@@ -1,0 +1,57 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 난다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 암 影 (특수)</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-what">왜 이 장이 있나</a><a href="#s-body">몸</a><a href="#s-skill">스킬 열두 칸</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 캐릭터 · <b>특수</b> · 출시 범위 밖</p>
+  <h1>암 影 <span style="font-size:14px;color:#6B4E8C;letter-spacing:.1em;vertical-align:middle">특수 · 일곱째 속성</span></h1>
+</header>
+
+<div class="warn">
+<h3>⚠️ 이 장은 기본 여섯 장과 다른 물건이다</h3>
+<p><b>기본 여섯은 지금 만드는 게임이고, 이 장은 아니다.</b> 무속성 · 빙 · 염 · 뇌 · 독 · 풍 여섯은 <b>출시 범위 안</b>이고 열두 칸을 채우는 것이 일인데, <b>특수 속성은 출시 범위 밖</b>이며 <b>상점 해금 대상</b>이다. 엔진에도 안 배선한다 — 사용자 지시가 그렇다: 「<b>특수속성은 실제 소스코드에 녹이진 않을 거지만</b> … 미리 특수속성에 페이지 만들어서 넣어줘」(2026-08-21). 그리고 방어 판정에 대해서도 같은 말이 있다: 「<b>특수는 어차피 새로 만들 거야 신경 안 써도 돼</b>」(2026-08-22).</p>
+<p><b>그래서 이 장은 캐릭터 시안이 아니라 보관소다.</b> 2026-08-22 판정으로 <b>결계가 「입히는 것」이 아니라 속성마다 제 방어 스킬</b>이 됐는데(<a href="mockup-guard.html">방어</a> 장의 여덟), <b>결계 · 암 影(꺼진 판)과 암전 暗轉</b> 이 갈 곳이 없으면 <b>판정과 함께 스킬이 사라진다</b>. 열두 칸 중 <b>두 칸</b> 만 서 있는 것이 그 사실의 그림이다 — 여섯 장의 자물쇠는 「<b>채워야 할 구멍</b>」인데 이 장의 자물쇠는 「<b>아직 차례가 아니다</b>」다.</p>
+<p><b>원장은 <code>docs/design/속성-개선-백로그.md</code></b> 의 「방어 계열 판정」 절이다. 틀은 <a href="mockup-char-numb.html">폭마</a> 장 그대로다 — <code>char-page.js</code> 는 <b>한 줄도 안 고쳤다</b>.</p>
+</div>
+
+<h2 id="s-what">「암 影」이 무엇인가 — <b>이름을 새로 안 지었다</b></h2>
+<p class="def"><b>암 影 은 쌍이 아니다.</b> 특수 열 종은 여섯 속성의 <b>쌍</b>(<code>FVNAME</code>)인데 암은 그 표에 없다 — <code>ELEMS</code> 에 <b>제 몸 두 벌</b>(<code>preShade</code>/<code>shade</code>)로 서 있는 <b>일곱째 속성</b>이고, 상태이상 표에서도 실명 · 침묵 · 봉인 셋을 혼자 쥔다(<code>vfx.js</code> 의 <code>PVMKL</code>).</p>
+<p class="def">⚠️ <b>이름이 두 갈래로 적혀 있다</b> — <code>ELEMS</code> 는 「<b>어둠 影</b>」, 원장(<code>docs/design/속성-개선-백로그.md</code>)과 결계 표(<code>WLTBL</code>)는 「<b>암 影</b>」이다. 이 장은 <b>원장을 따랐다</b>. ⚠️ 새 이름을 지은 것이 아니라 <b>둘 중 하나를 고른 것</b>이고, 갈라짐 자체는 <b>남아 있다</b>(판정 대기).</p>
+<p class="def">⚠️ <b>색은 <code>TONE.shade</code></b> = <code>#0E060F</code> / <code>#2E1840</code> / <code>#6B4E8C</code> — 여섯 팔레트 중 <b>유일하게 lit 이 어두운</b> 속성이다. 이 장의 레벨 라벨이 그 보라인 것도 같은 이유다.</p>
+
+<h2 id="s-body">몸</h2>
+<p class="def"><b>몸 그림은 이미 있다 — 새로 안 그렸다.</b> <a href="mockup.html">속성 · 몸</a> 장의 <code>#elem</code> 격자가 부르는 <b>같은 함수</b>(<code>ELEM.preShade</code> · <code>ELEM.shade</code>)를 <code>charBody</code> 로 그대로 부르고, <b>캡션도 <code>ELEMS</code> 에서 읽어 온다</b>.<br>
+⭐ 폭마 장은 <code>charBody</code> 를 못 썼는데(특수 쌍은 <code>ELEMS</code> 에 없다) <b>암은 쓸 수 있다</b> — 이 장이 쌍이 아니라 일곱째 속성이라는 사실이 여기서도 드러난다.</p>
+<div class="grid" id="csbody"></div>
+
+<h2 id="s-skill">스킬 — 열두 칸</h2>
+<p class="def"><b>틀은 여섯 장과 똑같다</b> — 열두 칸이고, 서 있는 것은 성장표 다섯 레벨로 뜨고, 나머지는 자물쇠다(<code>char-page.js</code> 의 <code>charDeck</code>). <b>다른 것은 수와 띠 문구뿐</b>이다.</p>
+<p class="def"><b>그림도 문구도 새로 안 만들었다.</b> 결계 줄은 <a href="mockup-guard.html">방어</a> 장의 <code>#wardlv</code> 성장표가 쓰는 <b>같은 표</b>(<code>vfx.js</code> 의 <code>WLTBL</code>·<code>WLtxt</code>)에서 이름·부제·다섯 줄을 그대로 읽어 온다 — <code>char-page.js</code> 의 <code>charWard</code> 한 함수를 <b>여덟 장이 같이 쓴다</b>.<br>
+⚠️ <b>칸 키가 「방어 › 속성 입힘 가능」 격자와 다르다</b> — 저쪽(<code>WDward*</code>·<code>GDground3/4</code>)은 <b>확정된 그림 한 장</b>이라 레벨을 안 읽어 다섯 칸이 통째로 같아진다. 레벨을 읽는 것은 <code>WLFX</code>(<code>WLward*</code>) 쪽이고, 캐릭터 장은 다섯 칸이 갈려야 하므로 이쪽을 건다.<br>
+⚠️ <b>등급은 <code>lib/data/skill_rank.dart</code> 에 아직 없다</b>(엔진 편입이 마지막이다). 같은 처지의 속성 방어(풍벽 · 역풍 · 파동정지)가 전부 <b>변주</b>라 그 자리로 봤다 — <b>판정 대기</b>.</p>
+
+<div class="lvset char-lv" id="csskill"></div>
+</div>
+<!-- 목차는 서른네 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라 따로 부른다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 간다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **캐릭터 장의 틀** — 열 장이 같이 쓴다(띠·자물쇠·빈 칸·가드·결계 줄).
+     `vfx.js` **뒤**, 이 장의 스크립트 **앞**이라야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"char-page.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **페이지 제 스크립트도 쿼리로 캐시를 깬다.** `vfx.js` 뒤에 실린다. -->
+<script>document.write(unescape("%3Cscript src=\"mockup-char-shade.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

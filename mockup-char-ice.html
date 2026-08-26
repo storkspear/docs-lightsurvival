@@ -1,0 +1,186 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 난다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 빙 氷</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-body">몸</a><a href="#s-affinity">상성</a><a href="#s-skill">스킬 열두 칸</a><a href="#s-fspot">서리결정 확정본</a><a href="#s-frostlv">서리결정 성장</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 캐릭터 · 기본</p>
+  <h1>빙 氷</h1>
+</header>
+
+<h2 id="s-body">몸</h2>
+<p class="def"><b>수지상 결정 여섯 갈래</b>다 — 갈래마다 곁가지가 난다. 평상시에는 <b>코어만 물들고</b>, 발현하면 둘레에 그 결정이 선다.<br>
+<b>그림은 새로 안 그렸다</b> — <a href="mockup.html">속성 · 몸</a>이 정본이고 여기서는 같은 함수(<code>ELEM.preIce</code> · <code>ELEM.ice</code>)를 그대로 부른다. 캡션 문구도 그 목록(<code>ELEMS</code>)에서 읽어 온다.</p>
+
+<div class="grid" id="cibody"></div>
+
+<h2 id="s-affinity">상성</h2>
+<p class="def"><b>배수는 한 곳이 정한다</b> — <code>lib/sim/combat/damage.dart</code> 의 <code>affinityMul()</code>. 스킬은 자기 속성만 넘기면 되고, 값은 <b>셋뿐</b>이다: <b>0.5 · 1.0 · 2.0</b>(<code>sim/config/balance.dart</code> 의 <code>kAffinityWeak</code> · <code>kAffinityStrong</code>).<br>
+<b>5×5 를 안 채운 것이 설계다.</b> 스물다섯 칸을 채우면 아무도 못 외우고, 맞았을 때 왜 피해가 줄었는지 몰라 억울해진다 — 그래서 <b>상극 셋 · 상생 하나</b>뿐이다.</p>
+
+<table class="st">
+<tr><th>때리는 속성</th><th>적의 상태</th><th>배수</th><th>왜 · 어디</th></tr>
+<tr><td><b>빙 氷</b></td><td>연소 중</td><td><b>×0.5</b></td><td>불이 꺼진다 — 얼음이 불을 상쇄한다 <code>:186</code></td></tr>
+<tr><td><b>염 炎</b></td><td>동상</td><td><b>×0.5</b></td><td>얼음이 녹는다 — 열이 결빙을 상쇄한다 <code>:188</code></td></tr>
+<tr><td><b>독 毒</b></td><td>연소 중</td><td><b>×0.5</b></td><td>타는 몸에선 독이 끓어 없어진다 <code>:190</code></td></tr>
+<tr><td><b>뇌 雷</b></td><td>동상 · <b>젖음</b></td><td><b>×2.0</b></td><td><b>전도</b> — 넷 중 유일한 상생 <code>:191</code></td></tr>
+<tr><td><b>풍 風</b></td><td>—</td><td>×1.0</td><td><b>상성표 밖.</b> 위치만 건드리는 속성이라 피해 상성에 안 낀다 <code>:177 · :196</code></td></tr>
+<tr><td><b>암 影</b></td><td>—</td><td>×1.0</td><td><b>상성표 밖.</b> 빛의 문법에 참여하지 않는 것이 정체다 <code>:197</code></td></tr>
+<tr><td><b>무속성</b></td><td>—</td><td>×1.0</td><td>거는 상태가 없다 <code>:195</code></td></tr>
+</table>
+
+<h3>빙이 이 표에서 서는 자리 셋</h3>
+<p class="def">① <b>내가 손해 보는 자리 하나</b> — 연소 중인 적을 때리면 <b>피해가 반</b>이다.<br>
+② <b>내가 열어 주는 자리 하나</b> — 내가 거는 <b>동상</b>이 뇌에게 <b>×2.0</b> 을 연다. 표에서 유일한 상생이고, 그 문을 여는 상태 둘(동상 · 젖음) 중 하나가 빙의 것이다.<br>
+③ <b>내가 지워지는 자리 하나</b> — 그 동상을 <b>염이 녹인다</b>(염 ×0.5).</p>
+<p class="def"><b>곱하는 자리가 중요하다.</b> 상성은 <b>단일 곱셈 지점 바깥에서 마지막에</b> 곱한다 — <code>amp</code> 안에 넣으면 상극이 상쇄가 아니라 <b>감산</b>이 되어 음수 피해가 난다.<br>
+<b>상극은 상태를 끄기도 한다</b>(빙으로 연소를 때리면 불도 꺼진다). 그건 순수 함수인 <code>affinityMul</code> 이 아니라 <b>발사 지점</b>의 일이다.</p>
+
+<h3>⭐ 2026-08-22 — <b>결계 · 빙 氷 이 이 장으로 들어왔다</b></h3>
+<p class="def">사용자 판정: 「결계 방어를 <b>결계가 입힌다는 느낌이 아니라 아예 속성의 방어 스킬로 편입</b>」 · 「결계:염 은 염 속성의 스킬 중 하나로, 결계:빙 은 빙 속성의 스킬 중 하나로. 풍, 독 전부 동일」 (원장 = <code>docs/design/속성-개선-백로그.md</code> 「방어 계열 판정」). 빙의 방어는 <b>셋에서 넷</b>이 되고 자물쇠가 하나 준다. ⚠️ 그래도 이 장의 빈 칸이 말하는 것은 <b>기초</b>이지 방어가 아니다 — 그쪽은 안 메워졌다.</p>
+<p class="def">⚠️⚠️ <b>이 여덟은 시안에만 있다</b> — 엔진 방어는 7종뿐이라(결계 · 풍벽 · 역풍 · 빙벽 · 파동정지 · 바늘 숲 · 모자이크 석벽) <b>옮겨 두지 않으면 없어진다</b>. 그래서 이 편입은 그림 정리가 아니라 <b>보관</b>이다.<br>⚠️ <b>그림도 문구도 새로 안 만들었다</b> — <a href="mockup-guard.html">방어</a> 장의 <code>#wardlv</code> 성장표가 쓰는 <b>같은 표</b>(<code>vfx.js</code> 의 <code>WLTBL</code> · <code>WLtxt</code>)에서 읽어 온다. <code>char-page.js</code> 의 <code>charWard</code> 한 함수를 <b>여덟 장이 같이 쓴다</b>.<br>⚠️ <b>칸 키가 「방어 › 속성 입힘 가능」 격자와 다르다</b> — 저쪽(<code>WDward*</code> · <code>GDground3/4</code>)은 <b>확정된 그림 한 장</b>이라 레벨을 안 읽어 다섯 칸이 통째로 같아진다. 레벨을 읽는 <code>WLFX</code>(<code>WLward*</code>) 쪽을 걸었다.<br>⚠️ <b>등급은 <code>lib/data/skill_rank.dart</code> 에 아직 없다</b>(엔진 편입이 마지막). 같은 처지의 속성 방어(풍벽 · 역풍 · 파동정지)가 전부 <b>변주</b>라 그 자리로 봤다 — <b>판정 대기</b>.</p>
+
+<h2 id="s-skill">스킬 — 열두 칸</h2>
+<p class="def">⚠️⚠️ <b>2026-08-25 — 고유 스킬 풀 목표가 12 → 20 으로 갱신됐다</b>(<code>docs/vfx/mockup-basic.html#s-skillelem</code>). <b>캐릭터마다 고유 스킬 스무 종</b>이다. 빙은 지금 <b>여덟</b>이 서 있고 <b>열두 칸이 비어 있다</b> — 계열은 일반 2 · 보조 <b>0</b> · 마법 2 · 방어 4 다. 정본은 <code>lib/data/skill_element.dart</code> 이고, 빠짐·겹침은 <code>test/sim/skill_element_test.dart</code> 가 막는다.</p>
+
+<h3>⚠️⚠️ 2026-08-21 재배치 + 2026-08-23 제거 — <b>둘이 나갔다</b></h3>
+<p class="def">다섯 속성 전부에 사용자 판정이 났다(원장 = <code>docs/design/속성-개선-백로그.md</code>). 빙은 <b>아홉에서 여덟</b>이 되고, 그 뒤 빙격검이 빠져 서 있는 것이 <b>여덟</b>·자물쇠가 <b>넷</b>이다.</p>
+<table class="st">
+<tr><th>스킬</th><th>판정</th><th>무엇이 달라지나</th></tr>
+<tr><td>바람원반 <code>discus</code></td><td><b>개명 + 풍 風 으로 이적</b></td><td>「<b>바람원반</b>」이 되어 <a href="mockup-char-gale.html">풍 장</a>으로 간다. 색도 풍에 맞게 — 빙에서 <b>보조가 0</b> 이 된다</td></tr>
+<tr><td>빙격검 <code>saber</code></td><td><b>제거</b> (2026-08-23)</td><td>게임에서 뺀다 — 사용자: 「둘 다 ‘칼’의 부류인데 재미가 없음」(염의 <code>lance</code> 와 같이). <b>일반 · 변주</b> 하나가 사라진다</td></tr>
+<tr><td>파문 <code>pulse</code></td><td>그림 교체</td><td>면 → <b>빛(선)</b>. L5 기준 3안 — <b>아직 안 그렸다</b></td></tr>
+<tr><td>빙벽 <code>icewall</code></td><td>시전 연출 + <b>실효</b></td><td>① 벽이 서기 전 <b>시전 애니메이션</b> ② 적이 <b>실제로 막혀야</b> 한다(<code>magic/icewall.dart:54</code> 가 <code>EmitMode.attached</code> — 몸에 붙어 따라다닌다)</td></tr>
+<tr><td>바늘 숲 <code>iceneedle</code> · 석벽 <code>icebrick</code></td><td>시전 연출</td><td>빙벽과 <b>같은 메커니즘</b></td></tr>
+</table>
+<p class="def">⚠️⚠️ <b>개명·색 교체 판정은 스킬과 함께 무효가 됐다.</b> 2026-08-21 에 <code>saber</code> 를 「빙격검」으로 고쳐 부르고 빙결색 + 동상·둔화를 얹기로 했었는데, 2026-08-23 에 그 스킬 자체가 게임에서 빠졌다. ⇒ 이름 맞바꿈(염의 <code>lance</code> 와 주고받던 것)도, 상성표에 동상을 새로 태우는 일도 <b>없다</b>. 옛 문서에서 「빙격검」을 만나면 <b>지금은 없는 스킬</b>이다.<br>
+⭐ <b>팔레트의 이물 둘이 그대로 사라졌다.</b> 빙 아홉 중 <b>일곱이 196~200° 청</b>인데 둘만 금색이었다 — <b>빙격검 38°(흰금) · 바람원반 40°(금동)</b>. 하나는 풍으로 나갔고 하나는 제거돼, 빙에 남은 것은 청 하나뿐이다.<br>
+⚠️ <b>빙벽 셋의 「실효」는 시안의 일이 아니다.</b> 시전 애니메이션은 <b>시안(그림)</b>이고 「실제로 막힌다」는 <b>엔진(판정)</b>이다 — 결정은 「그 자리에 선다」이므로 <code>anchored</code> + 수명인데(<code>anchored</code> 는 이미 열세 자루가 쓴다) 그건 편입 때의 일이다.</p>
+<p class="def"><b>덱 = 공유 13 + 내 속성 20 = 서른셋</b>, 그중 <b>여섯</b>을 골라 판에 들어간다. ⚠️ <b>내 속성이 셋 이상</b>이어야 나갈 수 있다 — 공유만으로 여섯을 채우면 어느 캐릭터로 들어가든 같은 판이 되기 때문이다.<br>
+⚠️ <b>저금은 여기 없다.</b> 회복 다섯이 통째로 공유로 갔다 — <b>공유 13 = 버프 3 + 회복 5 + 다섯 축 5</b>(이동 · 시야 · 재화 · 부활 · 시간).</p>
+<p class="def"><b>그림도 문구도 새로 안 만들었다.</b> 칸의 이펙트는 계열 장(<a href="mockup-weapon.html">일반</a> · <a href="mockup-support.html">보조</a> · <a href="mockup-magic.html">마법</a> · <a href="mockup-guard.html">방어</a>)이 쓰는 <code>FX</code> 의 <b>같은 함수</b>를 부르고, 칸마다 전역 <code>LV</code> 만 갈아 끼운다.<br>
+성장표 문구는 <b>도감 그대로</b>다 — <code>lib/data/weapons.dart</code>(<code>l1</code>~<code>l5</code>) · <code>magic.dart</code> · <code>magic_attack5.dart</code> · <code>magic_guard.dart</code>(<code>l1</code> + <code>levelText</code> 넉 줄). 시안이 문구를 새로 짓지 않는다.<br>
+⚠️ <b>결빙은 「포탈 낙하」</b>다 — 셋으로 그려 둔 안 중에서 엔진이 고른 변주가 그것이다(<code>sim/combat/magic/tomb.dart</code>).<br>
+⚠️ <b>칸 키가 엔진 id 와 다른 것이 여섯이다</b> — 서릿발 <code>SDspineD</code> · 서리결정 <code>SCspine</code> · 결빙 <code>POportal</code> · 빙벽 셋 <code>WLwall1/2/4</code>. 지어내면 그 줄이 <b>예외 없이 조용히</b> 사라진다 — <code>charMISS</code> 가 콘솔에 밝힌다. 대조표의 정본은 <code>tools/mockup_sheet.js</code> 의 <code>SKILL</code> 표다.<br>
+⭐ <b>격자 키가 아니라 성장표 키를 걸었다.</b> 계열 장의 낱칸은 <b>L5 로 못 박은</b> 이름(<code>ICspine4</code> · <code>AWwall1/2/4</code>)이고, 다섯 레벨을 도는 것은 <code>LV</code> 를 읽는 이름이다 — 이 장의 칸은 성장표라 뒤쪽이라야 다섯 칸이 서로 달라진다.</p>
+
+<h3>「즉시 여섯 / 추가 여섯」은 무엇으로 가르나</h3>
+<p class="def"><b>자는 이미 서 있다</b> — 등급이다(<code>lib/data/skill_rank.dart</code>). <b>기초 基 → 변주 變 → 연계 連</b> 이고, <b>그 차례가 곧 해금 순서</b>다. 등급은 세기가 아니라 <b>전제의 크기</b>다: 기초는 전제가 없고, 변주는 플레이어(어디 서고 언제 놓나)가 전제이며, 연계는 <b>판에 이미 선 다른 것</b>이 전제다. ⚠️ <b>연계 = 약한 것이 아니다.</b></p>
+<p class="def">⚠️ <b>그런데 「기초 = 즉시 여섯」으로는 안 갈린다.</b> 여섯 캐릭터의 기초 수가 <b>무속성 5 · 뇌 3 · 빙 2 · 풍 2 · 염 0 · 독 0</b> 이라, 그렇게 읽으면 <b>어느 캐릭터도 여섯을 못 채우고</b> <b>염과 독은 한 칸도 안 열린다</b>. (<code>skill_element.dart</code> × <code>skill_rank.dart</code> 에 2026-08-21 이적을 얹어 다시 센 값. ⚠️ <code>skill_element.dart</code> 는 <b>아직 판정 전 상태</b>라 이적을 손으로 얹어 세야 한다. 풍이 셋에서 <b>둘</b>로 내려간 것은 개안이 무속성으로 갔기 때문이고, 옛 수 「무속성 6 · 독 1」은 회복 다섯이 아직 속성 칸에 있던 배분표에서 온 것이다.) ⇒ <b>선은 아직 안 그어졌다</b>(<code>docs/design/캐릭터-속성-배분.md</code> §7: 등급이 자가 될 수 있지만 값표 <code>ui/shop_data.dart</code> 와 같이 봐야 한다).<br>
+그래서 이 장은 <b>등급 차례로 앞에서 여섯을 잘라</b> 격자에 띠를 하나 그었다 — 「즉시 여섯」 · 「추가 여섯」이 그것이다. ⚠️ <b>그 띠는 이 장이 그은 잠정선</b>이고, 근거는 칸마다 적힌 <b>계열 · 등급</b>이다. 선이 확정되면 바뀌는 것은 <b>띠 한 줄과 이 문단</b>뿐이다.</p>
+<p class="def"><b>빈 네 칸의 바닥은 둘이다.</b> ① <b>기초가 한 종 더</b> 들어와야 한다 — 빙의 기초는 둘(파문 · 빙벽)인데 배분표 §2-1 ② 가 <b>캐릭터마다 기초 세 종 이상</b>을 요구한다: 내 속성 셋만 들고 나가는 사람이 있는데 그 셋이 전부 「짝이 서야 사는 것」이면 그 판은 시작부터 죽는다.<br>
+② ⚠️ <b>그리고 재배치로 계열 하나가 통째로 비었다 — 보조 0.</b> 바람원반이 풍으로 나가며 빙의 <b>유일한 보조</b>가 사라졌다. 배분표 §2-1 ① 이 요구하는 「계열 넷이 다 선다」가 <b>이제 미달</b>이고, 공유 쪽도 못 메운다 — <b>공유는 목표가 13 이지 지금 선 것은 여덟</b>이다(버프 3 + 회복 5. 다섯 축은 <b>자리만 있고 0종</b>이라 <code>skill_element.dart</code> 가 그렇게 적어 뒀다).</p>
+
+<div class="lvset char-lv" id="ciskill"></div>
+
+<!-- ══ 서리결정 **확정본** — 고르기 장에서 이 장으로 옮겨 온 절 ═══════════
+     ⚠️ 그림은 `docs/vfx/vfx-frostspot.js`(전역 접두 `FS`) 한 파일이고 **여기서
+       한 글자도 안 고쳤다**(md5 로 대조했다). 이 장이 하는 일은 **마운트뿐**이다.
+     ⚠️⚠️ **격자 id 가 `pkfspot` 인 것은 오타가 아니다.** 확정본 파일의 마운트가
+       `document.getElementById("pkfspot")` 한 줄로 박혀 있고 그 파일을 **안 고치는
+       것이 이 작업의 조건**이라, 이름을 갈면 칸이 통째로 조용히 사라진다
+       (`$` 가 떨어진 캔버스를 돌려주며 삼킨다 — 린터 머리말의 사고 C).
+       ⇒ 이름을 갈려면 **그 파일의 주인**이 마운트 줄과 같이 간다.
+     ⚠️ 다음 절(성장표)의 설명이 아직 이 칸을 「고르기 장 `#pkfspot`」이라고
+       부른다 — **다른 담당의 절이라 한 글자도 안 건드렸다.** id 는 그대로다. -->
+<h2 id="s-fspot">서리결정 — <b>자리에 박고 그 자리에서 터진다</b></h2>
+<p class="def"><b>확정본이다</b>(사용자 2026-08-23: 「고르기 페이지에 서리결정도 시안 결정 ㄱㄱ <b>확정임</b>」). ⇒ 고르기 장에서 <b>제 속성 장인 여기로</b> 옮겼다 — 광주 · 낙광 · 뇌광 · 독침이 간 것과 같은 길이다. 「옮겼으면 고르기에서 지워야지」가 이 사이클의 고정 실패라 <b>넣기와 빼기를 같이</b> 한다(빼기는 고르기 장 담당의 몫이다).</p>
+<p class="def"><b>무엇을 고친 그림인가.</b> 사용자가 실기에서 잡아낸 것 — 「사슬이 <b>거기서 굳어져</b> 다음 발사 때까지 안 사라진다」. 원인은 <b>「빗나감」이라는 상태</b>였다: 표적을 못 찾은 사슬을 끝내는 처리가 없어 박제된다(<code>lib/game/fx/w_chain_cel.dart</code> 의 <code>_chain()</code> 세 번째 갈래).<br>
+⇒ 사용자가 낸 답은 <b>사라지는 연출을 만드는 것이 아니라 빗나갈 수 없게 설계를 바꾸는 것</b>이었다. 원문: 「<b>발사할 타겟 지점을 위치</b>하고 <b>그곳에서 터진다</b>고 하면 빗나가는 걸 저렇게 처리할 필요가 없을 거 같은데. <b>타겟 지점에서 그냥 터지면 되잖아.</b> 그리고 <b>그 위치를 지나가는 적이 있으면 지금 판정처럼 맞는 걸로</b>」</p>
+<p class="def"><b>다섯 걸음</b> — ① <b>자리를 고른다</b>(예고 <b>0.14초</b>, 바닥에 각진 서리 자국이 돋는다) → ② <b>사슬이 그 자리로 날아간다</b>(상수 속도 <b>287</b>) → ③ <b>자리에 박힌다</b>(자국에 <b>0.20초</b> 걸쳐 흡수된다) → ④ <b>그 자리에서</b> 마디가 갈린다(0.125초 간격) → ⑤ <b>그 자리에서</b> 얼음 폭발(넉백 → 0.22초 → 빙결).<br>
+<b>③~⑤가 전부 「그 자리」</b>에서 일어난다. 적을 안 따라간다 — 적이 죽어도, 피해도, 애초에 없어도 <b>그 자리에서 계속 진행된다</b>.</p>
+<p class="def">⭐⭐ <b>「빗나감」이라는 상태가 없다.</b> 적이 피해도 <b>그 자리에서 터지고 그것이 화면에 보인다</b>. 이 레포에 그 규약이 이미 서 있다 — <code>lib/sim/world_step.dart:97</code> 의 「실명」 절(실명은 명중률이 아니라 <b>조준각</b>을 튼다) 원문: 「<b>확률 회피는 이 게임에서 두 번 버려진 설계</b>이고, 「빗나갔다」가 화면에 안 보이면 <b>피해가 덜 들어온 것과 구별이 안 된다</b>. 각을 틀면 탄이 <b>옆으로 지나가는 것이 보인다</b>」<br>
+⇒ 지점 폭발은 <b>실패가 화면에 남는다</b>. 빈 자리를 열한 번 내리치고 <b>거기서 터지는 것이 보이므로</b> 지우지도 박제하지도 않는다. 같은 규약의 연장이지 새 문법이 아니다.</p>
+<h3>한 주기 <b>8.4초</b>에 <b>세 경우</b>가 다 나온다</h3>
+<p class="def">갈림이 없는 확정 설계라 <b>칸은 하나</b>다. 대신 한 주기를 한 발 <b>2.8초</b>씩 셋으로 갈라 같은 함수가 세 결말을 다 보여 준다 — <b>자리와 적 배치만</b> 다르다.</p>
+<table class="st">
+<tr><th>발</th><th>자리 · 거리</th><th>연타 열한 대가 어디에 박히나</th><th>얼음 폭발에 언 놈</th></tr>
+<tr><td><b>① 맞음</b></td><td>(−40,−72) · 82.37</td><td><b>11 / 11</b> 이 적①에 박힌다 (<code>11111111111</code>)</td><td><b>셋</b> — ①(겉면 3.1) · ③(19.9) · ④(21.2)</td></tr>
+<tr><td><b>② 지나감</b></td><td>(52,−58) · 77.90</td><td><b>2 / 11</b> — 적②가 도착 순간에만 걸리고 <b>나머지 아홉은 빈 자리</b>를 친다 (<code>22.........</code>)</td><td><b>없다</b> — 제일 가까운 ②가 34.7 로 <b>32 를 아슬하게</b> 벗어난다</td></tr>
+<tr><td><b>③ 아무도 없음</b></td><td>(10,−100) · 100.50</td><td><b>0 / 11</b> — 열한 대가 전부 빈 자리 (<code>...........</code>)</td><td><b>하나</b> — 26 떨어져 있던 ③(겉면 14.5)</td></tr>
+</table>
+<p class="def">⭐ <b>②③이 곧 옛 「빗나감」인데 그림이 안 달라진다.</b> 사슬은 늘 자리에 박히고 늘 거기서 갈리고 늘 거기서 터진다 — 달라지는 것은 <b>번쩍임 · 성에 · 넉백</b>뿐이다. <b>수치로 세운다</b>: 한 발 2.8초 동안 <b>한 번이라도 잉크가 묻은 화소</b>(alpha&gt;8, 236칸 × DPR 2 = 222,784화소)를 세면 <b>② 57,711 ↔ ③ 57,044</b> — <b>차이 1.16%</b>다. 맞은 놈이 있느냐가 그림의 1% 밖에 안 건드린다.<br>
+(⚠️ <b>앞 담당이 낸 값은 다른 자</b>다 — 「② 147,235 ↔ ③ 146,327, <b>0.6%</b>」. 그쪽 잣대의 정의를 못 되살려 <b>내 자를 새로 정의해 다시 쟀다</b>. 두 자가 같은 방향을 가리킨다: <b>맞았느냐와 무관하게 그림이 같다</b>.)<br>
+⚠️ <b>탄착만은 갈린다</b> — 빈 자리를 친 마디의 세기가 <b>0.52</b>(맞으면 1.00)다. <b>탕 ↔ 텅</b>이 거기서 갈리고, 그게 「빗나감」을 <b>지우는 대신 들리게</b> 하는 자리다.</p>
+<h3>엔진 이식용 — <b>옮겨야 하는 값</b></h3>
+<p class="def">⚠️ <b>다음 담당이 옮길 것은 이 표다.</b> 값은 전부 <code>docs/vfx/vfx-frostspot.js</code> 에서 읽었다 — 이 절이 지어낸 수는 하나도 없다.</p>
+<table class="st">
+<tr><th>무엇</th><th>값</th><th>시안 이름</th><th>어디서 왔나</th></tr>
+<tr><td><b>예고</b>(자리가 먼저 보이는 시간)</td><td><b>0.14초</b></td><td><code>FSTELE</code></td><td>확정본에 없던 것 — <b>자리가 보여야</b> 「저기를 노린다」가 읽힌다</td></tr>
+<tr><td><b>비행</b></td><td><b>상수 속도 287</b> (238칸/초)</td><td><code>FSSPD</code></td><td>확정본은 <b>거리와 무관한 상수 시간</b>(<code>SCFLY</code>=0.30)인데, 자리마다 거리가 다르면 그 식은 <b>먼 자리를 더 빠르게</b> 던진다 ⇒ 속도를 고정하고 시간이 거리를 따르게 했다. 82.37 에서 <b>0.301초</b> — <code>SCFLY</code> 와 <b>0.4% 차</b></td></tr>
+<tr><td><b>자리 셋</b></td><td>(−40,−72) 82.37 · (52,−58) 77.90 · (10,−100) 100.50</td><td><code>FSSPOT</code></td><td>⚠️ <b>엔진이 고르는 값의 대역</b>이지 규칙이 아니다 — 이 게임은 <b>조준이 곧 이동 방향</b>이라(<code>aimBlind(player.faceX, player.faceY)</code>) 자리 선정은 <b>엔진의 몫</b>이다. 시안은 <b>「자리가 정해졌다」를 전제</b>하고 그 뒤만 그렸다</td></tr>
+<tr><td><b>자리 표식</b></td><td>반지름 = <b>마디 반지름 × 2.6</b> · 세로 눌림 0.50 · 돋는 조각 6 · <b>0.20초</b>에 흡수</td><td><code>FSMKR</code> · <code>FSMKSQ</code> · <code>FSMKN</code> · <code>FSMKOUT</code></td><td>⚠️ <b>판정 안내선이 아니라 연출</b>이다 — 부채꼴 · 점선 · 반경 원을 하나도 안 그린다. 바닥에 <b>서리가 먼저 돋고</b> 사슬이 닿으면 그 자국에 흡수된다</td></tr>
+<tr><td><b>갈림 판정</b></td><td>자리 중심 ↔ 적 <b>겉면</b> ≤ <b>마디 반지름 × 1.05</b></td><td><code>FSBITE</code></td><td>확정본 <code>SCcontact</code> 의 <b>선</b> 판정(<code>RAD×1.05 + f.r</code>)을 <b>점</b> 판정으로 옮긴 것. 사슬이 한 점에 박히므로 물리가 「그 점이 몸에 닿아 있나」 <b>하나로 준다</b></td></tr>
+<tr><td><b>연타</b></td><td>레벨마다 5 · 7 · 9 · 9 · 11 대 · 간격 <b>0.125초</b></td><td><code>SCN</code> · <code>SCHIT</code></td><td><b>확정본 그대로</b>(성장축은 다음 절)</td></tr>
+<tr><td><b>폭발 판정</b></td><td>중심 ↔ 적 <b>겉면</b> ≤ <b>32</b> · 넉백 0.20 → <b>0.22초</b> → 빙결</td><td><code>SCBR</code> · <code>SCKB</code> · <code>SCFRZ</code></td><td><b>확정본 그대로.</b> ⚠️ 중심거리가 아니라 <b>겉면</b>이라 반지름 9 짜리 적의 유효 반경은 <b>41</b> 이다</td></tr>
+<tr><td><b>탄착 세기</b></td><td>맞음 <b>1.00</b> / 빈 자리 <b>0.52</b></td><td><code>FSDRY</code></td><td><b>탕 ↔ 텅</b>이 여기서 갈린다 — 「빗나감」이 <b>지워지는 대신 들린다</b></td></tr>
+<tr><td><b>한 발 · 한 주기</b></td><td><b>2.8초</b> · <b>8.4초</b>(= 세 발)</td><td><code>FSSLOT</code> · <code>FSPER</code></td><td>확정본 주기 <code>SCPER</code> 2.6 + 예고 0.14 + 뒤끝 정리. <b>사건의 박자는 확정본과 한 값도 안 다르다</b></td></tr>
+<tr><td><b>뒤끝 정리</b></td><td>슬롯 안 <b>2.42 → 2.80초</b> 램프</td><td><code>FSTH0</code> · <code>FSTH1</code></td><td>확정본은 주기가 넘어갈 때 상태를 <b>툭 끊는데</b>(<code>f.pv=0</code> 대입) 그 자리가 화면에서는 <b>보이는 이음매</b>다 ⇒ 램프로 바꿨다</td></tr>
+</table>
+<p class="def">⚠️ <b>난수 0건</b> — <code>Math.random</code> 을 부르는 확정본 도구(<code>emit</code> · <code>hitFoe</code> · <code>IBpushFrag</code>)를 <b>하나도 안 쓴다</b>. 부스러기 · 조각은 <code>hash()</code> 표에서 나오고, 그려지는 값이 전부 <b>주기에 못 박은 스케줄 하나</b>(<code>FSsched</code>)에서 파생된다 — 그리기와 검산이 <b>같은 함수</b>를 본다(<code>window.FSDBG</code>). ⇒ 같은 시각을 두 번 그리면 화소가 <b>정확히 같다</b>(실측: 여덟 τ 에서 222,784화소 중 <b>0</b>).<br>
+⚠️ <b>이음매 0</b> — 적 다섯의 길이 전부 <b>주기당 정수 바퀴의 사인</b>이라 <code>τ=0</code> 과 <code>τ=8.4</code> 의 자리가 같다(실측: 다섯 전부 <b>0</b>).<br>
+⚠️ <b>그림은 <code>docs/vfx/vfx-frostspot.js</code> 에 따로 있다</b>(425줄) — <code>vfx.js</code>(<b>50,766줄</b> · 실측)는 <b>읽기만</b> 했다. 확정본 <code>SCspine</code> 과 그 상수 열셋(<code>SCN</code> · <code>SCRAD</code> · <code>SCBOOM</code> · <code>SCPER</code> · <code>SCFLY</code> · <code>SCHIT</code> · <code>SCFOE</code> · <code>SCBR</code> · <code>SCGAPM</code> · <code>SCMUZ</code> · <code>SCKB</code> · <code>SCFRZ</code> · <code>SCTICK</code>)도 <b>안 건드렸다</b>. <code>vfx-poison.js</code> · <code>vfx-flamelv.js</code> 와 같은 전례다.<br>
+⚠️ <b>위 스킬 격자(<code>#ciskill</code>)의 서리결정 줄은 아직 옛 그림</b>(<code>SCspine</code> — 사슬이 처음 맞은 적을 따라간다)이다. 그 줄을 갈아 끼우는 것은 <b>엔진 편입 때의 일</b>이다.</p>
+<div class="grid" id="pkfspot"></div>
+
+<h2 id="s-frostlv">서리결정 — <b>지점 폭발</b>이 레벨마다 무엇을 늘리나</h2>
+<p class="def"><b>확정된 설계로 다시 그린 다섯 칸</b>이다. 사용자 판정(2026-08-23): 「서리결정 빗나갔을 때 <b>적을 타겟</b>으로 해서 그런데, <b>발사할 타겟 지점을 위치</b>하고 <b>그곳에서 터진다</b>고 하면 빗나가는 걸 저렇게 처리할 필요가 없을 거 같은데. <b>타겟 지점에서 그냥 터지면 되잖아.</b> 그리고 <b>그 위치를 지나가는 적이 있으면 지금 판정처럼 맞는 걸로</b>」<br>
+⇒ <b>「빗나감」이라는 상태를 없앤다.</b> ① 자리를 고른다(예고 0.14초, 각진 서리 자국이 돋는다) → ② 사슬이 그 자리로 날아간다(상수 속도 287) → ③ 자리에 박힌다(자국에 0.20초 걸쳐 흡수) → ④ <b>그 자리에서</b> 마디가 갈린다(0.125초 간격) → ⑤ <b>그 자리에서</b> 얼음 폭발(넉백 → 0.22초 → 빙결). <b>③~⑤가 전부 「그 자리」</b>에서 일어나고 적을 안 따라간다.</p>
+<p class="def"><b>이 표가 답하는 것은 하나다 — 레벨이 오르면 무엇이 자라나.</b> 그래서 다섯 칸을 <b>같은 경우 하나</b>(자리에 적이 서 있는 경우)로 통일했다. <b>세 경우(맞음 · 지나감 · 없음)를 한 칸에 담지 않는다</b> — 그건 <b>확정본 칸</b>(고르기 장 <code>#pkfspot</code> · <code>FSspot</code>, 한 주기 8.4초)이 하는 일이고, 여기서 또 하면 다섯 칸이 서로 다른 순간을 보여 <b>나란히 놓아도 비교가 안 된다</b>.<br>
+<b>주기는 다섯 칸이 정확히 같은 2.8초</b>다 — 확정본이 <b>한 발</b>에 주는 시간(<code>FSSLOT</code>) 그대로이고, 그것이 엔진 주기 <code>SCPER</code> 2.6 + 예고 0.14 + 뒤끝 정리다. 확정본이 8.4초인 것은 그 한 발을 <b>셋 이어 붙였기</b> 때문이지 한 발이 긴 것이 아니다.</p>
+<p class="def"><b>성장축은 시안이 아니라 엔진 표가 정본이다</b> — <code>lib/sim/combat/weapons/frostcrystal_tuning.dart</code>. 시안의 <code>SCN</code> · <code>SCRAD</code> · <code>SCBOOM</code> 과 <b>한 값도 안 다르다</b>(대조 완료).</p>
+<table class="st">
+<tr><th>LV</th><th>연타 <code>SCN</code> / <code>kFrostcrystalHits</code></th><th>마디 반지름 <code>SCRAD</code></th><th>사슬 굵기</th><th>얼음 폭발 <code>SCBOOM</code></th></tr>
+<tr><td>L1</td><td><b>5</b></td><td>5.2</td><td>10.4</td><td>—</td></tr>
+<tr><td>L2</td><td><b>7</b></td><td>5.7</td><td>11.4</td><td>—</td></tr>
+<tr><td>L3</td><td><b>9</b></td><td>6.2</td><td>12.4</td><td>—</td></tr>
+<tr><td>L4</td><td><b>9 그대로</b></td><td>6.7</td><td>13.4</td><td><b>○</b></td></tr>
+<tr><td>L5</td><td><b>11</b></td><td>7.2</td><td>14.4</td><td><b>○</b></td></tr>
+</table>
+<p class="def">⚠️ <b>L4 에서 연타가 안 는다 — 9 가 두 번 적힌 것은 오타가 아니라 계약이다.</b> 그 칸의 사건은 연타가 아니라 <b>얼음 폭발</b>이고, 그래서 L3 → L4 는 <b>수가 아니라 사건이 갈리는</b> 자리다(<code>frostcrystal_tuning.dart</code> 가 그렇게 못 박았다).<br>
+⚠️ <b>사거리는 다섯 칸이 같다</b> — 굵기만 는다(<code>SCcontact</code> 에 레벨 항이 한 줄도 없다).</p>
+<h3>다섯 칸에서 <b>보여야 하는 것</b> 셋</h3>
+<p class="def">① <b>연타 수가 는다(5 → 11) — 셀 수 있어야 한다.</b> 세는 자리를 <b>둘</b> 뒀다: <b>날아가는 동안 사슬의 마디</b>가 통째로 보이고(N개가 다 나와 있다), <b>갈릴 때마다 적 몸에 서리 가시가 하나씩 박힌다</b> — 끝나면 정확히 N개다. ⚠️ 확정본은 가시를 부채꼴로 폈는데 열한 개가 <b>겹쳐 못 센다</b> — 이 표에서만 <b>한 바퀴에 고르게</b> 돌리고 가시를 <b>반지름 방향</b>으로 눕혔다.<br>
+② <b>L4 부터 얼음 폭발이 붙는다.</b> 자리 둘레의 적 둘이 L4 · L5 에서만 밀리고 얼고 눈송이 도장이 찍힌다. 멀리 선 하나는 다섯 칸 내내 아무 일도 안 당한다 — <b>반경 32 의 경계</b>가 그 둘 사이에서 읽힌다.<br>
+③ <b>지점 폭발의 정체가 유지된다</b> — 자리 표식 → 날아감 → 박힘 → 갈림.</p>
+<p class="def">⚠️ <b>영웅이 칸 한복판이 아니라 오른아래(+20,+20)에 선다.</b> L5 사슬은 97.9칸이고 얼음 폭발은 반경 32칸이라, 한복판에 두면 <b>둘 중 하나가 잘린다</b> — 사슬을 다 보이게 하면 폭발이 잘리고, 폭발을 넣으면 사슬 꼬리가 몸에 묻혀 <b>열한 개를 못 센다</b>. <b>확정본 칸은 안 건드렸다</b>(저쪽은 제일 먼 자리가 100.5칸이라 한복판으로 충분하다).<br>
+⚠️ <b>판정 안내선을 하나도 안 그린다</b> — 부채꼴 · 점선 · 반경 원 전부 없다. 자리 표식은 <b>바닥에 돋는 각진 서리 자국</b>이고 그건 연출이다.<br>
+⚠️ <b>난수 0건</b> — <code>Math.random</code> 을 부르는 도구(<code>emit</code> · <code>hitFoe</code>)를 하나도 안 쓴다. 조각 · 부스러기는 <code>hash()</code> 표에서 나오고, 그려지는 값이 전부 <b>주기에 못 박은 스케줄 하나</b>에서 파생된다.<br>
+⚠️ <b>그림은 <code>docs/vfx/vfx-frostlv.js</code> 에 따로 있다</b> — <code>vfx.js</code>(50,761줄)와 확정본 <code>vfx-frostspot.js</code> 는 <b>읽기만</b> 했다. 위 성장표(<code>#ciskill</code>)의 서리결정 줄은 아직 <b>옛 그림</b>(<code>SCspine</code> — 사슬이 처음 맞은 적을 따라간다)이다. 그 줄을 갈아 끼우는 것은 <b>편입 때의 일</b>이다.</p>
+
+<div id="cifrostlv"></div>
+</div>
+<!-- 목차는 서른두 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라 따로 부른다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 간다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **캐릭터 장의 틀** — 일곱 장이 같이 쓴다(띠·자물쇠·빈 칸·가드).
+     `vfx.js` **뒤**, 이 장의 스크립트 **앞**이라야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"char-page.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **페이지 제 스크립트도 쿼리로 캐시를 깬다** — css 에서 겪은 것과 같은 함정이다.
+     `vfx.js` **뒤에** 실린다: `$`·`tile`·`mk`·`box`·`A`·`ELEM`·`ELEMS` 를 그쪽에서 쓴다. -->
+<script>document.write(unescape("%3Cscript src=\"mockup-char-ice.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️⚠️ **서리결정 확정본(지점 폭발)** — `vfx.js` **뒤**라야 한다
+     (`FX`·`TONE`·`tile`·`LV`·`IB*`·`SC*`·`hash`·`saw`·`hero` 를 그쪽에서 읽는다).
+     ⚠️ `vfx.js` 본문은 **한 글자도 안 고쳤다** — 확정본 `SCspine` 과 그 상수
+       열셋도 **읽기만** 한다. `vfx-poison.js`·`vfx-flamelv.js` 와 같은 전례다.
+     ⚠️ 이 파일은 격자 `#pkfspot` **하나만** 찾는다 — 없는 장에서는 조용히
+       건너뛴다. 그래서 고르기 장에서 절이 빠져도 이 장이 안 깨진다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx-frostspot.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **서리결정 지점 폭발 성장표** — `vfx.js` **뒤**라야 한다(`FX`·`LV`·`lvTable`·
+     `SCN`·`SCRAD`·`SCBOOM`·`IB*` 를 그쪽에서 읽는다). `vfx.js` 는 안 건드렸다:
+     `vfx-poison.js`·`vfx-frostspot.js`·`vfx-flamelv.js` 와 같은 전례다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx-frostlv.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

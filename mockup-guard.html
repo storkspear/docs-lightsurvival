@@ -1,0 +1,69 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다(16장 전부 빠져 있었다). -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 셀 VFX 시안</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
+     2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-guard">방어 18종</a><a href="#s-icelife">빙벽 나고 죽는 법</a><a href="#s-levelsg">레벨 성장표</a><a href="#s-aicons">아이콘</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 셀 VFX 시안</p>
+  <h1>방어 — 안 아픈 법</h1>
+  
+</header>
+<h2 id="s-guard">방어 14종</h2>
+
+<div class="grid" id="guard"></div>
+
+<h2 id="s-icelife">빙벽 셋 — <b>나고 죽는 법</b></h2>
+<p class="def">정본은 <code>docs/vfx/vfx-icewalllife.js</code>. 위 칸의 확정본(<code>AWwall1</code>·<code>AWwall2</code>·<code>AWwall4</code>)은 <b>「서 있는 벽」만 그린다</b> — 어떻게 서고 어떻게 사라지는지가 한 프레임도 없어서, 2026-08-22 에 엔진이 솟는 연출을 <b>시안 없이 지어냈다</b>(<code>w_barrier_ice_parts.dart</code> 가 스스로 「시안에 없다 — 엔진이 만들었다」고 적어 두었다). <b>여기가 그 빈칸의 정본이다.</b><br>
+⭐ <b>사라짐은 알파가 아니라 개수로 낸다.</b> 벽은 면이라 반투명해지면 「사라지는 중」이 아니라 <b>「얇은 벽」</b>으로 읽힌다 — 서리결정이 같은 날 낸 판정과 같은 줄이고, 이 저장소의 「<b>성기다 ≠ 투명하다</b>」와도 같은 줄이다.<br>
+⚠️ <b>세 벽이 각자의 정체에서 나고 죽는다</b> — 판은 <b>겹쳐 들고 끝부터 주저앉고</b>, 바늘 숲은 <b>긴 것이 늦게 자라고 짧은 것부터 스미고</b>(성장축이 「버팀=시간」이다), 석벽은 <b>안쪽 줄부터 쌓이고 바깥 줄부터 빠진다</b>(성장축이 「겹」이다).<br>
+⚠️⚠️ 아랫줄 석 장(<b>망가짐</b>)은 <b>지금 엔진이 못 내는 장면</b>이다 — <code>icearc.dart</code> 의 벽은 <b>내구도가 없어</b> 죽는 길이 수명 하나뿐이다. 켜려면 시뮬에 벽 HP 가 생겨야 하고 그것은 그림이 아니라 <b>밸런스</b>(압력이 높을수록 벽이 일찍 죽는다 = 제일 필요할 때 제일 약해진다)라, 정본만 남겨 둔다.<br>
+⚠️ <b>가짜 적을 안 세운다.</b> 확정본 타일이 적 넷을 늘 세워 두는 습관이 정확히 「시안이 안 다룬 상태」를 낳은 병이다(<a href="mockup-miss.html">빗나감 장</a>). 적과 부딪히는 그림의 정본은 위 칸이 이미 갖고 있다.</p>
+<div class="grid" id="icelife"></div>
+
+<h2 id="s-tintable">속성 입힘 가능</h2>
+<p class="def">이 계열에서 <b>기본이 「무 無」</b>라 속성을 입힐 수 있는 스킬들이다.
+나머지는 <b>제 속성이 정해져 있어</b> 못 바꾼다 — 화염방사는 늘 염이고 결빙은 늘 빙이다.
+속성을 입히면 <a href="mockup.html#s-affinity">상성</a>이 자동으로 따라온다.</p>
+<div class="grid" id="tintguard"></div>
+
+<h2 id="s-ward">결계</h2>
+<p class="def">속성마다 결계가 하나씩 있고, 각각 <b>Lv1~Lv5</b> 로 자란다.
+맨 앞의 <b>무 無 (원본)</b> 이 기준이고 나머지는 그 변주다 — 같은 육각 껍질을
+쓰되 <b>맞았을 때 무엇을 하는가</b>로 갈린다.</p>
+<div id="wardlv"></div>
+
+<h2 id="s-levelsg">레벨 성장표</h2>
+
+<div id="levelsg"></div>
+
+<h2 id="s-aicons">아이콘</h2>
+
+<div class="grid" id="aicons"></div>
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 시안을 고쳐도 새로고침에
+     반영이 안 돼 「왜 똑같지?」가 났다(2026-08-10). 매 로드마다 쿼리를 갈아
+     항상 새로 읽게 한다. file:// 에서도 쿼리 문자열은 먹는다(확인함). -->
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **`vfx.js` 뒤라야 한다** — 확정본의 호 기하(`AWG`·`AWang`·`AWface`·
+     `AWpoly`·`AWroot`)와 그림체(`IB*`)를 **그 함수 그대로** 부른다(사본 금지).
+     순서를 섞으면 `ReferenceError` 가 난다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx-icewalllife.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

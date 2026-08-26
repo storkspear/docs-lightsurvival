@@ -1,0 +1,2670 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!-- ⚠️ HTML 도 캐시를 안 탑니다. js·css 는 `?t=` 로 깨는데 HTML 만 안 깨면
+     스크립트 구성이 바뀔 때마다 열려 있던 탭이 「옛 HTML + 새 js」로 조용히
+     고장 납니다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소해 반응형이 통째로 죽습니다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 텍스처·파티클</title>
+<!-- 목차(`nav.js`)가 쓰는 알약 스타일이 `vfx.css` 에 있습니다. 이 장의
+     제 스타일은 아래 <style> 이라 뒤에 와서 겹치는 속성을 이깁니다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<style>
+  :root{
+    --bg:#0b0d12; --panel:#12151d; --line:#232838; --text:#d9dde6; --dim:#8b93a7;
+    --accent:#ff8a3d; --good:#4fd1c5; --warn:#ffcf5c; --bad:#ff6b6b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    /* 여백은 `vfx.css` 의 `.wrap` 이 잡습니다 — 여기서 위쪽에 padding 을 주면
+       다른 장에는 없는 여백이 목차 위에 생깁니다. */
+  }
+  h1{font-size:18px; margin:0 0 4px; font-weight:700;}
+  h2{font-size:12.5px; margin:0; font-weight:600; color:var(--dim); letter-spacing:.02em;}
+  p.lede{color:var(--dim); font-size:12.5px; line-height:1.65; max-width:1080px; margin:0 0 14px;}
+  p.lede b{color:var(--text);}
+  code{color:var(--text);}
+  .controls{
+    display:flex; flex-wrap:wrap; gap:9px 20px; align-items:center;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:11px 15px; margin-bottom:12px; font-size:12.5px;
+  }
+  .controls label{display:flex; align-items:center; gap:6px; color:var(--dim); white-space:nowrap;}
+  .controls select, .controls input[type=range]{accent-color:var(--accent);}
+  .controls .val{color:var(--text); font-variant-numeric:tabular-nums; min-width:34px;}
+  /* ⚠️ **목차보다 아래에 서야 합니다.** `vfx.css` 의 `nav.toc` 가 이미
+     `position:sticky · z-index:20` 인 고정 띠입니다. 목차가 제 층을 20으로
+     여니 그 안의 드롭다운(`.nav1 .gi`, z-index 30)은 **목차 안에서만** 30이고,
+     바깥에서 견주는 값은 20입니다. 이 판이 20이면 문서에서 뒤에 와서 이기고,
+     스킬 그룹을 열었을 때 아홉 칸 중 다섯만 보입니다.
+     ⚠️ 이 장에서 `.toc` 를 올려 봐야 소용없습니다 — `nav.toc`(0,1,1)가
+       `.toc`(0,1,0)를 이깁니다. 비켜서는 쪽이 이 판입니다. */
+  .fxstagewrap{position:sticky; top:32px; z-index:10; background:var(--bg); padding:6px 0 8px; margin-bottom:2px;}
+  .fxstage{display:flex; gap:10px; flex-wrap:nowrap;}
+  .panel{
+    flex:1 1 0; min-width:0; background:var(--panel);
+    border:1px solid var(--line); border-radius:10px; padding:9px 10px 10px;
+  }
+  .panel h2{margin-bottom:7px;}
+  .panel h2 span{color:#5c6478; font-weight:500;}
+  canvas{width:100%; aspect-ratio:3/2; display:block; border-radius:6px; background:#000;}
+
+  /* ── 손잡이 ─────────────────────────────────────────────────────────── */
+  .work{display:grid; grid-template-columns:minmax(0,1fr) 306px; gap:12px; align-items:start; margin-top:10px;}
+  .deck{display:flex; flex-direction:column; gap:8px; min-width:0;}
+  details.grp{background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  details.grp>summary{
+    list-style:none; cursor:pointer; padding:8px 13px; font-size:12.5px; font-weight:600;
+    display:flex; align-items:center; gap:9px; user-select:none;
+  }
+  details.grp>summary::-webkit-details-marker{display:none;}
+  details.grp>summary::before{content:'▸'; color:var(--dim); font-size:10px; transition:transform .12s;}
+  details.grp[open]>summary::before{transform:rotate(90deg);}
+  details.grp>summary .tag{color:var(--dim); font-weight:500; font-size:11px;}
+  details.grp>summary .spacer{flex:1;}
+  details.grp>summary .mini{font-size:10.5px; color:#5c6478; font-variant-numeric:tabular-nums;}
+  .grpbody{padding:2px 13px 11px; border-top:1px solid var(--line);}
+  .toprow{display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:8px 0 6px; font-size:11.5px;}
+  .toprow label, .toprow .tl{display:flex; align-items:center; gap:5px; color:var(--dim); white-space:nowrap;}
+  .toprow select{font-size:11.5px; max-width:190px;}
+  .knob{
+    display:grid; grid-template-columns:minmax(230px,360px) minmax(90px,1fr) 52px 152px; gap:9px;
+    align-items:center; padding:2px 0; font-size:11.5px; white-space:nowrap;
+  }
+  .kl{text-decoration:none; white-space:nowrap;}
+  .kl b{color:var(--text); font-weight:600;}
+  .kl i{color:#6a7183; font-style:normal; font-size:10.5px;}
+  .kl:hover b{color:var(--accent);}
+  .knob .kl{overflow:hidden; text-overflow:ellipsis;}
+  .knob input[type=range]{width:100%; accent-color:var(--accent); height:16px;}
+  .knob .kv{color:var(--text); font-variant-numeric:tabular-nums; text-align:right; font-size:11.5px;}
+  .knob .kv.chg{color:var(--accent);}
+  .knob .kd{color:#5c6478; font-variant-numeric:tabular-nums; font-size:10.5px; overflow:hidden; text-overflow:ellipsis;}
+  .side{position:sticky; top:calc(var(--stageh, 300px)); display:flex; flex-direction:column; gap:9px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px;}
+  .card h3{font-size:11.5px; margin:0 0 7px; color:var(--dim); font-weight:600;}
+  .kpi{display:grid; grid-template-columns:1fr 1fr; gap:7px;}
+  .kpi .b{background:#0e1118; border:1px solid var(--line); border-radius:7px; padding:6px 9px;}
+  .kpi .b .n{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .kpi .b .l{color:var(--dim); font-size:9.5px; margin-top:1px;}
+  .kpi .b.warn .n{color:var(--warn);} .kpi .b.bad .n{color:var(--bad);} .kpi .b.good .n{color:var(--good);}
+  .swatch{width:18px; height:18px; border-radius:4px; background:#1a1e2a; border:1px solid var(--line); flex:none; aspect-ratio:auto;}
+  .btnrow{display:flex; gap:6px; flex-wrap:wrap;}
+  .verify{
+    margin-top:11px; font-size:12px; color:var(--dim); background:#0e1118;
+    border:1px solid var(--line); border-radius:8px; padding:9px 14px;
+    display:flex; gap:22px; flex-wrap:wrap; align-items:center;
+  }
+  .verify b{font-variant-numeric:tabular-nums; color:var(--text);}
+  .verify .ok{color:var(--good);} .verify .bad{color:var(--bad);} .verify .diff{color:var(--warn);}
+  /* 값이 낡았을 때 — 지우지 않고 흐리게만 둡니다. */
+  .verify.stale{opacity:.5;}
+  .verify .staleq{color:var(--warn);}
+  .recpre{
+    background:#0e1118; border:1px solid var(--line); border-radius:7px; padding:9px 12px;
+    font-size:11px; line-height:1.55; color:var(--dim); overflow-x:auto; white-space:pre;
+    font-variant-numeric:tabular-nums; margin:8px 0 0;
+  }
+  .reccopy{color:var(--accent); cursor:pointer; text-decoration:underline;}
+  .costtable{width:100%; border-collapse:collapse; font-size:11px;}
+  .costtable th, .costtable td{padding:3px 4px; text-align:right; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+  .costtable th:first-child, .costtable td:first-child{text-align:left;}
+  .costtable th{color:var(--dim); font-weight:600; font-size:10px;}
+  .costtable td.name{color:var(--text);}
+  .costtable tr.off td{color:#4a4f5c;}
+  .costtable tr.add td{color:var(--accent);}
+  .costnote{margin-top:7px; font-size:10px; line-height:1.6; color:#5c6478;}
+  .costnote b{color:var(--dim);}
+  .costtable tr.total td{font-weight:700; color:var(--text); border-top:1px solid var(--line); border-bottom:none;}
+  .gloss{margin-top:14px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 18px;}
+  .gloss h3{font-size:13px; margin:0 0 3px; color:var(--text);}
+  .gloss .gitem{padding:9px 0; border-bottom:1px solid #1b2030;}
+  .gloss .gitem:last-child{border-bottom:none;}
+  .gloss .gitem:target{background:#161b28; border-radius:7px; padding-left:9px; padding-right:9px;}
+  .gloss .gt{font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:3px;}
+  .gloss .gd{font-size:12px; line-height:1.72; color:var(--dim); margin:0;}
+  .gloss code{background:#0e1118; padding:1px 5px; border-radius:4px; font-size:11px; color:var(--accent);}
+  .notes{
+    margin-top:14px; background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:13px 17px; font-size:12.5px; line-height:1.7; color:var(--dim);
+  }
+  .notes b{color:var(--text);}
+  .notes h3{font-size:12.5px; color:var(--text); margin:0 0 6px;}
+  .notes ul{margin:4px 0 10px; padding-left:18px;}
+  .jtable{width:100%; border-collapse:collapse; font-size:11.5px; margin-top:6px;}
+  .jtable th,.jtable td{padding:4px 7px; text-align:right; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+  .jtable th:first-child,.jtable td:first-child{text-align:left;}
+  .jtable th{color:var(--dim); font-size:10.5px;}
+  .jtable td.g{color:var(--good);} .jtable td.b{color:var(--bad);}
+  button{
+    background:#1b2030; color:var(--text); border:1px solid var(--line); border-radius:7px;
+    padding:6px 12px; font-size:12px; cursor:pointer; font-family:inherit;
+  }
+  button:hover{border-color:var(--accent);}
+  #loading{position:fixed; inset:0; background:#0b0d12; color:var(--dim); display:flex; align-items:center; justify-content:center; font-size:13px; z-index:50;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc"><div class="nav1"></div></nav>
+
+<div id="loading">텍스처 18장 불러오는 중…</div>
+
+<h1>화염방사 — 옛 도안 + 텍스처 + 파티클</h1>
+<p class="lede">
+  바탕은 <code>lib/game/fx/w_flamer_*.dart</code> 의 <b>다섯 레이어</b>(원뿔 · 덩어리 · 후광 · 불씨 · 연기)이고
+  상수와 식은 그대로입니다. 여기에 ① <b>텍스처</b>로 표면의 결을 주고 ② <b>파티클</b>(덩어리 결 · 불씨 덧뿌림)로
+  각진 폴리곤의 가장자리를 부숩니다. 세 판은 <b>같은 기하 · 같은 알파 · 같은 개수</b>를 쓰고
+  칠하는 방법과 얹는 알갱이만 다릅니다.
+  텍스처는 <b>「텍스처 한 장 × 단색 하나」 곱하기 한 번</b>으로만 칠합니다 —
+  알파 정규화(<code>a′ = 255·a/max(a)</code>)는 굽는 단계에서 한 번뿐이고,
+  밝기 보상은 <b>색 쪽</b>(단색의 알파 → 남으면 RGB 균일배)에서 합니다.
+  화면 합성은 레이어 간 <code>Screen</code> 하나뿐입니다 — <code>source-in</code> 은 굽는 단계 안에서만 씁니다.
+  아래 손잡이는 모두 <b>배수</b>이고 <b>×1.00 이 기본값 그대로</b>입니다(다섯 레이어는 엔진 상수, 얹은 파티클 둘은 이 페이지의 기본값입니다).
+  슬라이더 오른쪽에 <b>실제 값</b>이 같이 뜨고, 옆의 비용 표는 <b>판 ①(Base) 대비</b>로 매 프레임 다시 잽니다.
+  손잡이 이름을 누르시면 <a href="#glossary" style="color:var(--accent)">아래 용어집</a>의 해당 항목으로 갑니다.
+</p>
+
+<div class="fxstagewrap" id="fxstagewrap">
+  <div class="controls">
+    <label>레벨
+      <select id="level">
+        <option value="1">L1</option><option value="2">L2</option>
+        <option value="3" selected>L3</option><option value="4">L4</option>
+        <option value="5">L5(안 꺼짐)</option>
+      </select>
+    </label>
+    <label>속성
+      <select id="attr">
+        <option value="fire">염(炎)</option><option value="ice">빙(氷)</option><option value="poison">독(毒)</option>
+      </select>
+    </label>
+    <label title="판 ②·③ 에 텍스처를 입힐지"><input type="checkbox" id="texToggle" checked> 텍스처(Texture) — 판 ②③</label>
+    <label title="판 ③ 에 얹은 파티클을 그릴지"><input type="checkbox" id="parToggle" checked> 파티클(Particles) — 판 ③</label>
+    <label>타임 스케일 <input type="range" id="speed" min="0.1" max="3" step="0.1" value="1"><span class="val" id="speedV">1.0×</span></label>
+    <label title="해상도 배율(Pixel Ratio) — 1이면 가볍고 2면 선명합니다. 낮추면 칠할 화소가 배율의 제곱으로 줄어듭니다.">해상도 배율<input type="range" id="pxr" min="0.5" max="2" step="0.05" value="2"><span class="val" id="pxrV">2.00배</span></label>
+    <label><input type="checkbox" id="freeze"> 정지</label>
+    <span class="spacer" style="flex:1"></span>
+    <button id="btnRec">프레임 기록(10초)</button>
+    <button id="btnCopy">바뀐 값 복사</button>
+    <button id="btnResetAll">전체 초기화</button>
+    <button id="btnJudge">레이어별 텍스처 판정</button>
+  </div>
+  <div class="fxstage">
+    <div class="panel"><h2>① Base <span>— 옛 도안 그대로 단색으로만 칠한 판입니다</span></h2><canvas id="cA"></canvas></div>
+    <div class="panel"><h2>② + Texture <span>— 같은 기하에 텍스처로 결을 준 판입니다</span></h2><canvas id="cB"></canvas></div>
+    <div class="panel"><h2>③ + Particles <span>— 거기에 알갱이를 더 얹은 판입니다</span></h2><canvas id="cC"></canvas></div>
+  </div>
+  <div class="verify" id="verifyBar">검산 대기 중입니다…</div>
+</div>
+
+<div class="work">
+  <div class="deck" id="deck"></div>
+  <aside class="side">
+    <div class="card">
+      <h3>비용 — 지금 이 프레임</h3>
+      <div class="kpi" id="costKpi"></div>
+    </div>
+    <div class="card">
+      <h3>레이어별</h3>
+      <table class="costtable" id="costTable"></table>
+      <div class="costnote" id="costNote"></div>
+    </div>
+  </aside>
+</div>
+
+<div class="notes" id="recBox" style="display:none">
+  <h3>프레임 기록 — 이 화면에서 실제로 잰 값입니다</h3>
+  <div id="recBody"></div>
+</div>
+
+<div class="notes" id="judgeBox">
+  <h3>레이어별 텍스처 판정 — 단색 대비 밝기 · 채도 · 국소 대비</h3>
+  <div id="judgeBody"><i>「레이어별 텍스처 판정」을 누르시면 지금 고른 스프라이트를 레이어마다 실측합니다.</i></div>
+</div>
+
+<div class="gloss" id="glossary">
+  <h3>용어집</h3>
+  <p class="lede" style="margin:0 0 4px">손잡이 이름을 누르시면 그 항목으로 옵니다.</p>
+  <div id="glossBody"></div>
+</div>
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════════
+ * 색 유틸 + 결정론 해시 — fillStyle 은 #RRGGBB 또는 rgba() 로만 만든다.
+ * ════════════════════════════════════════════════════════════════════════ */
+function clamp01(x){ return x<0?0:x>1?1:x; }
+function clamp01c(v){ return v<0?0:v>255?255:v; }
+function hexToRgb(hex){ const n=parseInt(hex.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+function mixRgb(a,b,f){ return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f, a[2]+(b[2]-a[2])*f]; }
+function hex2(v){ const s=Math.round(clamp01c(v)).toString(16); return s.length<2?'0'+s:s; }
+function rgbHex(c){ return '#'+hex2(c[0])+hex2(c[1])+hex2(c[2]); }
+const TAU = Math.PI*2;
+function hash01(n){ const s = Math.sin(n*127.1)*43758.5453; return s - Math.floor(s); }
+function s3(x){ return x*x*(3-2*x); }
+
+/* ════════════════════════════════════════════════════════════════════════
+ * flamer_tuning.dart — 시간표. 상수 전부 원본 값 그대로.
+ * ════════════════════════════════════════════════════════════════════════ */
+const kFlamerHalfAngle = [0, .300, .334, .371, .413, .460];
+const kFlamerReachLv   = [0, 1.0, 1.084, 1.179, 1.284, 1.4];
+const kFlamerHush      = [0, 1.860, 1.290, 0.894, 0.620, 0.0];
+const kFlamerCycle = 5.46364;
+const kFlamerFade = 1.15;
+const kFlamerSputter = 0.62;
+const kFlamerLenMin = 0.15;
+const kFlamerFill = 0.34;
+const kFlamerCool = 0.55;
+const kFlamerTail = 0.74;
+const kFlamerTailLow = 0.60;
+const kFlamerPop = [ [0,.20,1.00], [.30,.18,.60], [.58,.16,.38], [.84,.16,.20] ];
+const kFlamerBlobSpeed = .85;
+const kFlamerAmpJit = .013, kFlamerW = 1.15;
+const kFlamerExt0 = .20;
+
+function phase(t){ return (t % kFlamerCycle + kFlamerCycle) % kFlamerCycle; }
+function flamerPhase(t){ return phase(t); }
+function flamerLenK(t, lv){
+  const hush = kFlamerHush[lv];
+  if (hush<=0) return 1;
+  const u = phase(t);
+  const spray = kFlamerCycle - hush;
+  if (u < spray - kFlamerFade) return kFlamerLenMin + (1-kFlamerLenMin)*s3(Math.min(1, u/kFlamerFill));
+  const rel = clamp01((u - (spray - kFlamerFade)) / kFlamerFade);
+  return 1 - (1-kFlamerLenMin)*s3(rel);
+}
+function flamerPressure(t, lv){ return (flamerLenK(t,lv) - kFlamerLenMin)/(1 - kFlamerLenMin); }
+function flamerOn(t, lv){
+  const hush = kFlamerHush[lv];
+  if (hush<=0) return 1;
+  const u = phase(t);
+  const spray = kFlamerCycle - hush;
+  if (u >= spray) return 0;
+  const rel = clamp01((u - (spray - kFlamerFade)) / kFlamerFade);
+  if (rel < kFlamerSputter) return Math.min(1, u/kFlamerFill);
+  const s = (rel - kFlamerSputter)/(1 - kFlamerSputter);
+  let on = s < kFlamerPop[0][1] ? s3(1 - s/kFlamerPop[0][1]) : 0.0;
+  for (let k=1;k<kFlamerPop.length;k++){
+    const s0=kFlamerPop[k][0], du=kFlamerPop[k][1], pw=kFlamerPop[k][2];
+    if (s>=s0 && s<s0+du){ const w=Math.sin(Math.PI*(s-s0)/du); on = Math.max(on, w*w*pw); }
+  }
+  return on;
+}
+function flamerCool(t, lv){ return kFlamerCool*(1 - flamerPressure(t,lv)); }
+function flamerTail(t, lv){ return kFlamerTail - (kFlamerTail-kFlamerTailLow)*(1-flamerPressure(t,lv)); }
+function flamerAmpK(t, lv){ return .18 + .82*flamerLenK(t,lv); }
+function flamerExt(u, p){ return 1 - (1-p)*s3(clamp01((u - kFlamerExt0)/(1 - kFlamerExt0))); }
+function flamerFl2(t){
+  return Math.sin(kFlamerW*3*t + 2.6)*.50 + Math.sin(kFlamerW*4*t + 0.9)*.32 + Math.sin(kFlamerW*7*t + 3.3)*.18;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * w_flamer_parts.dart — 휜 축 · flamerHw/flamerLat · 너덜 윤곽 · 색 사다리.
+ * ════════════════════════════════════════════════════════════════════════ */
+const kFlamerMuzzleW = 5.0, kFlamerJet = .15;
+const kFlamerU0 = kFlamerJet + .06;
+const kFlamerConePow = .75 + 1.40*kFlamerJet;
+const kFlamerHwMul = .86;
+const kFlamerMockLen = 95.0;
+const _kBk = .75, _kBkPow = 2.40;
+
+// gm — 흐르며 벌어지는 폭만 굴리는 배수(Size over Life). 총구 폭(w0)은 안 건드립니다.
+function flamerHw(u, hl, w0, gm){ return w0*0.5 + hl*Math.pow(u, kFlamerConePow)*kFlamerHwMul*(gm===undefined?1:gm); }
+function flamerLat(u, t, hl){
+  return hl*.33*Math.pow(u,1.6)*Math.sin(u*Math.PI*1.25 - t*kFlamerW)
+       + Math.sin(u*Math.PI*3.30 - t*kFlamerW*3)*hl*.085*Math.pow(u,2.20);
+}
+function tailFade(u, tail){ return u<=tail ? 1 : 1 - s3(Math.min(1,(u-tail)/(1-tail))); }
+function flamerBk(lv){ return _kBk / kFlamerReachLv[lv]; }
+function flamerAgeAt(u, u0){ return u<=u0 ? 0 : Math.pow((u-u0)/(1-u0), 1/.86)/kFlamerBlobSpeed; }
+
+const FLAMER_TABLE_SEG = 16, FLAMER_TABLE_STOPS = FLAMER_TABLE_SEG + 1;
+function bakeFlamerTable(tt, lv, reachFull){
+  const len=new Float64Array(FLAMER_TABLE_STOPS), on=new Float64Array(FLAMER_TABLE_STOPS),
+        cool=new Float64Array(FLAMER_TABLE_STOPS), tail=new Float64Array(FLAMER_TABLE_STOPS),
+        ampK=new Float64Array(FLAMER_TABLE_STOPS);
+  let mx=0;
+  for (let j=0;j<FLAMER_TABLE_STOPS;j++){
+    const u=j/FLAMER_TABLE_SEG, tb=tt - flamerAgeAt(u, kFlamerU0);
+    const l=reachFull*flamerLenK(tb,lv);
+    if (l>mx) mx=l;
+    len[j]=mx; on[j]=flamerOn(tb,lv); cool[j]=flamerCool(tb,lv);
+    tail[j]=flamerTail(tb,lv); ampK[j]=flamerAmpK(tb,lv);
+  }
+  return {len,on,cool,tail,ampK};
+}
+function tabMidOn(tab,j){ return (tab.on[j-1]+tab.on[j])*.5; }
+function tabMidCool(tab,j){ return (tab.cool[j-1]+tab.cool[j])*.5; }
+function tabMidTail(tab,j){ return (tab.tail[j-1]+tab.tail[j])*.5; }
+
+function buildArc(ang, bk, seg){
+  seg = seg || 24;
+  const ax=Math.cos(ang), ay=Math.sin(ang), upX=0, upY=-1;
+  function dir(v){
+    const b=bk*Math.pow(v,_kBkPow), x=ax+upX*b, y=ay+upY*b, d=Math.sqrt(x*x+y*y);
+    return [x/d, y/d];
+  }
+  const X=[0], Y=[0], TX=[dir(0)[0]], TY=[dir(0)[1]];
+  let x=0, y=0;
+  for (let i=1;i<=seg;i++){
+    const v0=(i-1)/seg, v1=i/seg, vm=(v0+v1)/2;
+    const d0=dir(v0), dm=dir(vm), d1=dir(v1);
+    x += (d0[0]+4*dm[0]+d1[0])/6/seg;
+    y += (d0[1]+4*dm[1]+d1[1])/6/seg;
+    X.push(x); Y.push(y); TX.push(d1[0]); TY.push(d1[1]);
+  }
+  return {seg,X,Y,TX,TY};
+}
+function arcAt(arc, u){
+  const seg=arc.seg;
+  if (u<=0) return [0,0,arc.TX[0],arc.TY[0]];
+  if (u>=1){ const e=u-1; return [arc.X[seg]+arc.TX[seg]*e, arc.Y[seg]+arc.TY[seg]*e, arc.TX[seg], arc.TY[seg]]; }
+  const s=u*seg, i=Math.floor(s), f=s-i;
+  const tx=arc.TX[i]+(arc.TX[i+1]-arc.TX[i])*f, ty=arc.TY[i]+(arc.TY[i+1]-arc.TY[i])*f;
+  const d=Math.sqrt(tx*tx+ty*ty);
+  return [arc.X[i]+(arc.X[i+1]-arc.X[i])*f, arc.Y[i]+(arc.Y[i+1]-arc.Y[i])*f, tx/d, ty/d];
+}
+// 너덜너덜한 윤곽 — 각진 셀 실루엣의 정체. 이 식이 이 게임의 그림체다.
+function ragRadius(r, seed, i, amp){
+  return r*(1 + (hash01(seed+i*3.7)-0.5)*2*amp + Math.sin(i*2.1+seed)*amp*0.35);
+}
+function flamerRag(cx, cy, r, seed, n, amp, rot){
+  const pts=[];
+  for (let i=0;i<n;i++){
+    const a=i/n*TAU + rot, rr=ragRadius(r,seed,i,amp);
+    pts.push([cx+Math.cos(a)*rr, cy+Math.sin(a)*rr]);
+  }
+  return pts;
+}
+
+const _kAsh=hexToRgb('#4A0A04'), _kDarkred=hexToRgb('#7A1206'), _kRed=hexToRgb('#E03A10'),
+      _kOrange=hexToRgb('#FF6A1E'), _kAmber=hexToRgb('#FF9B22'), _kYellow=hexToRgb('#FFD23A'),
+      _kBlood=hexToRgb('#B31208');
+const _kCold = [[_kAmber,_kYellow],[_kOrange,_kAmber],[_kRed,_kOrange],[_kDarkred,_kRed],[_kAsh,_kDarkred]];
+const _kBloodRamp = [[_kRed,_kAmber],[_kBlood,_kOrange],[_kBlood,_kRed],[_kDarkred,_kBlood],[_kAsh,_kDarkred]];
+const kFlamerBloodMix = [0,0,0,0,0.5,1.0];
+function fireMass5ForLevel(lv){
+  const mix=kFlamerBloodMix[lv], out=[];
+  for (let i=0;i<5;i++) out.push([mixRgb(_kCold[i][0],_kBloodRamp[i][0],mix), mixRgb(_kCold[i][1],_kBloodRamp[i][1],mix)]);
+  return out;
+}
+function deriveMass5FromTone(darkHex, midHex, lightHex){
+  const dark=hexToRgb(darkHex), mid=hexToRgb(midHex), light=hexToRgb(lightHex);
+  const ash=mixRgb(dark,[0,0,0],.55);
+  const stops=[{p:0,c:light},{p:.5,c:mid},{p:.85,c:dark},{p:1,c:ash}];
+  function colorAt(u){
+    u=clamp01(u);
+    for (let i=0;i<stops.length-1;i++){
+      if (u<=stops[i+1].p){ const f=(u-stops[i].p)/(stops[i+1].p-stops[i].p||1); return mixRgb(stops[i].c,stops[i+1].c,f); }
+    }
+    return stops[stops.length-1].c;
+  }
+  const out=[];
+  for (let i=0;i<5;i++){ const uCore=i/4, uBody=Math.min(1,i/4+0.14); out.push([colorAt(uBody), colorAt(uCore)]); }
+  return out;
+}
+const ICE_MASS5    = deriveMass5FromTone('#123A5E','#4FC3F7','#E8F8FF');
+const POISON_MASS5 = deriveMass5FromTone('#123D1C','#57D96B','#E6FFEA');
+function mass5For(attr, lv){
+  if (attr==='fire') return fireMass5ForLevel(lv);
+  if (attr==='ice') return ICE_MASS5;
+  return POISON_MASS5;
+}
+function buildFireStages(mass5){
+  return mass5.map(([body,core]) => [mixRgb(body,[0,0,0],.45), body, core, mixRgb(core,[255,255,255],.45)]);
+}
+function rampAt(stages, idx, u, cool){
+  const s=clamp01(u+(cool||0))*(stages.length-1);
+  const i=Math.floor(Math.min(s, stages.length-1-1e-9)), f=s-i;
+  return mixRgb(stages[i][idx], stages[Math.min(stages.length-1,i+1)][idx], f);
+}
+const RAMP_ALPHA = [1,1,1,.95,.80];
+function rampAlphaAt(u, cool){
+  const s=clamp01(u+(cool||0))*(RAMP_ALPHA.length-1);
+  const i=Math.floor(Math.min(s, RAMP_ALPHA.length-1-1e-9)), f=s-i;
+  const a=RAMP_ALPHA[i];
+  return a + (RAMP_ALPHA[Math.min(RAMP_ALPHA.length-1,i+1)]-a)*f;
+}
+function flamerRampAt(mass5, idx, u, cool){
+  const s=clamp01(u+cool)*(mass5.length-1);
+  const i=Math.floor(Math.min(s, mass5.length-1-1e-9)), f=s-i;
+  return mixRgb(mass5[i][idx], mass5[Math.min(mass5.length-1,i+1)][idx], f);
+}
+const kFlamerSmokeOut = mixRgb(hexToRgb('#4E4A4A'), hexToRgb('#2A0F08'), .16);
+const kFlamerSmokeIn  = mixRgb(hexToRgb('#4E4A4A'), hexToRgb('#2A0F08'), .44);
+const TONE3 = {
+  fire:   { dark: hexToRgb('#7A1206'), base: hexToRgb('#FF6A1E'), lit: hexToRgb('#FFD23A') },
+  ice:    { dark: hexToRgb('#123A5E'), base: hexToRgb('#4FC3F7'), lit: hexToRgb('#E8F8FF') },
+  poison: { dark: hexToRgb('#123D1C'), base: hexToRgb('#57D96B'), lit: hexToRgb('#E6FFEA') },
+};
+
+/* ════════════════════════════════════════════════════════════════════════
+ * 원뿔 기하 — w_flamer_cel.dart 의 _cone/_jet + w_flamer_table.dart 그대로.
+ * ════════════════════════════════════════════════════════════════════════ */
+function buildConeQuads(arc, tab, half, w0, tEval, k, ramp, idx, alphaMul, pNow, gm){
+  const seg = FLAMER_TABLE_SEG, nodes=[];
+  for (let j=0;j<=seg;j++){
+    const u=j/seg, len=tab.len[j], hl=half*len, p=arcAt(arc,u);
+    const nx=-p[3], ny=p[2];
+    const lat=flamerLat(u,tEval,hl)*tab.ampK[j];
+    const hw=flamerHw(u,hl,w0,gm)*k;
+    const wl=hw*(1+Math.sin(u*5.2 - tEval*4.4 - 1.9)*.10*u);
+    const wr=hw*(1+Math.sin(u*5.2 - tEval*4.4 + 1.9)*.10*u);
+    const ax=p[0]*len, ay=p[1]*len;
+    nodes.push({u, lx:ax+nx*(lat-wl), ly:ay+ny*(lat-wl), rx:ax+nx*(lat+wr), ry:ay+ny*(lat+wr)});
+  }
+  const quads=[];
+  for (let j=1;j<=seg;j++){
+    const n0=nodes[j-1], n1=nodes[j], um=(n0.u+n1.u)/2, cool=tabMidCool(tab,j);
+    const a = alphaMul*tabMidOn(tab,j)*rampAlphaAt(um,cool)*tailFade(um,tabMidTail(tab,j))*flamerExt(um,pNow);
+    if (a<=0.004) continue;
+    quads.push({
+      A:{x:n0.lx,y:n0.ly}, B:{x:n0.rx,y:n0.ry}, C:{x:n1.lx,y:n1.ly}, D:{x:n1.rx,y:n1.ry},
+      u0:n0.u, u1:n1.u, color: rampAt(ramp, idx, um, cool), alpha: a,
+    });
+  }
+  return quads;
+}
+function buildJetQuads(arc, tab, half, w0, t, ramp, alphaMul, pNow, gm){
+  const seg=6, len=tab.len[0], on=tab.on[0], cool=tab.cool[0], ampK0=tab.ampK[0];
+  const hl=half*len, alpha=alphaMul*on;
+  if (!(alpha>.004 && len>0)) return [];
+  const nodes=[];
+  for (let j=0;j<=seg;j++){
+    const u=kFlamerJet*j/seg, p=arcAt(arc,u);
+    const nx=-p[3], ny=p[2];
+    const lat=flamerLat(u,t,hl)*ampK0, hw=flamerHw(u,hl,w0,gm)*.42;
+    const wl=hw*(1+Math.sin(u*5.2 - t*4.4 - 1.9)*.10*u);
+    const wr=hw*(1+Math.sin(u*5.2 - t*4.4 + 1.9)*.10*u);
+    const ax=p[0]*len, ay=p[1]*len;
+    nodes.push({u, lx:ax+nx*(lat-wl), ly:ay+ny*(lat-wl), rx:ax+nx*(lat+wr), ry:ay+ny*(lat+wr)});
+  }
+  const quads=[];
+  for (let j=1;j<=seg;j++){
+    const n0=nodes[j-1], n1=nodes[j], um=kFlamerJet*(j-.5)/seg;
+    const a = alpha*rampAlphaAt(um,cool)*flamerExt(um,pNow);
+    if (a<=0.004) continue;
+    quads.push({
+      A:{x:n0.lx,y:n0.ly}, B:{x:n0.rx,y:n0.ry}, C:{x:n1.lx,y:n1.ly}, D:{x:n1.rx,y:n1.ry},
+      u0:n0.u, u1:n1.u, color: rampAt(ramp, 3, um, cool), alpha: a,
+    });
+  }
+  return quads;
+}
+function buildGeometry(t, ramp, arc, half, w0, reachFull, lv, pNow, gm, op){
+  const amul = (1 - kFlamerAmpJit*(1+flamerFl2(t)));
+  const am = amul*op;
+  const tab  = bakeFlamerTable(t, lv, reachFull);
+  const tab9 = bakeFlamerTable(t-.09, lv, reachFull);
+  return { amul, layers: [
+    buildConeQuads(arc, tab9, half, w0, t-.09, 1.10, ramp, 1, .30*am, pNow, gm),
+    buildConeQuads(arc, tab,  half, w0, t,     1.0,  ramp, 1, am,     pNow, gm),
+    buildConeQuads(arc, tab,  half, w0, t,     .55,  ramp, 2, am,     pNow, gm),
+    buildJetQuads(arc, tab, half, w0, t, ramp, am, pNow, gm),
+  ]};
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * 텍스처 — 굽는 단계에서 딱 두 가지만 한다.
+ *   ① mask_*·noise_* 는 알파가 통짜 불투명하다(결이 RGB 에 있다) — 휘도를
+ *      알파로 삼는다. 안 그러면 18종 중 13종이 전부 흰 네모가 된다.
+ *   ② 알파 정규화 a′ = 255·a/max(a). 한 번뿐이고, 흔들 폭은 안 좁힌다
+ *      (좁히면 결이 사라진다 — 그게 앞 판의 실패였다).
+ * 그리는 것은 「텍스처 한 장 × 단색 하나」 곱하기 한 번뿐이다. 그 곱은
+ * 굽는 단계에서 미리 해 둔 tinted 스프라이트(= BlendMode.modulate 의 결과)를
+ * 패턴으로 깔고 flat 경로와 똑같은 fill() 한 번으로 낸다 — 메인 캔버스에서
+ * source-in / destination-in / lighten 을 쓰지 않으므로 이음매 크랙이 없다.
+ * ════════════════════════════════════════════════════════════════════════ */
+const TEX_MANIFEST = [
+  {key:'kenney_circle', file:'kenney_circle.png', cat:'kenney', label:'원'},
+  {key:'kenney_fire',   file:'kenney_fire.png',   cat:'kenney', label:'불'},
+  {key:'kenney_flame',  file:'kenney_flame.png',  cat:'kenney', label:'불꽃'},
+  {key:'kenney_light',  file:'kenney_light.png',  cat:'kenney', label:'빛'},
+  {key:'kenney_magic',  file:'kenney_magic.png',  cat:'kenney', label:'마법'},
+  {key:'kenney_smoke',  file:'kenney_smoke.png',  cat:'kenney', label:'연기'},
+  {key:'kenney_spark',  file:'kenney_spark.png',  cat:'kenney', label:'불티'},
+  {key:'kenney_star',   file:'kenney_star.png',   cat:'kenney', label:'별'},
+  {key:'kenney_twirl',  file:'kenney_twirl.png',  cat:'kenney', label:'소용돌이'},
+  {key:'mask_beam_vertical',   file:'mask_beam_vertical.png',   cat:'mask', label:'세로 빔', luma:true},
+  {key:'mask_crystal_flower',  file:'mask_crystal_flower.png',  cat:'mask', label:'결정 꽃', luma:true},
+  {key:'mask_crystal_mandala', file:'mask_crystal_mandala.png', cat:'mask', label:'결정 만다라', luma:true},
+  {key:'mask_glow_soft',       file:'mask_glow_soft.png',       cat:'mask', label:'부드러운 빛', luma:true},
+  {key:'mask_ring_double',     file:'mask_ring_double.png',     cat:'mask', label:'이중 고리', luma:true},
+  {key:'noise_grainy', file:'noise_grainy.png', cat:'noise', label:'그레인', luma:true},
+  {key:'noise_spokes', file:'noise_spokes.png', cat:'noise', label:'바퀴살', luma:true},
+  {key:'noise_streak', file:'noise_streak.png', cat:'noise', label:'줄무늬', luma:true},
+  {key:'noise_vein',   file:'noise_vein.png',   cat:'noise', label:'혈관결', luma:true},
+];
+const CAT_LABEL = {kenney:'kenney 알갱이', mask:'마스크', noise:'노이즈'};
+const TEX = {};
+function makeCanvas(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+
+// ── 굽기: 휘도→알파(필요하면) + 알파 정규화 a′ = 255·a/max(a). ────────────
+function bakeTexture(img, deriveAlpha){
+  const w=img.naturalWidth, h=img.naturalHeight;
+  const c=makeCanvas(w,h), g=c.getContext('2d', {willReadFrequently:true});
+  g.drawImage(img,0,0);
+  const id=g.getImageData(0,0,w,h), d=id.data;
+  if (deriveAlpha){
+    for (let i=0;i<d.length;i+=4){
+      const lum = d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
+      d[i]=255; d[i+1]=255; d[i+2]=255; d[i+3]=lum;
+    }
+  } else {
+    for (let i=0;i<d.length;i+=4){ d[i]=255; d[i+1]=255; d[i+2]=255; }
+  }
+  let maxA=0, sum=0;
+  for (let i=3;i<d.length;i+=4){ const a=d[i]; if (a>maxA) maxA=a; sum+=a; }
+  const gain = maxA>0 ? 255/maxA : 1;
+  let sum2=0;
+  for (let i=3;i<d.length;i+=4){ const v=Math.min(255, Math.round(d[i]*gain)); d[i]=v; sum2+=v; }
+  g.putImageData(id,0,0);
+  const n=w*h;
+  const meanCov = (sum2/n)/255;
+  // 결의 세기 — 정규화 후 알파의 표준편차(0.. ). 국소 대비의 상한을 가늠한다.
+  let v2=0;
+  for (let i=3;i<d.length;i+=4){ const x=d[i]/255 - meanCov; v2 += x*x; }
+  return { canvas:c, w, h, maxA, meanA:sum/n, gain, meanCov, sd:Math.sqrt(v2/n) };
+}
+// 이어붙여 흘려도 자국이 안 나게 2×2 거울 타일 — 원뿔 리본이 이걸 repeat 로 쓴다.
+function buildMirrorTile(src, w, h){
+  const c=makeCanvas(w*2,h*2), g=c.getContext('2d');
+  g.drawImage(src,0,0);
+  g.save(); g.translate(2*w,0); g.scale(-1,1); g.drawImage(src,0,0); g.restore();
+  g.save(); g.translate(0,2*h); g.scale(1,-1); g.drawImage(src,0,0); g.restore();
+  g.save(); g.translate(2*w,2*h); g.scale(-1,-1); g.drawImage(src,0,0); g.restore();
+  return c;
+}
+function loadAllTextures(){
+  return Promise.all(TEX_MANIFEST.map(m => new Promise((res,rej) => {
+    const img=new Image();
+    img.onload = () => {
+      const b = bakeTexture(img, !!m.luma);
+      TEX[m.key] = {
+        key:m.key, label:m.label, cat:m.cat,
+        base:b.canvas, w:b.w, h:b.h,
+        mirror: buildMirrorTile(b.canvas, b.w, b.h),
+        maxA:b.maxA, meanA:b.meanA, gain:b.gain, meanCov:b.meanCov, sd:b.sd,
+        tint: new Map(), byHex: new Map(), tintBytes: 0,
+      };
+      res();
+    };
+    img.onerror = () => rej(new Error('load failed: '+m.file));
+    img.src = 'fx/' + m.file;
+  })));
+}
+
+/* ── 「텍스처 한 장 × 단색 하나」 = modulate. 굽는 단계에서 미리 곱해 둡니다.
+ *   흰 스프라이트(RGB=255)에 단색을 곱하면 RGB=단색, A=텍스처알파 — 그것이
+ *   곧 tinted 스프라이트입니다. 메인 캔버스는 이 결과를 패턴으로 한 번 fill
+ *   할 뿐이라 합성 모드를 건드리지 않습니다.
+ *
+ *   텍스처 블렌드 b 는 굽는 단계에서 알파를 되섞습니다 — a′ = 1 − b(1 − a).
+ *   b=1 이면 텍스처 그대로, b=0 이면 알파가 전면 1 이라 단색 한 장과 똑같아
+ *   집니다. 되섞기는 흰 판을 lighter 로 한 번 얹어 끝냅니다(전부 굽는 단계
+ *   안입니다 — 화면 합성은 여전히 층 간 screen 하나뿐입니다).
+ * ─────────────────────────────────────────────────────────────────────── */
+function makeTinted(tex, hex, mirror, blend){
+  const w = mirror ? tex.w*2 : tex.w, h = mirror ? tex.h*2 : tex.h;
+  const c = poolTake(w,h), g = c.getContext('2d');
+  if (blend >= 0.999){
+    g.drawImage(mirror ? tex.mirror : tex.base, 0, 0);
+  } else {
+    g.globalAlpha = blend;
+    if (blend > 0.001) g.drawImage(mirror ? tex.mirror : tex.base, 0, 0);
+    g.globalCompositeOperation = 'lighter';   // 알파 되섞기 — 굽는 단계 전용.
+    g.globalAlpha = 1 - blend;
+    g.fillStyle = '#ffffff';
+    g.fillRect(0,0,w,h);
+    g.globalAlpha = 1;
+  }
+  g.globalCompositeOperation = 'source-in';   // 굽는 단계 전용 — 화면엔 안 씁니다.
+  g.fillStyle = hex;
+  g.fillRect(0,0,w,h);
+  return c;
+}
+// 색 열쇠는 채널당 4 눈금으로 잘라 씁니다 — 사다리가 연속이라 안 자르면
+// tinted 스프라이트가 프레임마다 수백 장씩 새로 구워집니다(최대 오차 ±2/255).
+let TINT_STEP = 4;
+const BLEND_STEP = 0.05;             // 텍스처 블렌드도 잘라야 캐시가 안 터집니다.
+// 상한에 닿으면 통째로 비우지 않고 오래된 것부터 1/4 만 버립니다. 통째로 비우면
+// 다음 프레임이 색칠본을 전부 다시 구워야 해서 프레임이 절벽처럼 떨어집니다.
+// 상한은 장수가 아니라 **바이트**로 겁니다 — 거울 타일 한 장은 낱장 한 장의
+// 네 배라 장수로 재면 메모리가 네 배로 벌어집니다.
+const TINT_BYTES_CAP = 32*1024*1024;
+/* 상한을 텍스처마다 따로 걸면 스프라이트가 18장이라 합쳐 576MB 까지 자랍니다.
+ * 실제로 레벨·속성·손잡이를 굴리는 동안 장수가 수천으로 불어 수백 MB 가 됩니다.
+ * 그래서 **전체 합**에도 상한을 겁니다. 한 장면이 쓰는 색칠본이 24~50MB 이므로
+ * 96MB 면 장면 두어 개를 품고도 남습니다 — 늘 쓰는 것을 버렸다가 다시 굽는
+ * 헛수고는 안 생기고, 오래 굴리셔도 메모리는 여기서 멈춥니다. */
+const TINT_BYTES_CAP_ALL = 96*1024*1024;
+let _tintBytesAll = 0;
+/* 버릴 차례는 **배열과 머리 위치**로 잡습니다. Map 에서 keys().next() 로 맨 앞을
+ * 꺼내면 지워진 자리를 매번 처음부터 건너뛰느라 삭제가 쌓일수록 느려집니다
+ * (10만 개를 앞에서부터 지우면 1.9초가 걸렸습니다 — 재 봤습니다). 배열 머리는
+ * 언제나 한 걸음이고, 이미 다른 경로로 버려진 자리는 그냥 지나칩니다. */
+const _tintQueue = [];
+let _tintHead = 0;
+function _tintDrop(tex, key){
+  const ent = tex.tint.get(key);
+  if (!ent) return 0;
+  tex.tint.delete(key);
+  tex.tintBytes -= ent.bytes;
+  _tintBytesAll -= ent.bytes;
+  _retire.push(ent.canvas);
+  return ent.bytes;
+}
+function _tintQueueTrim(){
+  if (_tintHead > 2048 && _tintHead*2 > _tintQueue.length){ _tintQueue.splice(0, _tintHead); _tintHead = 0; }
+}
+function _tintDropOldest(){
+  while (_tintHead < _tintQueue.length){
+    const rec = _tintQueue[_tintHead++];
+    if (rec.tex.tint.get(rec.key) === rec.ent){ _tintDrop(rec.tex, rec.key); _tintQueueTrim(); return true; }
+  }
+  _tintQueueTrim();
+  return false;
+}
+let _bakes = 0, _patNew = 0;         // 실측용 계수기. 그림에는 안 쓰입니다.
+let _ctxSeq = 0;
+
+/* ── 색칠본 캔버스는 새로 만들지 않고 돌려 씁니다 ──────────────────────────
+ *   256×256 짜리를 프레임마다 새로 만들면 초당 수 MB 를 만들고 버리게 되고,
+ *   그 쓰레기를 치우는 순간이 「뚝」 합니다. 버린 캔버스는 **한 프레임 묵혔다가**
+ *   풀에 넣습니다 — 방금 뜬 패턴이 아직 래스터되지 않았을 수 있어서입니다.
+ * ──────────────────────────────────────────────────────────────────────── */
+const _canvasPool = new Map();
+let _retire = [];
+const POOL_PER_SIZE = 48;
+function poolTake(w, h){
+  const a = _canvasPool.get(w+'x'+h);
+  if (a && a.length){
+    const c = a.pop();
+    const g = c.getContext('2d');
+    g.setTransform(1,0,0,1,0,0);
+    g.globalAlpha = 1;
+    g.globalCompositeOperation = 'source-over';
+    g.clearRect(0,0,w,h);
+    return c;
+  }
+  return makeCanvas(w,h);
+}
+function poolFlushRetired(){
+  if (!_retire.length) return;
+  for (const c of _retire){
+    const k = c.width+'x'+c.height;
+    let a = _canvasPool.get(k);
+    if (!a){ a = []; _canvasPool.set(k, a); }
+    if (a.length < POOL_PER_SIZE) a.push(c);
+  }
+  _retire.length = 0;
+}
+
+/* ── 굽기 예산 — 한 프레임에 새로 굽는 장수를 묶어 둡니다. 블렌드 슬라이더를
+ *   끄는 동안엔 눈금마다 열쇠가 통째로 갈리는데, 예산이 다하면 같은 색의
+ *   **이미 구워 둔 다른 블렌드**를 한두 프레임 빌려 씁니다. 화면 밖 검산
+ *   경로에는 예산을 안 겁니다(결정론 검산이 예산에 흔들리면 안 됩니다).
+ * ──────────────────────────────────────────────────────────────────────── */
+const BAKE_BUDGET = 6;
+let _bakeBudget = Infinity;
+function ctxId(ctx){ return ctx.__pid != null ? ctx.__pid : (ctx.__pid = _ctxSeq++); }
+function tintKey(color){
+  const q = v => Math.round(clamp01c(v)/TINT_STEP)*TINT_STEP;
+  return [q(color[0]), q(color[1]), q(color[2])];
+}
+function blendQ(b){ return Math.round(clamp01(b)/BLEND_STEP); }
+// 텍스처 블렌드 뒤의 평균 커버리지 — 알파 되섞기의 닫힌 식.
+function covFor(tex, qb){ const b=qb*BLEND_STEP; return 1 - b*(1 - tex.meanCov); }
+// 패턴 객체도 캐시합니다. 패턴은 조각마다 setTransform 으로 다시 변형되는데,
+// fill() 이 그 자리에서 셰이더를 뜨므로 같은 객체를 이어 써도 앞뒤가 안 섞입니다
+// (픽셀 동일 검산으로 확인했습니다). 컨텍스트마다 따로 뜹니다.
+let _keyProbe = null, _probePat = null;
+function tintedPattern(ctx, tex, color, mirror, qb){
+  const hex = rgbHex(tintKey(color));
+  const key = hex + '|' + qb + (mirror ? '|m' : '|s');
+  // 조사 모드 — 굽지 않고 열쇠만 세어 봅니다(그림은 버립니다).
+  if (_keyProbe){
+    _keyProbe.add(tex.key + '|' + key);
+    if (!_probePat) _probePat = ctx.createPattern(tex.base, 'repeat');
+    return _probePat;
+  }
+  let ent = tex.tint.get(key);
+  if (!ent){
+    // 예산이 다했으면 같은 색의 다른 블렌드본을 잠깐 빌려 씁니다.
+    if (_bakeBudget <= 0){
+      const alt = tex.byHex.get(hex + (mirror ? '|m' : '|s'));
+      if (alt != null){
+        const e2 = tex.tint.get(hex + '|' + alt + (mirror ? '|m' : '|s'));
+        if (e2) ent = e2;
+      }
+    }
+    if (!ent){
+      const px = (mirror ? tex.w*2*tex.h*2 : tex.w*tex.h)*4;
+      while (tex.tintBytes + px > TINT_BYTES_CAP && tex.tint.size){
+        _tintDrop(tex, tex.tint.keys().next().value);
+      }
+      while (_tintBytesAll + px > TINT_BYTES_CAP_ALL){
+        if (!_tintDropOldest()) break;
+      }
+      ent = { canvas: makeTinted(tex, hex, mirror, qb*BLEND_STEP), pats: [], bytes: px };
+      tex.tint.set(key, ent);
+      _tintQueue.push({tex, key, ent});
+      tex.byHex.set(hex + (mirror ? '|m' : '|s'), qb);
+      tex.tintBytes += px;
+      _tintBytesAll += px;
+      _bakes++;
+      _bakeBudget--;
+    }
+  }
+  const pid = ctxId(ctx);
+  let p = ent.pats[pid];
+  if (!p){ p = ent.pats[pid] = ctx.createPattern(ent.canvas, mirror ? 'repeat' : 'no-repeat'); _patNew++; }
+  return p;
+}
+
+/* ── 밝기 보상은 색 쪽에서 한다 ────────────────────────────────────────────
+ *   텍스처를 곱하면 평균 커버리지가 meanCov 로 떨어진다. 되돌릴 배수는
+ *   g = 1/meanCov 다. 그 배수를 ① 먼저 단색의 알파에 싣고(여유 = 1/A),
+ *   ② 남으면 RGB 를 균일배한다(균일배는 색상·HSV 채도를 그대로 둔다 —
+ *   S = 1 − min/max 가 균일 스케일에 불변). 텍스처 알파의 흔들 폭은
+ *   손대지 않는다. 되돌린 몫 achieved = meanCov·aUse·rgbUse 가 1 이면 동률.
+ * ──────────────────────────────────────────────────────────────────────── */
+function compensate(cov, color, alpha){
+  const g = 1/Math.max(1e-6, cov);
+  const aHead = alpha > 1e-6 ? 1/alpha : g;
+  const aUse = Math.min(g, aHead);
+  const restNeed = g/aUse;
+  const cMax = Math.max(color[0], color[1], color[2]);
+  const rgbCap = cMax > 1e-6 ? 255/cMax : 1;
+  const rgbUse = Math.min(restNeed, rgbCap);
+  return {
+    alpha: clamp01(alpha*aUse),
+    color: rgbUse > 1.0001 ? [color[0]*rgbUse, color[1]*rgbUse, color[2]*rgbUse] : color,
+    achieved: cov*aUse*rgbUse,
+  };
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * 칠하기 — 단색과 텍스처가 **같은 path, 같은 fill() 한 번**을 쓴다.
+ *   다른 것은 fillStyle 뿐(#RRGGBB vs tinted 패턴)이고 알파는 globalAlpha 다.
+ *   그래서 이음매가 flat 경로와 똑같이 안티에일리어싱되고 크랙이 안 생긴다.
+ * ════════════════════════════════════════════════════════════════════════ */
+function pathQuad(ctx, q){
+  ctx.beginPath();
+  ctx.moveTo(q.A.x,q.A.y); ctx.lineTo(q.B.x,q.B.y); ctx.lineTo(q.D.x,q.D.y); ctx.lineTo(q.C.x,q.C.y);
+  ctx.closePath();
+}
+function pathPts(ctx, pts){
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath();
+}
+// 리본 한 칸 — 텍스처 공간(흐름 u, 가로 v)을 화면 사각꼴에 아핀으로 얹는다.
+// A,B,C 세 점이 아핀을 정확히 정하고 D 는 그 아핀을 따른다(띠가 얇아 눈에 안 띈다).
+function fillConeQuad(ctx, q, tx, flowPx, repeatAlong){
+  const alpha = q.alpha;
+  if (alpha <= .004) return;
+  if (!tx){
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = rgbHex(q.color);
+    pathQuad(ctx, q); ctx.fill();
+    ctx.globalAlpha = 1;
+    return;
+  }
+  const tex = tx.t;
+  const c = compensate(tx.cov, q.color, alpha);
+  const pat = tintedPattern(ctx, tex, c.color, true, tx.qb);
+  const TW = tex.w*2, TH = tex.h*2;
+  const u0x = q.u0*repeatAlong*TW - flowPx;
+  const u1x = q.u1*repeatAlong*TW - flowPx;
+  const du = u1x - u0x;
+  if (Math.abs(du) < 1e-6) return;
+  const a = (q.C.x - q.A.x)/du, b = (q.C.y - q.A.y)/du;
+  const cc = (q.B.x - q.A.x)/TH,  d = (q.B.y - q.A.y)/TH;
+  pat.setTransform({a, b, c:cc, d, e: q.A.x - a*u0x, f: q.A.y - b*u0x});
+  ctx.globalAlpha = c.alpha;
+  ctx.fillStyle = pat;
+  pathQuad(ctx, q); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+// 알갱이 하나 — 텍스처 한 장을 (2r·BOX) 상자에 rot 만큼 돌려 얹는다.
+const BILLBOARD_BOX = 1.6; // 너덜 윤곽이 r 을 최대 1.42배까지 넘으므로 여유.
+function fillRag(ctx, pts, cx, cy, r, rot, color, alpha, tx){
+  if (alpha <= .004 || r <= .15) return;
+  if (!tx){
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = rgbHex(color);
+    pathPts(ctx, pts); ctx.fill();
+    ctx.globalAlpha = 1;
+    return;
+  }
+  const tex = tx.t;
+  const c = compensate(tx.cov, color, alpha);
+  const pat = tintedPattern(ctx, tex, c.color, false, tx.qb);
+  const s = (2*r*BILLBOARD_BOX)/tex.w, sy = (2*r*BILLBOARD_BOX)/tex.h;
+  const co = Math.cos(rot), si = Math.sin(rot);
+  const a = co*s, b = si*s, cc = -si*sy, d = co*sy;
+  pat.setTransform({a, b, c:cc, d, e: cx - (a*tex.w/2 + cc*tex.h/2), f: cy - (b*tex.w/2 + d*tex.h/2)});
+  ctx.globalAlpha = c.alpha;
+  ctx.fillStyle = pat;
+  pathPts(ctx, pts); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+function drawRag(ctx, cx, cy, r, seed, n, amp, rot, color, alpha, tx){
+  fillRag(ctx, flamerRag(cx,cy,r,seed,n,amp,rot), cx, cy, r, rot, color, alpha, tx);
+}
+
+/* ── 후광(glowHalo) — glow.dart 의 6겹 동심원 그대로. 텍스처는 여섯 겹이
+ *   **하나의 결**로 읽히게 바깥 반지름 기준의 상자 하나를 공유한다. ─────── */
+const kHaloR = [0.12,0.22,0.385,0.55,0.775,1];
+const kHaloA = [0.4927,0.3112,0.2023,0.1447,0.1043,0.0479];
+function haloColorFor(tone, k){
+  if (k===0) return [255,255,255];
+  if (k===1) return tone.lit;
+  if (k<=3) return tone.base;
+  return tone.dark;
+}
+function drawHalo(ctx, x, y, r, tone, a, tx){
+  if (r<=1 || a<=0.01) return;
+  for (let k=kHaloR.length-1;k>=0;k--){
+    const alpha = kHaloA[k]*a;
+    if (alpha<=0.002) continue;
+    const rr = Math.max(0, r*kHaloR[k]);
+    const col = haloColorFor(tone,k);
+    if (!tx){
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = rgbHex(col);
+      ctx.beginPath(); ctx.arc(x,y,rr,0,TAU); ctx.fill();
+      ctx.globalAlpha = 1;
+      continue;
+    }
+    const tex = tx.t;
+    const c = compensate(tx.cov, col, alpha);
+    const pat = tintedPattern(ctx, tex, c.color, false, tx.qb);
+    const s = (2*r)/tex.w, sy = (2*r)/tex.h;
+    pat.setTransform({a:s, b:0, c:0, d:sy, e: x - r, f: y - r});
+    ctx.globalAlpha = c.alpha;
+    ctx.fillStyle = pat;
+    ctx.beginPath(); ctx.arc(x,y,rr,0,TAU); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+function haloArea(r){ const side=2*r; return side*side; }
+function quadArea(q){
+  const pts=[q.A,q.B,q.D,q.C];
+  let s=0;
+  for (let i=0;i<4;i++){ const p0=pts[i], p1=pts[(i+1)%4]; s += p0.x*p1.y - p1.x*p0.y; }
+  return Math.abs(s)*0.5;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * 다섯 층의 알갱이 — w_flamer_stream.dart 그대로(위치 누적 없음, 나이는
+ * 위상에서 역산하는 닫힌 식).
+ * ════════════════════════════════════════════════════════════════════════ */
+const kFlamerBlobLanes = [0, 2, 3, 3, 3, 3];
+const kFlamerBlobCount = [0, 4, 5, 5, 6, 6];
+const kFlamerEmberCount = [0, 6, 9, 12, 16, 20];
+const kFlamerSmokeN = 6, kFlamerSmokeLife=.70, kFlamerSmokeAlpha=.26, kFlamerSmokeGap=.042;
+const kFlamerSmokeU0=.34, kFlamerSmokeU1=.82, kFlamerSmokeRise=.30, kFlamerSmokeGrow=1.9;
+
+function computeBlobs(t, lv, mx, my, half, reachFull, sc, pNow, amul, arc, kb){
+  const nl=kFlamerBlobLanes[lv], nb=Math.max(0, Math.round(kFlamerBlobCount[lv]*kb.rate)), items=[];
+  const spd = kFlamerBlobSpeed/Math.max(.05, kb.life);
+  for (let j=0;j<nl;j++){
+    const lane = nl>1 ? (j-(nl-1)/2)/((nl-1)/2) : 0.0;
+    for (let q=0;q<nb;q++){
+      const sd=j*5.3 + q*1.7;
+      const ph=(t*spd + j*.37 + q/nb) % 1;
+      const u=kFlamerU0 + (1-kFlamerU0)*Math.pow(ph,.86);
+      const tb=t - ph/spd;
+      const on=flamerOn(tb,lv);
+      if (on<=.004) continue;
+      const len=reachFull*flamerLenK(tb,lv), hl=half*len, halfW=flamerHw(u,hl,0);
+      const off = flamerLat(u,t,hl)*flamerAmpK(tb,lv) + lane*halfW*.62 + Math.sin(ph*5.4+j*2.1)*halfW*.10;
+      const p=arcAt(arc,u);
+      const al = Math.min(1,ph*8)*Math.min(1,(1-ph)*8)*on*flamerExt(u,pNow)*amul*kb.op;
+      if (al<=.02) continue;
+      const x=mx + p[0]*len - p[3]*off, y=my + p[1]*len + p[2]*off;
+      const r=sc*2.2*kb.size + halfW*(.40+1.20*hash01(sd*1.9))*.62*kb.sol;
+      items.push({ x, y, r, sd, bu:(u-kFlamerU0)/(1-kFlamerU0), cool:flamerCool(tb,lv), al, d:len*u,
+                   rn: (r > 9*sc ? 21 : 15) });
+    }
+  }
+  items.sort((a,b)=>b.d-a.d);
+  return items;
+}
+function drawBlob(ctx, it, mass5, sc, tx){
+  const {x,y,r,sd,bu,cool,al,rn} = it;
+  if (al<=.02 || r<=.4) return;
+  const skin = flamerRampAt(mass5, 0, Math.min(1,bu+cool), 0);
+  const core = flamerRampAt(mass5, 1, Math.min(1,bu+cool), 0);
+  drawRag(ctx, x, y, r, sd, rn, .42, sd, skin, al, tx);
+  drawRag(ctx, x, y-r*.08, r*.60, sd, rn, .30, sd, core, al*.95, tx);
+  if (r<=5*sc) return;
+  const grain = flamerRampAt(mass5, 1, Math.min(1, Math.max(0,bu-.34)+cool), 0);
+  const gn = 2 + (Math.floor(sd*7) % 2);
+  for (let q=0;q<gn;q++){
+    const ga=sd*2.3 + q*2.7;
+    const gd=r*(.18 + .30*hash01(sd+q*5.1));
+    const gr=r*(.16 + .16*hash01(sd+q*2.7));
+    drawRag(ctx, x+Math.cos(ga)*gd, y+Math.sin(ga)*gd, gr, sd+q*11, 9, .34, ga, grain, al, tx);
+  }
+}
+function blobArea(it, sc){
+  let a = (2*it.r)*(2*it.r) + (2*it.r*.60)*(2*it.r*.60);
+  if (it.r > 5*sc){
+    const gn = 2 + (Math.floor(it.sd*7) % 2);
+    for (let q=0;q<gn;q++){ const gr=it.r*(.16+.16*hash01(it.sd+q*2.7)); a += (2*gr)*(2*gr); }
+  }
+  return a;
+}
+function blobPieces(it, sc){ return it.r > 5*sc ? 2 + 2 + (Math.floor(it.sd*7)%2) : 2; }
+
+// 불씨 — 몸에서 떨어져 따로 사는 알갱이. wide 는 파티클로 더 얹는 몫이라
+// 총구(u0e 아래쪽)까지 태어나고 반지름이 작다.
+function computeEmbers(t, lv, half, reachFull, sc, pNow, amul, mx, my, arc, n, seed0, rMul, wide, ke){
+  const items=[];
+  for (let k=0;k<n;k++){
+    const sd = seed0 + k*3.77;
+    const sp = .42 + .80*hash01(sd);
+    const life = Math.max(.02, (.55 + .60*hash01(sd+1.3))*ke.life);
+    const q = (t*sp + hash01(sd+2.1)) % 1;
+    if (q > life) continue;
+    const w = q/life;
+    const u0e = wide ? (.12 + .70*hash01(sd+3.3)) : (.34 + .46*hash01(sd+3.3));
+    const tb = t - q/sp;
+    const on = flamerOn(tb,lv);
+    if (on<=.004) continue;
+    const len = reachFull*flamerLenK(tb,lv), hl = half*len;
+    const uu = u0e + .52*w*(.4+.9*hash01(sd+6.1));
+    const lat = flamerLat(uu,t,hl)*flamerAmpK(tb,lv) + (hash01(sd+5.2)-.5)*2*flamerHw(uu,hl,0)*(.55+.95*w);
+    const p = arcAt(arc,uu);
+    const x = mx + p[0]*len - p[3]*lat, y = my + p[1]*len + p[2]*lat;
+    const r = sc*(.7+2.1*hash01(sd+7.3))*ke.size*Math.max(0,1-w*.6*ke.sol)*rMul;
+    const ea = (1-w)*(1-w)*.95*amul*on*flamerExt(Math.min(1,uu),pNow)*(wide?.85:1)*ke.op;
+    if (ea<=.02 || r<=.3) continue;
+    items.push({ x, y, r, sd, u:u0e+w*.55, cool:flamerCool(tb,lv), ea, rot:sd+t*3.1, w, wide:!!wide });
+  }
+  return items;
+}
+// 스스로 내는 빛의 세기(Emissive Intensity) — RGB 를 균일배합니다. 균일배는
+// 색상도 HSV 채도도 그대로 두므로 「더 밝게」만 하고 색이 안 변합니다.
+function emissive(color, k){
+  if (k <= 1.0001) return color;
+  return [Math.min(255,color[0]*k), Math.min(255,color[1]*k), Math.min(255,color[2]*k)];
+}
+function drawEmber(ctx, it, mass5, tx, emis){
+  const color = emissive(flamerRampAt(mass5, 0, Math.min(1, it.u+it.cool), 0), emis||1);
+  drawRag(ctx, it.x, it.y, it.r, it.sd, 5, .42, it.rot, color, it.ea, tx);
+}
+
+function computeSmoke(t, lv, len0, sc, mx, my, arc, ks){
+  const hush=kFlamerHush[lv], items=[];
+  if (hush<=0) return items;
+  const u=flamerPhase(t);
+  const t0=(kFlamerCycle - hush) - kFlamerFade*(1-kFlamerSputter);
+  const nSm=Math.max(0, Math.round(kFlamerSmokeN*ks.rate));
+  const smLife=Math.max(.05, kFlamerSmokeLife*ks.life);
+  for (let k=0;k<nSm;k++){
+    const sd=k*4.31 + 2.7;
+    const start=t0 + kFlamerSmokeGap*k + .09*hash01(sd);
+    const ph=(u-start)/smLife;
+    if (ph<=0 || ph>=1) continue;
+    const uk=kFlamerSmokeU0 + (kFlamerSmokeU1-kFlamerSmokeU0)*hash01(sd+1.7);
+    const lk=len0*flamerLenK(start - flamerAgeAt(uk,kFlamerU0), lv);
+    const p=arcAt(arc,uk);
+    const off=(hash01(sd+3.1)-.5)*2*len0*.10*ks.spread;
+    const x=mx + p[0]*lk - p[3]*off;
+    const y=my + p[1]*lk + p[2]*off - len0*kFlamerSmokeRise*ph*ph;
+    const ramp=Math.min(1,ph*3.2)*Math.min(1,(1-ph)*2.4);
+    const r=(len0*.055 + 3.0*sc)*ks.size*(1+(kFlamerSmokeGrow-1)*ks.sol*ph)*(.7+.6*hash01(sd+5.3));
+    const alpha=kFlamerSmokeAlpha*ramp*ks.op;
+    if (alpha<=.004 || r<=.4) continue;
+    items.push({x,y,r,sd,alpha});
+  }
+  return items;
+}
+function drawSmoke(ctx, it, tx){
+  drawRag(ctx, it.x, it.y, it.r, it.sd, 11, .30, it.sd*1.7, kFlamerSmokeOut, it.alpha, tx);
+  drawRag(ctx, it.x, it.y-it.r*.10, it.r*.55, it.sd+2.3, 9, .26, it.sd, kFlamerSmokeIn, it.alpha*.8, tx);
+}
+function smokeArea(it){ return (2*it.r)*(2*it.r) + (2*it.r*.55)*(2*it.r*.55); }
+
+/* ════════════════════════════════════════════════════════════════════════
+ * 덩어리 결 — 덩어리에 딸린 파티클. 각진 폴리곤의 **꼭짓점 자리에서** 태어나
+ * 바깥으로 조금 밀려나며 사라진다. 주인이 아니라 가장자리를 부수는 몫이라
+ * 반지름은 덩어리의 8~20% 뿐이고, 자기도 5각 너덜 폴리곤이라 셀 그림체를
+ * 안 벗어난다(텍스처는 안 입힌다 — 2~4px 짜리엔 결이 안 읽힌다).
+ *
+ * 결정론: 나이 ph 는 (t·spg + hash)%1 하나뿐인 닫힌 식이고, 방향·길이·크기는
+ * 태어날 때 hash 로 고정된다. 위치 누적(x += vx·dt)이 없다.
+ * ════════════════════════════════════════════════════════════════════════ */
+const kGrainPerBlob = 8;      // 덩어리 하나가 데리고 다니는 결의 기본 수
+const kGrainRMin = .13, kGrainRSpan = .17;  // 덩어리 반지름 대비
+const kGrainAlpha = .92;
+const kGrainSpawn = 1.05;     // 기본 자리 — 실루엣 바로 바깥입니다.
+// 결의 색 — 흰 쪽으로 섞으면 식은 끝에서 잿빛이 됩니다. 그래서 ① 사다리를
+// 덜 식은 쪽으로 되감고 ② RGB 를 균일배합니다. 균일배는 색상도 HSV 채도도
+// 그대로 두므로 「불빛」인 채로 밝아집니다.
+const kGrainCoolBack = .30;
+const kGrainGain = 1.34;
+function computeGrains(t, blobs, kg){
+  const out=[];
+  if (kg.rate<=0) return out;
+  const ng = Math.max(0, Math.round(kGrainPerBlob*kg.rate));
+  for (const it of blobs){
+    if (it.al<=.06 || it.r<=1.2) continue;
+    for (let i=0;i<ng;i++){
+      const s = it.sd*3.1 + i*1.618 + .37;
+      const spg = (.9 + 1.5*hash01(s))/Math.max(.05, kg.life);
+      const ph = (t*spg + hash01(s+2.3)) % 1;
+      // 태어날 자리 = 덩어리 너덜 폴리곤의 꼭짓점(그 폴리곤의 실제 반지름 식).
+      // 스폰 오프셋이 1 이면 실루엣 위, 1 보다 크면 실루엣 바깥입니다.
+      const vi = Math.floor(hash01(s+4.1)*it.rn) % it.rn;
+      const th = vi/it.rn*TAU + it.sd;
+      const re = ragRadius(it.r, it.sd, vi, .42)*kGrainSpawn*kg.spawn;
+      // 방향은 태어날 때 고정 — 바깥 법선에서 조금 비틀고, 위로 살짝 뜹니다.
+      const dd = th + (hash01(s+5.7)-.5)*0.9;
+      const dl = it.r*(.10 + .45*hash01(s+6.9));
+      const rg = it.r*(kGrainRMin + kGrainRSpan*hash01(s+7.7))*kg.size*Math.max(0,1 - .45*kg.sol*ph);
+      const ga = it.al*kGrainAlpha*kg.op*(1-ph)*(1-ph)*Math.min(1, ph*6);
+      if (ga<=.02 || rg<=.25) continue;
+      out.push({
+        x: it.x + Math.cos(th)*re + Math.cos(dd)*dl*ph,
+        y: it.y + Math.sin(th)*re + Math.sin(dd)*dl*ph - it.r*.28*ph*ph,
+        r: rg, sd: s, rot: dd, ga: clamp01(ga), bu: it.bu, cool: it.cool,
+      });
+    }
+  }
+  return out;
+}
+function drawGrain(ctx, it, mass5, emis){
+  // 심 색 그대로 쓰면 뒤 가장자리와 같은 색이라 얹어도 화소가 안 바뀝니다 —
+  // 덜 식은 자리의 색을 균일배로 끌어올려 결이 실제로 읽히게 합니다.
+  const base = flamerRampAt(mass5, 1, clamp01(it.bu + it.cool - kGrainCoolBack), 0);
+  const color = emissive(base, kGrainGain*(emis||1));
+  fillRag(ctx, flamerRag(it.x,it.y,it.r,it.sd,5,.45,it.rot), it.x, it.y, it.r, it.rot, color, it.ga, null);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * 한 프레임 계산 — 세 판이 이 하나를 나눠 쓴다(같은 기하·같은 알파·같은 개수).
+ * ════════════════════════════════════════════════════════════════════════ */
+const ANG = 0;
+/* ── 손잡이 ───────────────────────────────────────────────────────────────
+ *   전부 「배수」입니다 — ×1.00 이 지금 값(= 엔진 상수 그대로)입니다.
+ *   기하 손잡이(크기·개수·수명·스폰 오프셋·스프레드)는 색을 안 건드리므로
+ *   색칠본 캐시를 무효화하지 않습니다. 색을 건드리는 것은 텍스처 블렌드와
+ *   에미시브 인텐시티, 그리고 (보상식을 통해) 오패시티뿐입니다.
+ * ──────────────────────────────────────────────────────────────────────── */
+function defKnobs(){
+  return {
+    world: { spread:1, reach:1 },
+    cone:  { on:1, solo:0, texOn:1, tex:'noise_streak', blend:1, op:1, size:1, sol:1, spread:1 },
+    blob:  { on:1, solo:0, texOn:1, tex:'noise_grainy', blend:1, op:1, size:1, sol:1, rate:1, life:1, spread:1 },
+    halo:  { on:1, solo:0, texOn:1, tex:'noise_vein',   blend:1, op:1, size:1 },
+    ember: { on:1, solo:0, texOn:1, tex:'noise_grainy', blend:1, op:1, size:1, sol:1, rate:1, life:1, spread:1 },
+    smoke: { on:1, solo:0, texOn:1, tex:'noise_vein',   blend:1, op:1, size:1, sol:1, rate:1, life:1, spread:1 },
+    grain: { on:1, solo:0, rate:1, size:1, sol:1, life:1, op:1, emis:1, spawn:1 },
+    extra: { on:1, solo:0, rate:1, size:1, sol:1, life:1, op:1, emis:1 },
+  };
+}
+let K = defKnobs();
+
+function buildFrame(t, lv, attr, W, H, kk){
+  kk = kk || K;
+  const mass5 = mass5For(attr, lv);
+  const fire4 = buildFireStages(mass5);
+  const tone = TONE3[attr];
+  const sc = Math.min(W,H)/230;
+  const half = kFlamerHalfAngle[lv]*kk.world.spread;
+  const reachFull = sc*kFlamerMockLen*kFlamerReachLv[lv]*kk.world.reach;
+  const w0 = kFlamerMuzzleW*sc*kk.cone.size;
+  const pNow = flamerPressure(t,lv);
+  const amul = 1 - kFlamerAmpJit*(1+flamerFl2(t));
+  const arc = buildArc(ANG, flamerBk(lv), 24);
+  const mx = W*0.15, my = H*0.60;
+
+  const geoUnit = buildGeometry(t, fire4, arc, half*kk.cone.spread, w0, reachFull, lv, pNow, kk.cone.sol, kk.cone.op);
+  const layers = geoUnit.layers.map(qs => qs.map(q => ({
+    A:{x:mx+q.A.x,y:my+q.A.y}, B:{x:mx+q.B.x,y:my+q.B.y},
+    C:{x:mx+q.C.x,y:my+q.C.y}, D:{x:mx+q.D.x,y:my+q.D.y},
+    u0:q.u0, u1:q.u1, color:q.color, alpha:q.alpha,
+  })));
+
+  const blobs  = computeBlobs(t, lv, mx, my, half*kk.blob.spread, reachFull, sc, pNow, amul, arc, kk.blob);
+  const embers = computeEmbers(t, lv, half*kk.ember.spread, reachFull, sc, pNow, amul, mx, my, arc,
+                               Math.max(0,Math.round(kFlamerEmberCount[lv]*kk.ember.rate)), 0, 1, false, kk.ember);
+  const extraN = Math.max(0, Math.round(kFlamerEmberCount[lv]*1.2*kk.extra.rate));
+  // 덧뿌림은 불씨 레이어의 원뿔을 타되 크기·수명·오패시티는 제 손잡이를 씁니다.
+  const extras = computeEmbers(t, lv, half*kk.ember.spread, reachFull, sc, pNow, amul, mx, my, arc,
+                               extraN, 57.3, .50, true, kk.extra);
+  const smokes = computeSmoke(t, lv, reachFull, sc, mx, my, arc, kk.smoke);
+  const grains = computeGrains(t, blobs, kk.grain);
+
+  // 원뿔 흐름 — 위상에서 냅니다(누적 아님). 주기 끝과 처음이 같은 값이 되게
+  // 정수 배(kFlowLoops)를 곱해 이음매를 없앱니다.
+  const flowU = flamerPhase(t)/kFlamerCycle;
+
+  return { t, lv, attr, mass5, fire4, tone, sc, half, reachFull, pNow, amul, arc, mx, my,
+           layers, blobs, embers, extras, smokes, grains, flowU, k:kk };
+}
+
+const kFlowLoops = 6, kConeRepeat = 3;
+/* ── 켜짐·텍스처 판정을 한 군데서 냅니다(판 ②와 판 ③이 같은 답을 써야 합니다). */
+function sceneCtl(fr, opts){
+  const kk = fr.k, only = opts.only || null, textured = !!opts.textured;
+  const anySolo = SOLO_KEYS.some(k => kk[k].solo);
+  return {
+    kk, only, anySolo,
+    on: k => !!kk[k].on && (!only || only===k) && (!anySolo || !!kk[k].solo),
+    tx: k => {
+      if (!textured) return null;
+      const st = kk[k];
+      if (!st.texOn || st.tex === '__none' || st.blend <= 0.001) return null;
+      const t = TEX[st.tex];
+      if (!t) return null;
+      const qb = blendQ(st.blend);
+      return { t, qb, cov: covFor(t, qb) };
+    },
+  };
+}
+
+/* ── 다섯 레이어 = 판 ②가 가진 전부입니다. ─────────────────────────────── */
+function drawBaseLayers(ctx, fr, opts){
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = opts.transparent ? 'rgba(0,0,0,0)' : '#06070b';
+  if (opts.transparent) ctx.clearRect(0,0,W,H); else ctx.fillRect(0,0,W,H);
+
+  // 층 간 합성은 screen 하나뿐 — fx_system.dart 의 flushScreen 그대로.
+  ctx.globalCompositeOperation = 'screen';
+  const c = sceneCtl(fr, opts), kk = c.kk;
+
+  // ⓪ 연기 — 줄기 뒤에.
+  if (c.on('smoke')) for (const it of fr.smokes) drawSmoke(ctx, it, c.tx('smoke'));
+
+  // 원뿔(잔상 · 밑판 · 심 · 제트).
+  if (c.on('cone')){
+    const t2 = c.tx('cone');
+    const flowPx = t2 ? fr.flowU*kFlowLoops*(t2.t.w*2) : 0;
+    for (const quads of fr.layers) for (const q of quads) fillConeQuad(ctx, q, t2, flowPx, kConeRepeat);
+  }
+  // 덩어리.
+  if (c.on('blob')) for (const it of fr.blobs) drawBlob(ctx, it, fr.mass5, fr.sc, c.tx('blob'));
+  // 후광 — 덩어리를 그대로 따라갑니다.
+  if (c.on('halo')){
+    const th = c.tx('halo');
+    for (const it of fr.blobs){
+      if (it.al<=.05) continue;
+      drawHalo(ctx, it.x, it.y-it.r*.14, it.r*(.72+.34*hash01(it.sd*1.3))*kk.halo.size, fr.tone, .24*it.al*kk.halo.op, th);
+    }
+  }
+  // 불씨(+ 초반 섬광).
+  if (c.on('ember')){
+    const te = c.tx('ember'), th = c.tx('halo');
+    for (const it of fr.embers){
+      drawEmber(ctx, it, fr.mass5, te, 1);
+      if (it.w < .42 && kk.halo.on && (!c.only || c.only==='ember')
+          && (!c.anySolo || kk.ember.solo || kk.halo.solo)){
+        drawHalo(ctx, it.x, it.y, it.r*2.3*kk.halo.size, fr.tone, .50*(1-it.w/.42)*it.ea*kk.halo.op, th);
+      }
+    }
+  }
+}
+
+/* ── 얹은 파티클 둘 — 반드시 **맨 끝**에 그립니다. ────────────────────────
+ *   층 간 합성이 screen 하나뿐이라 그리는 차례를 바꿔도 값이 같습니다
+ *   (screen(Cb, as·Cs) 는 교환·결합법칙을 만족합니다). 맨 끝으로 몰아 두면
+ *   판 ③이 판 ②를 그대로 복사한 뒤 이 두 벌만 더 얹는 것과 **바이트까지**
+ *   같아집니다 — 8비트 반올림이 일어나는 차례까지 똑같아지기 때문입니다.
+ * ──────────────────────────────────────────────────────────────────────── */
+function drawAddedParticles(ctx, fr, opts){
+  const c = sceneCtl(fr, opts), kk = c.kk;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'screen';
+  // 덩어리 결. 솔로를 켜면 주인 없이 결만 남습니다.
+  if (c.on('grain') && (kk.grain.solo || c.only==='grain' || c.on('blob'))){
+    for (const it of fr.grains) drawGrain(ctx, it, fr.mass5, kk.grain.emis);
+  }
+  // 불씨 덧뿌림 — wide 라 초반 섬광은 안 답니다.
+  if (c.on('extra')){
+    const te = c.tx('ember');
+    for (const it of fr.extras) drawEmber(ctx, it, fr.mass5, te, kk.extra.emis);
+  }
+}
+
+function drawScene(ctx, fr, opts){
+  drawBaseLayers(ctx, fr, opts);
+  if (opts.particles) drawAddedParticles(ctx, fr, opts);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ── 판 ③ = 판 ② ⊕ 얹은 파티클. 판 ②를 다시 그리지 않고 통째로 베낀 뒤
+ *   얹은 몫만 더합니다. 베끼기는 같은 크기·같은 자리의 source-over 한 번이라
+ *   무손실이고, 이어지는 두 벌은 직접 그릴 때와 똑같은 차례·똑같은 상태에서
+ *   얹히므로 결과가 바이트까지 같습니다(__recycleCheck 로 검산합니다). ──── */
+function drawSceneFrom(ctx, srcCanvas, fr, opts){
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(srcCanvas, 0, 0);
+  if (opts.particles) drawAddedParticles(ctx, fr, opts);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+// 덩어리 결만 따로 그리는 경로(판정·비용 계산용).
+function drawGrainsOnly(ctx, fr){
+  const W=ctx.canvas.width, H=ctx.canvas.height;
+  ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha=1;
+  ctx.globalCompositeOperation='source-over'; ctx.fillStyle='#06070b'; ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='screen';
+  for (const it of fr.grains) drawGrain(ctx, it, fr.mass5, fr.k.grain.emis);
+  ctx.globalCompositeOperation='source-over';
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * 화면 배선
+ * ════════════════════════════════════════════════════════════════════════ */
+const cA=document.getElementById('cA'), cB=document.getElementById('cB'), cC=document.getElementById('cC');
+// 세 판은 화면에만 씁니다 — 읽지 않으므로 willReadFrequently 를 안 켭니다.
+// 켜면 캔버스가 CPU 판으로 내려가 패턴 칠하기가 통째로 소프트웨어로 돕니다.
+const ctxA=cA.getContext('2d');
+const ctxB=cB.getContext('2d');
+const ctxC=cC.getContext('2d');
+/* ── 해상도 배율 ──────────────────────────────────────────────────────────
+ *   레티나에서 배율 2배는 칠할 화소가 4배라는 뜻입니다. 판이 셋이라 그 4배가
+ *   다시 셋입니다. JS 가 1ms 로 끝나도 화소를 칠하는 쪽이 못 따라오면 프레임이
+ *   떨어집니다. 그래서 배율을 손잡이로 뺐습니다 — 굴릴 때는 낮춰서 가볍게,
+ *   결을 볼 때는 올려서 선명하게 쓰시면 됩니다. 기본값은 이 화면의 배율 그대로라
+ *   아무것도 안 만지시면 지금까지와 똑같이 그립니다.
+ * ──────────────────────────────────────────────────────────────────────── */
+const deviceDpr = Math.min(2, window.devicePixelRatio||1);
+let _pxr = deviceDpr;
+/* 캔버스 크기를 매 프레임 재면(getBoundingClientRect 세 번) 그때마다 레이아웃이
+ * 강제로 다시 계산됩니다. 크기는 창이 바뀔 때만 달라지므로 그때만 잽니다. */
+let _fitDirty = true, _fitDpr = window.devicePixelRatio||1;
+function fitCanvas(cvs){
+  const r=cvs.getBoundingClientRect();
+  const w=Math.max(2, Math.round(r.width*_pxr)), h=Math.max(2, Math.round(r.height*_pxr));
+  if (cvs.width!==w || cvs.height!==h){ cvs.width=w; cvs.height=h; }
+}
+function fitAllCanvases(){
+  const d = window.devicePixelRatio||1;
+  if (d !== _fitDpr){ _fitDpr = d; _fitDirty = true; }   // 창을 다른 화면으로 옮기신 경우입니다.
+  if (!_fitDirty) return;
+  _fitDirty = false;
+  fitCanvas(cA); fitCanvas(cB); fitCanvas(cC);
+}
+const els = {
+  level:document.getElementById('level'), attr:document.getElementById('attr'),
+  texToggle:document.getElementById('texToggle'), parToggle:document.getElementById('parToggle'),
+  speed:document.getElementById('speed'), freeze:document.getElementById('freeze'),
+  pxr:document.getElementById('pxr'),
+};
+{
+  const el=els.speed, out=document.getElementById('speedV');
+  const upd=()=>{ out.textContent=parseFloat(el.value).toFixed(1)+'×'; };
+  el.addEventListener('input', upd); upd();
+}
+{
+  const el=els.pxr, out=document.getElementById('pxrV');
+  el.value = String(deviceDpr);
+  const upd=()=>{ _pxr = parseFloat(el.value); out.textContent = _pxr.toFixed(2)+'배'; _fitDirty = true; };
+  el.addEventListener('input', upd); upd();
+}
+if (window.ResizeObserver){
+  const ro = new ResizeObserver(()=>{ _fitDirty = true; });
+  ro.observe(cA); ro.observe(cB); ro.observe(cC);
+}
+window.addEventListener('resize', ()=>{ _fitDirty = true; });
+
+// ── 다섯 레이어. 이름은 엔진 것 그대로입니다. ────────────────────────────
+const LAYERS = [
+  {key:'cone',  name:'원뿔',   note:'줄기 리본'},
+  {key:'blob',  name:'덩어리', note:'흐르는 불덩이'},
+  {key:'halo',  name:'후광',   note:'동심원 여섯 겹'},
+  {key:'ember', name:'불씨',   note:'몸에서 떨어진 알갱이'},
+  {key:'smoke', name:'연기',   note:'꺼진 뒤 남는 것'},
+];
+const LAYER_KEYS = LAYERS.map(L=>L.key);
+// 얹은 파티클 둘도 솔로가 됩니다 — 「얹은 몫만 남기고 보기」가 이 페이지의 요점입니다.
+const SOLO_KEYS = LAYER_KEYS.concat(['grain','extra']);
+const LAYER_NAME = {cone:'원뿔', blob:'덩어리', halo:'후광', ember:'불씨', smoke:'연기',
+                    grain:'덩어리 결', extra:'불씨 덧뿌림'};
+
+/* ── 용어 — 라벨은 「한글 발음(English) : 뜻」 한 줄입니다. ────────────── */
+const TERM = {
+  layer: {ko:'레이어',       en:'Layer',         d:'겹쳐 그리는 한 겹', a:'g-layer'},
+  on:    {ko:'이네이블',     en:'Enable',        d:'이 레이어를 켤지', a:'g-enable'},
+  solo:  {ko:'솔로',         en:'Solo',          d:'이 레이어만 보기', a:'g-solo'},
+  tex:   {ko:'스프라이트',   en:'Sprite',        d:'알갱이에 입히는 그림 한 장', a:'g-sprite'},
+  texOn: {ko:'텍스처',       en:'Texture',       d:'이 레이어에 텍스처를 입힐지', a:'g-texblend'},
+  live:  {ko:'라이브 파티클', en:'Live Particles', d:'지금 살아 있는 알갱이 수', a:'g-liveparticles'},
+  fill:  {ko:'필',           en:'Fill',          d:'칠한 화소 수', a:'g-fill'},
+  over:  {ko:'오버드로',     en:'Overdraw',      d:'같은 화소를 몇 번 겹쳐 칠하나', a:'g-overdraw'},
+  bmode: {ko:'블렌드 모드',  en:'Blend Mode',    d:'레이어를 겹치는 방식', a:'g-blendmode'},
+  blend: {ko:'텍스처 블렌드', en:'Texture Blend', d:'0이면 단색, 1이면 텍스처', a:'g-texblend'},
+  size:  {ko:'스타트 사이즈', en:'Start Size',    d:'태어날 때 크기', a:'g-startsize'},
+  sol:   {ko:'사이즈 오버 라이프', en:'Size over Life', d:'수명 동안 크기가 변하는 폭', a:'g-sizeoverlife'},
+  rate:  {ko:'이미션 레이트', en:'Emission Rate', d:'초당 뿜는 알갱이 수', a:'g-emissionrate'},
+  life:  {ko:'라이프타임',   en:'Lifetime',      d:'태어나서 사라질 때까지의 시간', a:'g-lifetime'},
+  op:    {ko:'오패시티',     en:'Opacity',       d:'불투명도. 낮추면 뒤가 비칩니다', a:'g-opacity'},
+  spread:{ko:'스프레드 앵글', en:'Spread Angle',  d:'뿜는 원뿔이 벌어지는 각', a:'g-spreadangle'},
+  emis:  {ko:'에미시브 인텐시티', en:'Emissive Intensity', d:'스스로 내는 빛의 세기', a:'g-emissive'},
+  spawn: {ko:'스폰 오프셋',  en:'Spawn Offset',  d:'태어나는 자리를 안팎으로 밉니다', a:'g-spawnoffset'},
+};
+// 그룹마다 어떤 손잡이를 다는지. d2 는 이 레이어에서의 뜻만 갈아 끼웁니다.
+const KNOBS = {
+  world: [
+    {k:'spread', t:'spread', min:.3, max:2,  step:.05},
+    {k:'reach',  t:'life',   min:.3, max:2,  step:.05, d2:'불길이 닿는 거리를 정합니다'},
+  ],
+  cone: [
+    {k:'blend',  t:'blend',  min:0, max:1,   step:.05},
+    {k:'size',   t:'size',   min:.2, max:3,  step:.05, d2:'총구에서 나오는 폭'},
+    {k:'sol',    t:'sol',    min:0, max:2.5, step:.05, d2:'흐르며 벌어지는 폭'},
+    {k:'spread', t:'spread', min:.2, max:2.5,step:.05},
+    {k:'op',     t:'op',     min:0, max:2,   step:.05},
+  ],
+  blob: [
+    {k:'blend',  t:'blend',  min:0, max:1,   step:.05},
+    {k:'size',   t:'size',   min:.2, max:3,  step:.05},
+    {k:'sol',    t:'sol',    min:0, max:2.5, step:.05, d2:'멀리 갈수록 굵어지는 폭'},
+    {k:'rate',   t:'rate',   min:0, max:4,   step:.1},
+    {k:'life',   t:'life',   min:.2, max:3,  step:.05},
+    {k:'spread', t:'spread', min:.2, max:2.5,step:.05, d2:'줄들이 옆으로 벌어지는 각'},
+    {k:'op',     t:'op',     min:0, max:2,   step:.05},
+  ],
+  halo: [
+    {k:'blend',  t:'blend',  min:0, max:1,   step:.05},
+    {k:'size',   t:'size',   min:.2, max:3,  step:.05, d2:'덩어리 대비 후광 반지름'},
+    {k:'op',     t:'op',     min:0, max:2,   step:.05},
+  ],
+  ember: [
+    {k:'blend',  t:'blend',  min:0, max:1,   step:.05},
+    {k:'size',   t:'size',   min:.2, max:3,  step:.05},
+    {k:'sol',    t:'sol',    min:0, max:2.5, step:.05, d2:'수명이 흐르며 줄어드는 폭'},
+    {k:'rate',   t:'rate',   min:0, max:4,   step:.1},
+    {k:'life',   t:'life',   min:.2, max:3,  step:.05},
+    {k:'spread', t:'spread', min:.2, max:2.5,step:.05},
+    {k:'op',     t:'op',     min:0, max:2,   step:.05},
+  ],
+  smoke: [
+    {k:'blend',  t:'blend',  min:0, max:1,   step:.05},
+    {k:'size',   t:'size',   min:.2, max:3,  step:.05},
+    {k:'sol',    t:'sol',    min:0, max:2.5, step:.05, d2:'수명이 흐르며 커지는 폭'},
+    {k:'rate',   t:'rate',   min:0, max:4,   step:.1},
+    {k:'life',   t:'life',   min:.2, max:3,  step:.05},
+    {k:'spread', t:'spread', min:.2, max:2.5,step:.05, d2:'옆으로 흩어지는 폭'},
+    {k:'op',     t:'op',     min:0, max:2,   step:.05},
+  ],
+  grain: [
+    {k:'rate',  t:'rate',  min:0, max:6,   step:.1},
+    {k:'size',  t:'size',  min:.2, max:5,  step:.05},
+    {k:'emis',  t:'emis',  min:.5, max:3,  step:.05},
+    {k:'spawn', t:'spawn', min:0, max:1.8, step:.02},
+    {k:'sol',   t:'sol',   min:0, max:2.5, step:.05, d2:'수명이 흐르며 줄어드는 폭'},
+    {k:'life',  t:'life',  min:.2, max:3,  step:.05},
+    {k:'op',    t:'op',    min:0, max:2,   step:.05},
+  ],
+  extra: [
+    {k:'rate',  t:'rate',  min:0, max:5,   step:.1},
+    {k:'size',  t:'size',  min:.2, max:4,  step:.05},
+    {k:'emis',  t:'emis',  min:.5, max:3,  step:.05},
+    {k:'sol',   t:'sol',   min:0, max:2.5, step:.05, d2:'수명이 흐르며 줄어드는 폭'},
+    {k:'life',  t:'life',  min:.2, max:3,  step:.05},
+    {k:'op',    t:'op',    min:0, max:2,   step:.05},
+  ],
+};
+const GROUPS = [
+  {g:'world', title:'전체', tag:'줄기 전체를 정하는 값'},
+  {g:'cone',  title:'원뿔', tag:'레이어 — 이어진 리본이라 이미션 레이트 · 라이프타임이 없습니다', layer:true},
+  {g:'blob',  title:'덩어리', tag:'레이어 — 흐르는 불덩이', layer:true},
+  {g:'halo',  title:'후광', tag:'레이어 — 덩어리에 딸린 동심원 여섯 겹이라 제 방출·수명·각이 없습니다', layer:true},
+  {g:'ember', title:'불씨', tag:'레이어 — 몸에서 떨어진 알갱이', layer:true},
+  {g:'smoke', title:'연기', tag:'레이어 — 꺼진 뒤 남는 것', layer:true},
+  {g:'grain', title:'덩어리 결', tag:'얹은 파티클 — 덩어리 실루엣을 부수는 몫', solo:true},
+  {g:'extra', title:'불씨 덧뿌림', tag:'얹은 파티클 — 불씨 레이어에 더 뿌리는 몫', solo:true},
+];
+
+/* ── 손잡이 딱지 — 「한글 발음(English) : 뜻」 한 줄 ────────────────────── */
+function knobLabel(kb){
+  const T = TERM[kb.t];
+  const d = kb.d2 || T.d;
+  return `<a class="kl" href="#${T.a}"><b>${T.ko}(${T.en})</b> <i>: ${d}</i></a>`;
+}
+// 머리줄의 켜기·끄기 딱지도 같은 「한글(영어) : 뜻」 한 줄입니다.
+function termLabel(t, d2){
+  const T = TERM[t];
+  return `<a class="kl" href="#${T.a}"><b>${T.ko}(${T.en})</b> <i>: ${d2||T.d}</i></a>`;
+}
+const deckEl = document.getElementById('deck');
+const _ui = {};   // 그룹.손잡이 → {input, val, der}
+function buildDeck(){
+  deckEl.innerHTML = '';
+  for (const G of GROUPS){
+    const d = document.createElement('details');
+    d.className = 'grp'; d.open = true;
+    const st = K[G.g];
+    let head = `<summary><span>${G.title}</span><span class="tag">${G.tag}</span><span class="spacer"></span><span class="mini" data-mini="${G.g}"></span></summary>`;
+    let body = '<div class="grpbody">';
+    // 레이어 머리줄 — 이네이블 · 솔로 · 텍스처 · 스프라이트
+    body += '<div class="toprow">';
+    // 딱지가 용어집 링크라서 <label> 로 감싸지 않습니다 — 링크를 누를 때
+    // 체크박스가 같이 뒤집히면 안 되니까요.
+    if (G.g !== 'world'){
+      body += `<span class="tl"><input type="checkbox" data-b="${G.g}.on" ${st.on?'checked':''}>${termLabel('on', G.layer?null:'이 몫을 켤지')}</span>`;
+    }
+    if (G.layer || G.solo){
+      body += `<span class="tl"><input type="checkbox" data-b="${G.g}.solo" ${st.solo?'checked':''}>${termLabel('solo', G.layer?null:'이 몫만 보기')}</span>`;
+    }
+    if (G.layer){
+      body += `<span class="tl"><input type="checkbox" data-b="${G.g}.texOn" ${st.texOn?'checked':''}>${termLabel('texOn')}</span>`;
+      body += `<span class="tl"><canvas class="swatch" data-sw="${G.g}" width="18" height="18"></canvas>`+
+              `${termLabel('tex')}<select data-tex="${G.g}"></select></span>`;
+    }
+    body += `<span class="spacer" style="flex:1"></span><button data-reset="${G.g}">`+
+            `${G.g==='world' ? '전체 값 초기화' : '이 '+G.title+' 초기화'}</button>`;
+    body += '</div>';
+    for (const kb of KNOBS[G.g]){
+      body += `<div class="knob">${knobLabel(kb)}`+
+        `<input type="range" data-r="${G.g}.${kb.k}" min="${kb.min}" max="${kb.max}" step="${kb.step}" value="${st[kb.k]}">`+
+        `<span class="kv" data-v="${G.g}.${kb.k}"></span>`+
+        `<span class="kd" data-d="${G.g}.${kb.k}"></span></div>`;
+    }
+    body += '</div>';
+    d.innerHTML = head + body;
+    deckEl.appendChild(d);
+  }
+  // 스프라이트 고르기
+  for (const sel of deckEl.querySelectorAll('select[data-tex]')){
+    const g = sel.getAttribute('data-tex');
+    const optNone=document.createElement('option'); optNone.value='__none'; optNone.textContent='— 단색 —';
+    sel.appendChild(optNone);
+    for (const cat of ['noise','mask','kenney']){
+      const og=document.createElement('optgroup'); og.label=CAT_LABEL[cat];
+      for (const m of TEX_MANIFEST){
+        if (m.cat!==cat) continue;
+        const o=document.createElement('option'); o.value=m.key;
+        o.textContent = m.label + ' ('+(TEX[m.key].meanCov*100).toFixed(0)+'%)';
+        og.appendChild(o);
+      }
+      sel.appendChild(og);
+    }
+    sel.value = K[g].tex;
+    sel.addEventListener('change', ()=>{ K[g].tex = sel.value; paintSwatch(g); refreshKnobUI(); schedulePrewarm(); });
+  }
+  for (const cb of deckEl.querySelectorAll('input[data-b]')){
+    const [g,k] = cb.getAttribute('data-b').split('.');
+    cb.addEventListener('change', ()=>{ K[g][k] = cb.checked?1:0; refreshKnobUI(); if (k==='texOn') schedulePrewarm(); });
+  }
+  for (const r of deckEl.querySelectorAll('input[data-r]')){
+    const [g,k] = r.getAttribute('data-r').split('.');
+    r.addEventListener('input', ()=>{ K[g][k] = parseFloat(r.value); refreshKnobUI(); });
+    // 색을 건드리는 손잡이만 미리 굽기를 다시 부릅니다. 끄는 동안이 아니라
+    // **놓은 뒤**(change)라 드래그 내내 굽는 일이 없습니다.
+    if (k==='blend' || k==='op' || k==='emis') r.addEventListener('change', schedulePrewarm);
+  }
+  for (const b of deckEl.querySelectorAll('button[data-reset]')){
+    const g = b.getAttribute('data-reset');
+    b.addEventListener('click', ()=>{ K[g] = defKnobs()[g]; syncDeck(); });
+  }
+  for (const g of GROUPS) if (g.layer) paintSwatch(g.g);
+  collectDerivedEls();
+  refreshKnobUI();
+}
+function paintSwatch(g){
+  const cv = deckEl.querySelector(`canvas[data-sw="${g}"]`);
+  if (!cv) return;
+  const sw = cv.getContext('2d');
+  sw.setTransform(1,0,0,1,0,0); sw.clearRect(0,0,18,18);
+  sw.fillStyle='#12151d'; sw.fillRect(0,0,18,18);
+  const tx = TEX[K[g].tex];
+  if (tx) sw.drawImage(tx.base,0,0,18,18);
+}
+// 손잡이를 코드로 바꿨을 때 화면을 되맞춥니다.
+function syncDeck(){
+  for (const r of deckEl.querySelectorAll('input[data-r]')){
+    const [g,k]=r.getAttribute('data-r').split('.'); r.value = K[g][k];
+  }
+  for (const cb of deckEl.querySelectorAll('input[data-b]')){
+    const [g,k]=cb.getAttribute('data-b').split('.'); cb.checked = !!K[g][k];
+  }
+  for (const sel of deckEl.querySelectorAll('select[data-tex]')){
+    const g=sel.getAttribute('data-tex'); sel.value = K[g].tex; paintSwatch(g);
+  }
+  refreshKnobUI();
+}
+const KD = defKnobs();
+function refreshKnobUI(){
+  for (const el of deckEl.querySelectorAll('span[data-v]')){
+    const [g,k] = el.getAttribute('data-v').split('.');
+    const v = K[g][k];
+    el.textContent = '×'+v.toFixed(2);
+    el.className = 'kv' + (Math.abs(v-KD[g][k])>1e-6 ? ' chg' : '');
+  }
+  let n=0;
+  for (const G of GROUPS){
+    let c=0;
+    for (const kb of KNOBS[G.g]) if (Math.abs(K[G.g][kb.k]-KD[G.g][kb.k])>1e-6) c++;
+    for (const f of ['on','solo','texOn']) if (KD[G.g][f]!==undefined && K[G.g][f]!==KD[G.g][f]) c++;
+    if (K[G.g].tex && K[G.g].tex !== KD[G.g].tex) c++;
+    n += c;
+    const mini = deckEl.querySelector(`span[data-mini="${G.g}"]`);
+    if (mini) mini.textContent = c ? c+'개 바뀜' : '';
+  }
+  _changed = n;
+  // 손잡이가 움직였으니 검산 값이 낡았습니다. 손을 떼시면 한 번만 다시 잽니다.
+  markVerifyStale();
+}
+let _changed = 0;
+// 배수 옆에 실제 값 — 마지막 프레임에서 뽑습니다.
+function deriveText(g, k, fr){
+  const kk = fr.k, lv = fr.lv;
+  if (k==='blend'){
+    const st = kk[g];
+    if (!st.texOn || !st.tex || st.tex==='__none' || !TEX[st.tex]) return '단색';
+    const qb = blendQ(st.blend);
+    return '덮임 '+(covFor(TEX[st.tex], qb)*100).toFixed(0)+'%';
+  }
+  if (k==='spread' && g!=='world'){
+    if (g==='smoke') return '옆으로 ±'+(fr.reachFull*.10*kk.smoke.spread).toFixed(1)+'px';
+    return (kFlamerHalfAngle[lv]*kk.world.spread*kk[g].spread).toFixed(3)+'rad';
+  }
+  if (g==='world'){
+    if (k==='spread') return (kFlamerHalfAngle[lv]*kk.world.spread).toFixed(3)+'rad · 공통';
+    if (k==='reach')  return Math.round(fr.reachFull)+'px';
+  }
+  if (g==='cone'){
+    if (k==='size') return (kFlamerMuzzleW*fr.sc*kk.cone.size).toFixed(1)+'px';
+    if (k==='sol')  return '반각 ×'+(kFlamerHwMul*kk.cone.sol).toFixed(2);
+  }
+  if (g==='blob'){
+    const nb = Math.max(0,Math.round(kFlamerBlobCount[lv]*kk.blob.rate));
+    const spd = kFlamerBlobSpeed/Math.max(.05,kk.blob.life);
+    if (k==='rate') return kFlamerBlobLanes[lv]+'줄×'+nb+' = '+(kFlamerBlobLanes[lv]*nb)+'슬롯';
+    if (k==='life') return (1/spd).toFixed(2)+'초 · '+(kFlamerBlobLanes[lv]*nb*spd).toFixed(1)+'알/초';
+    if (k==='size' || k==='sol') return '평균 '+avgR(fr.blobs)+'px';
+  }
+  if (g==='ember'){
+    if (k==='rate') return Math.max(0,Math.round(kFlamerEmberCount[lv]*kk.ember.rate))+'슬롯 · 산 '+fr.embers.length+'알';
+    if (k==='size' || k==='sol') return '평균 '+avgR(fr.embers)+'px';
+    if (k==='life') return (1.04*kk.ember.life).toFixed(2)+'초쯤';
+  }
+  if (g==='smoke'){
+    if (k==='rate') return Math.max(0,Math.round(kFlamerSmokeN*kk.smoke.rate))+'슬롯 · 산 '+fr.smokes.length+'알';
+    if (k==='life') return (kFlamerSmokeLife*kk.smoke.life).toFixed(2)+'주기';
+    if (k==='size' || k==='sol') return '평균 '+avgR(fr.smokes)+'px';
+  }
+  if (g==='grain'){
+    if (k==='rate') return Math.max(0,Math.round(kGrainPerBlob*kk.grain.rate))+'알/덩어리 · 산 '+fr.grains.length+'알';
+    if (k==='size' || k==='sol') return '평균 '+avgR(fr.grains)+'px';
+    if (k==='life') return (1/((0.9+1.5*0.5)/Math.max(.05,kk.grain.life))).toFixed(2)+'초쯤';
+    if (k==='spawn'){
+      const s = kGrainSpawn*kk.grain.spawn;
+      return '반지름 ×'+s.toFixed(2)+' — '+(s<=0.01 ? '덩어리 한가운데'
+             : s<0.97 ? '실루엣 안쪽' : (s<1.03 ? '실루엣 위' : '실루엣 바깥'));
+    }
+    if (k==='emis') return 'RGB ×'+(kGrainGain*kk.grain.emis).toFixed(2);
+  }
+  if (g==='extra'){
+    if (k==='rate') return Math.max(0,Math.round(kFlamerEmberCount[lv]*1.2*kk.extra.rate))+'슬롯 · 산 '+fr.extras.length+'알';
+    if (k==='size' || k==='sol') return '평균 '+avgR(fr.extras)+'px';
+    if (k==='life') return (1.04*kk.extra.life).toFixed(2)+'초쯤';
+    if (k==='emis') return kk.extra.emis>1.001 ? 'RGB ×'+kk.extra.emis.toFixed(2) : '';
+  }
+  if (k==='op'){
+    const v = kk[g].op;
+    return v<0.999 ? '뒤가 비침' : (v>1.001 ? '알파 상한까지' : '');
+  }
+  return '';
+}
+function avgR(list){
+  if (!list.length) return '0.0';
+  let s=0; for (const it of list) s+=it.r;
+  return (s/list.length).toFixed(1);
+}
+/* 파생값 칸은 손잡이 44개 옆에 붙어 있습니다. 프레임마다 querySelectorAll 로
+ * 다시 모으면 트리를 매번 훑고, 값이 그대로인데도 textContent 를 다시 써서
+ * 레이아웃을 무효로 만듭니다. 목록은 갑판을 세울 때 한 번만 모으고, 글자가
+ * 실제로 달라졌을 때만 씁니다. */
+let _derivedEls = null;
+function collectDerivedEls(){
+  _derivedEls = [];
+  for (const el of deckEl.querySelectorAll('span[data-d]')){
+    const [g,k] = el.getAttribute('data-d').split('.');
+    _derivedEls.push({el, g, k});
+  }
+}
+function updateDerived(fr){
+  if (!_derivedEls) collectDerivedEls();
+  for (const it of _derivedEls){
+    const s = deriveText(it.g, it.k, fr);
+    if (it.el.textContent !== s) it.el.textContent = s;
+  }
+}
+
+/* ── 검산 ─────────────────────────────────────────────────────────────────
+ *   ① 결정론 — 어느 시각에 그리고, 아무렇게나 여러 시각을 그린 뒤, 같은
+ *      시각으로 돌아오면 픽셀이 한 바이트도 안 달라야 합니다.
+ *   ② 판 ①과 ②가 실제로 다른가 — 「단색과 거의 같다」는 실패입니다.
+ *   ③ 얹은 파티클이 실제로 보이는가 — 판 ②와 ③의 화소 차이 몫.
+ * ──────────────────────────────────────────────────────────────────────── */
+const verifyBar = document.getElementById('verifyBar');
+const _off = makeCanvas(2,2);
+const _offCtx = _off.getContext('2d', {willReadFrequently:true});
+function offAt(w,h){ if(_off.width!==w||_off.height!==h){_off.width=w;_off.height=h;} return _offCtx; }
+function snapshot(w,h,t,lv,attr,opts,kk){
+  const c = offAt(w,h);
+  drawScene(c, buildFrame(t,lv,attr,w,h,kk), opts);
+  return c.getImageData(0,0,w,h).data;
+}
+function checkDeterminism(){
+  const w=240,h=160, lv=parseInt(els.level.value,10), attr=els.attr.value;
+  const o={textured:true, particles:true};
+  const a = snapshot(w,h,3.77,lv,attr,o);
+  snapshot(w,h,0.31,lv,attr,o);
+  snapshot(w,h,9.14,lv,attr,o);
+  snapshot(w,h,5.46364,lv,attr,o);
+  const b = snapshot(w,h,3.77,lv,attr,o);
+  let d=0;
+  for (let i=0;i<a.length;i++) if (a[i]!==b[i]) d++;
+  return d;
+}
+function diffPct(a,b){
+  let n=0; const total=a.length/4;
+  for (let i=0;i<a.length;i+=4){
+    if (a[i]!==b[i]||a[i+1]!==b[i+1]||a[i+2]!==b[i+2]) n++;
+  }
+  return 100*n/total;
+}
+// 바탕(#06070b)의 휘도가 7 이라 그보다 넉넉히 위를 「켜진 화소」로 봅니다.
+const LIT_L = 12;
+function lum(d,i){ return d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114; }
+function litCount(d){
+  let n=0;
+  for (let i=0;i<d.length;i+=4) if (lum(d,i) > LIT_L) n++;
+  return n;
+}
+const VW=300, VH=200;
+let _litPx = 0, _baseFill = 0;
+/* 검산 한 번은 300×200 판 셋을 새로 그리고 화소를 훑는 일이라 20ms 가까이
+ * 걸립니다. 한 프레임에 몰면 그 프레임만 뚝 끊기므로 **세 프레임에 나눠** 합니다
+ * — 세 판이 같은 시각이어야 하니 시작할 때 시각을 붙잡아 둡니다. */
+let _vStage = 0, _vT = 0, _vLv = 3, _vAttr = 'fire', _vFlat = null, _vTex = null;
+/* ── 언제 재는가 ──────────────────────────────────────────────────────────
+ *   화소 차이는 설정이 그대로면 달라지지 않습니다. 그런데도 스무 프레임마다
+ *   다시 재면 0.33 초에 한 번씩 **세 프레임 연속으로** 장면을 새로 그리고
+ *   getImageData 로 GPU 를 세웁니다 — 그것이 「툭툭」의 한 갈래였습니다.
+ *   그래서 손잡이·레벨·속성·텍스처가 바뀐 뒤 **손을 떼시면** 한 번만 잽니다.
+ *   재는 동안은 여전히 세 프레임에 나눠 담아 한 프레임이 뚝 끊기지 않게 합니다.
+ *   그동안 화면에는 마지막 값이 그대로 남고 낡았다는 표시만 흐리게 붙습니다.
+ * ──────────────────────────────────────────────────────────────────────── */
+const VERIFY_DEBOUNCE_MS = 280;
+let _vPending = false, _vTimer = null;
+const _vStaleEl = document.createElement('span');
+_vStaleEl.className = 'staleq';
+verifyBar.appendChild(_vStaleEl);
+function markVerifyStale(){
+  if (_vTimer) clearTimeout(_vTimer);
+  verifyBar.classList.add('stale');
+  if (_vStaleEl.textContent !== '설정이 바뀌었습니다 — 손을 떼시면 다시 잽니다')
+    _vStaleEl.textContent = '설정이 바뀌었습니다 — 손을 떼시면 다시 잽니다';
+  _vTimer = setTimeout(()=>{
+    _vTimer = null;
+    _vPending = true;
+    _vStage = 0;                       // 중간에 끊긴 측정은 버리고 처음부터 잽니다.
+    _vStaleEl.textContent = '다시 재는 중입니다…';
+  }, VERIFY_DEBOUNCE_MS);
+}
+function updateVerify(fr){
+  if (_vStage === 0){ _vLv = parseInt(els.level.value,10); _vAttr = els.attr.value; }
+  const lv = _vLv, attr = _vAttr;   // 세 판이 같은 장면이어야 합니다.
+  if (_vStage === 0){
+    _vT = fr.t;
+    _vFlat = snapshot(VW,VH,_vT,lv,attr,{textured:false,particles:false}).slice();
+    _vStage = 1;
+    return;
+  }
+  if (_vStage === 1){
+    _vTex = snapshot(VW,VH,_vT,lv,attr,{textured:true, particles:false}).slice();
+    _vStage = 2;
+    return;
+  }
+  _vStage = 0;
+  const t = _vT;
+  const flat = _vFlat, texd = _vTex;
+  const full = snapshot(VW,VH,t,lv,attr,{textured:true, particles:true });
+  const dTex = diffPct(flat, texd);
+  const dPar = diffPct(texd, full);
+  _litPx = litCount(full);
+  const det = _det;
+  verifyBar.innerHTML =
+    `<span>결정론 <b class="${det===0?'ok':'bad'}">${det===0?'픽셀 동일 ✓':(det+' 바이트 다름 ✗')}</b></span>`+
+    `<span>①→② 텍스처가 바꾼 화소 <b class="diff">${dTex.toFixed(2)}%</b></span>`+
+    `<span>②→③ 파티클이 바꾼 화소 <b class="diff">${dPar.toFixed(2)}%</b></span>`+
+    `<span><a class="kl" href="#g-blendmode"><b>블렌드 모드(Blend Mode)</b></a> <b>Screen</b></span>`+
+    `<span>색칠본 캐시 <b>${cacheSize()}장 · ${(cacheBytes()/1048576).toFixed(1)}MB</b>`+
+    ` / 상한 <b>${(TINT_BYTES_CAP_ALL/1048576).toFixed(0)}MB</b> · 이번 프레임에 구운 것 <b>${_bakeRate}</b></span>`;
+  verifyBar.appendChild(_vStaleEl);
+  _vPending = false;
+  _vStaleEl.textContent = '';
+  verifyBar.classList.remove('stale');
+}
+
+/* ── 비용 — 지금 이 프레임 ────────────────────────────────────────────── */
+function fillOf(fr, withParticles){
+  const sc=fr.sc, kk=fr.k, rows=[];
+  const anySolo = SOLO_KEYS.some(k=>kk[k].solo);
+  const vis = k => !!kk[k].on && (!anySolo || !!kk[k].solo);
+  const coneN = vis('cone') ? fr.layers.reduce((s,l)=>s+l.length,0) : 0;
+  const coneA = vis('cone') ? fr.layers.reduce((s,l)=>s+l.reduce((x,q)=>x+quadArea(q),0),0) : 0;
+  rows.push({k:'cone', live:coneN?1:0, pieces:coneN, fill:coneA, add:false});
+  const blobN = vis('blob') ? fr.blobs.reduce((s,it)=>s+blobPieces(it,sc),0) : 0;
+  const blobA = vis('blob') ? fr.blobs.reduce((s,it)=>s+blobArea(it,sc),0) : 0;
+  rows.push({k:'blob', live:vis('blob')?fr.blobs.length:0, pieces:blobN, fill:blobA, add:false});
+  const lit = fr.blobs.filter(it=>it.al>.05);
+  const eGlow = fr.embers.filter(it=>it.w<.42);
+  const haloN = vis('halo') ? (lit.length+eGlow.length)*kHaloR.length : 0;
+  const haloA = vis('halo') ? (
+    lit.reduce((s,it)=>s+haloArea(it.r*(.72+.34*hash01(it.sd*1.3))*kk.halo.size),0) +
+    eGlow.reduce((s,it)=>s+haloArea(it.r*2.3*kk.halo.size),0)) : 0;
+  rows.push({k:'halo', live:vis('halo')?(lit.length+eGlow.length):0, pieces:haloN, fill:haloA, add:false});
+  const emBase = vis('ember') ? fr.embers : [];
+  rows.push({k:'ember', live:emBase.length, pieces:emBase.length,
+             fill:emBase.reduce((s,it)=>s+(2*it.r)*(2*it.r),0), add:false});
+  const smk = vis('smoke') ? fr.smokes : [];
+  rows.push({k:'smoke', live:smk.length, pieces:smk.length*2,
+             fill:smk.reduce((s,it)=>s+smokeArea(it),0), add:false});
+  const gr = (withParticles && vis('grain') && (kk.grain.solo || vis('blob'))) ? fr.grains : [];
+  rows.push({k:'grain', live:gr.length, pieces:gr.length,
+             fill:gr.reduce((s,it)=>s+(2*it.r)*(2*it.r),0), add:true});
+  const ex = (withParticles && vis('extra')) ? fr.extras : [];
+  rows.push({k:'extra', live:ex.length, pieces:ex.length,
+             fill:ex.reduce((s,it)=>s+(2*it.r)*(2*it.r),0), add:true});
+  let fill=0, live=0, pieces=0, addFill=0, addLive=0;
+  for (const r of rows){ fill+=r.fill; pieces+=r.pieces; if(r.k!=='cone') live+=r.live; if(r.add){addFill+=r.fill; addLive+=r.live;} }
+  return {rows, fill, live, pieces, addFill, addLive};
+}
+const costKpiEl=document.getElementById('costKpi'), costTableEl=document.getElementById('costTable');
+const costNoteEl=document.getElementById('costNote');
+// 손잡이를 끝까지 올리면 넓이가 억 단위로 갑니다 — 칸을 넘지 않게 접어 적습니다.
+function px2(v){
+  if (v >= 1e9) return (v/1e9).toFixed(1)+'G';
+  if (v >= 1e6) return (v/1e6).toFixed(1)+'M';
+  return (v/1000).toFixed(1)+'k';
+}
+// 판 ①(Base) — 손잡이를 하나도 안 건드린 기본값으로 같은 시각을 계산한 것입니다.
+function baselineOf(fr){
+  const bf = buildFrame(fr.t, fr.lv, fr.attr, cA.width, cA.height, KD);
+  const c = fillOf(bf, false);
+  const map = {};
+  for (const r of c.rows) map[r.k] = r.fill;
+  return { fill:c.fill, live:c.live, map };
+}
+/* 손잡이가 전부 기본값이면 판 ①의 같은 시각이 곧 이 프레임입니다 — 견주려고
+ * 프레임을 한 번 더 지을 이유가 없습니다. 얹은 파티클 둘만 빼면 값이 그대로
+ * 같습니다(fillOf 가 그 둘을 add 로 표시해 둡니다). 손잡이를 하나라도 건드리신
+ * 뒤에는 어쩔 수 없이 기본값 프레임을 지어야 하므로 그때만 짓습니다. */
+function baselineFromCurrent(c){
+  const map = {};
+  for (const r of c.rows) map[r.k] = r.add ? 0 : r.fill;
+  return { fill:c.fill - c.addFill, live:c.live - c.addLive, map };
+}
+/* ── 비용 표를 그리는 방법 ────────────────────────────────────────────────
+ *   표·타일·설명을 매번 innerHTML 로 새로 만들면 그때마다 HTML 을 다시 읽고
+ *   그 옆의 문서 전체 배치가 무효가 됩니다. 여섯 프레임마다 그러면 0.1 초에
+ *   한 번씩 걸리는 셈입니다. 그래서 뼈대는 한 번만 세우고 그 뒤로는 **글자가
+ *   달라진 칸만** 고쳐 씁니다. 화면에 뜨는 글자는 예전과 한 글자도 다르지
+ *   않습니다.
+ * ──────────────────────────────────────────────────────────────────────── */
+const COST_ROW_ORDER = ['cone','blob','halo','ember','smoke','grain','extra'];
+let _costDom = null;
+function setTx(node, s){ if (node.textContent !== s) node.textContent = s; }
+function setCls(el, s){ if (el.className !== s) el.className = s; }
+function buildCostDom(){
+  const A=(a,s)=>`<a href="#${a}" style="color:inherit;text-decoration:none">${s}</a>`;
+  let html = '<tr><th><a class="kl" href="#g-layer"><b>레이어</b></a></th>'+
+             '<th><a class="kl" href="#g-liveparticles"><b>Live</b></a></th><th>조각</th>'+
+             '<th><a class="kl" href="#g-fill"><b>Fill(px²)</b></a></th><th>판① 대비</th></tr>';
+  for (const k of COST_ROW_ORDER){
+    html += `<tr data-row="${k}"><td class="name">${LAYER_NAME[k]}</td><td></td><td></td><td></td><td></td></tr>`;
+  }
+  html += '<tr class="total" data-row="__total"><td class="name">합계</td><td></td><td></td><td></td><td></td></tr>';
+  html += '<tr><td colspan="5" style="text-align:left;color:#5c6478;font-size:10px;border:none;padding-top:5px">'+
+          '「판① 대비」는 손잡이를 하나도 안 건드린 판 ①(Base)의 같은 시각과 견준 값입니다. '+
+          '얹은 파티클 둘은 판 ①에 없으므로 「새로 얹음」으로 적습니다.</td></tr>';
+  costTableEl.innerHTML = html;
+  const rows = {};
+  for (const tr of costTableEl.querySelectorAll('tr[data-row]')){
+    rows[tr.getAttribute('data-row')] = { tr, td: tr.querySelectorAll('td') };
+  }
+  costKpiEl.innerHTML =
+    `<div class="b"><div class="n"></div><div class="l">${A('g-liveparticles','라이브 파티클(Live Particles)')}</div></div>`+
+    `<div class="b"><div class="n"></div><div class="l">${A('g-fill','필(Fill) px²')}</div></div>`+
+    `<div class="b"><div class="n"></div><div class="l">${A('g-overdraw','오버드로(Overdraw)')}</div></div>`+
+    `<div class="b"><div class="n"></div><div class="l">판 ①(Base) 대비 Fill</div></div>`+
+    `<div class="b"><div class="n"></div><div class="l">얹은 파티클이 더한 Fill</div></div>`+
+    `<div class="b"><div class="n"><span></span><span style="font-size:10px">ms</span><span></span></div>`+
+      `<div class="l">한 프레임 JS 시간 · p95(120프레임)</div></div>`;
+  const tiles = costKpiEl.querySelectorAll('.b');
+  const msSpans = tiles[5].querySelector('.n').querySelectorAll('span');
+  costNoteEl.innerHTML =
+    '실제 캔버스는 판 하나가 <b data-n="px1"></b>이고(해상도 배율 <b data-n="pxr"></b> · 이 화면의 배율 '+
+    '<b data-n="dpr"></b>), 판이 셋이라 매 프레임 <b data-n="px3"></b>를 칠합니다. 배율이 2배면 화소는 '+
+    '4배가 됩니다 — 위의 「해상도 배율」을 낮추시면 그만큼 줄어듭니다. '+
+    '색칠본 캐시는 <b data-n="cache"></b>(상한 <b data-n="cap"></b>)이고 미리 굽기에 '+
+    '<b data-n="warm"></b> 들었습니다(<b data-n="warmN"></b>).';
+  const note = {};
+  for (const b of costNoteEl.querySelectorAll('b[data-n]')) note[b.getAttribute('data-n')] = b;
+  _costDom = { rows, tiles, kpiN: Array.prototype.map.call(tiles, t=>t.querySelector('.n')), msSpans, note };
+}
+function updateCostPanel(fr){
+  if (!_costDom) buildCostDom();
+  const d = _costDom;
+  const parts = els.parToggle.checked;
+  const c = fillOf(fr, parts);
+  const base = _changed === 0 ? baselineFromCurrent(c) : baselineOf(fr);
+  _baseFill = base.fill;
+  for (const r of c.rows){
+    const row = d.rows[r.k];
+    if (!row) continue;
+    const b = base.map[r.k] || 0;
+    const pct = b>0 ? (100*r.fill/b).toFixed(0)+'%' : (r.fill>0 ? '새로 얹음' : '—');
+    setCls(row.tr, r.add ? 'add' : ((K[r.k]&&!K[r.k].on) ? 'off' : ''));
+    // 원뿔은 알갱이가 아니라 이어진 리본이라 살아 있는 알갱이 수가 없습니다.
+    setTx(row.td[1], r.k==='cone' ? '—' : String(r.live));
+    setTx(row.td[2], String(r.pieces));
+    setTx(row.td[3], px2(r.fill));
+    setTx(row.td[4], pct);
+  }
+  const tot = d.rows.__total;
+  setTx(tot.td[1], String(c.live));
+  setTx(tot.td[2], String(c.pieces));
+  setTx(tot.td[3], px2(c.fill));
+  setTx(tot.td[4], base.fill>0 ? (100*c.fill/base.fill).toFixed(0)+'%' : '—');
+
+  const vsBase = _baseFill>0 ? 100*c.fill/_baseFill : 100;
+  const over = _litPx>0 ? c.fill/(_litPx*(cA.width*cA.height)/(VW*VH)) : 0;
+  const p95 = framePct(.95);
+  setTx(d.kpiN[0], String(c.live));
+  setTx(d.kpiN[1], px2(c.fill));
+  setTx(d.kpiN[2], over.toFixed(1)+'×');
+  setTx(d.kpiN[3], vsBase.toFixed(0)+'%');
+  setTx(d.kpiN[4], '+'+px2(c.addFill));
+  setTx(d.msSpans[0], _frameMs.toFixed(1));
+  setTx(d.msSpans[2], ' · '+p95.toFixed(1));
+  setCls(d.tiles[0], 'b');
+  setCls(d.tiles[1], 'b ' + (c.fill>_baseFill*1.4?'bad':'warn'));
+  setCls(d.tiles[2], 'b ' + (over>4?'bad':'good'));
+  setCls(d.tiles[3], 'b ' + (vsBase>140?'bad':(vsBase>110?'warn':'good')));
+  setCls(d.tiles[4], 'b');
+  setCls(d.tiles[5], 'b ' + (p95>20?'bad':'good'));
+
+  const cw = cA.width, ch = cA.height;
+  setTx(d.note.px1, `${cw}×${ch} = ${px2(cw*ch)}화소`);
+  setTx(d.note.pxr, `${_pxr.toFixed(2)}배`);
+  setTx(d.note.dpr, `${deviceDpr.toFixed(1)}배`);
+  setTx(d.note.px3, `${px2(cw*ch*3)}화소`);
+  setTx(d.note.cache, `${cacheSize()}장 · ${(cacheBytes()/1048576).toFixed(1)}MB`);
+  setTx(d.note.cap, `${(TINT_BYTES_CAP_ALL/1048576).toFixed(0)}MB`);
+  setTx(d.note.warm, `${_prewarmMs.toFixed(0)}ms`);
+  setTx(d.note.warmN, `${_prewarmBakes}장`);
+}
+
+/* ── 레이어별 텍스처 판정 ─────────────────────────────────────────────────
+ *   레이어 하나만 그린 판을 단색/텍스처로 각각 내고, **단색이 켠 화소**를
+ *   자로 삼아 밝기·채도·국소 대비를 잽니다(같은 발자국 위에서 비교해야
+ *   공정합니다). 국소 대비 = |L(x,y) − 상하좌우 평균 L| 의 평균입니다.
+ * ──────────────────────────────────────────────────────────────────────── */
+function statsOn(dataFlat, dataTex, w, h){
+  const L=(d,i)=>d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
+  const lf=new Float32Array(w*h), lt=new Float32Array(w*h);
+  for (let p=0;p<w*h;p++){ lf[p]=L(dataFlat,p*4); lt[p]=L(dataTex,p*4); }
+  let n=0, bf=0, bt=0, sf=0, st=0, cf=0, ct=0, dp=0;
+  for (let y=1;y<h-1;y++) for (let x=1;x<w-1;x++){
+    const p=y*w+x;
+    if (lf[p] <= 8) continue;   // 단색이 켠 화소만
+    n++;
+    bf += lf[p]; bt += lt[p];
+    const i=p*4;
+    if (dataFlat[i]!==dataTex[i]||dataFlat[i+1]!==dataTex[i+1]||dataFlat[i+2]!==dataTex[i+2]) dp++;
+    const mxF=Math.max(dataFlat[i],dataFlat[i+1],dataFlat[i+2]);
+    const mnF=Math.min(dataFlat[i],dataFlat[i+1],dataFlat[i+2]);
+    const mxT=Math.max(dataTex[i],dataTex[i+1],dataTex[i+2]);
+    const mnT=Math.min(dataTex[i],dataTex[i+1],dataTex[i+2]);
+    sf += mxF>0 ? (mxF-mnF)/mxF : 0;
+    st += mxT>0 ? (mxT-mnT)/mxT : 0;
+    const nf=(lf[p-1]+lf[p+1]+lf[p-w]+lf[p+w])/4;
+    const nt=(lt[p-1]+lt[p+1]+lt[p-w]+lt[p+w])/4;
+    cf += Math.abs(lf[p]-nf); ct += Math.abs(lt[p]-nt);
+  }
+  if (n===0) return null;
+  return { n, bF:bf/n, bT:bt/n, sF:sf/n, sT:st/n, cF:cf/n, cT:ct/n, dp:100*dp/n };
+}
+const JUDGE_TIMES = [0.83, 2.44, 4.10, 4.55, 4.95];
+// 텍스처를 바꿨을 때 화소가 실제로 달라지는지 — 같은 레이어를 두 텍스처로 그려 견줍니다.
+function judgeLayer(key, texKey, lv, attr, w, h, texKeyB){
+  const save = K[key].tex, saveBlend = K[key].blend, saveTexOn = K[key].texOn;
+  let acc=null;
+  K[key].tex = texKey; K[key].blend = 1; K[key].texOn = 1;
+  for (const t of JUDGE_TIMES){
+    const fr = buildFrame(t, lv, attr, w, h);
+    const c = offAt(w,h);
+    drawScene(c, fr, {textured:false, particles:false, only:key});
+    const df = c.getImageData(0,0,w,h).data.slice();
+    drawScene(c, fr, {textured:true, particles:false, only:key});
+    const dt = c.getImageData(0,0,w,h).data.slice();
+    const s = statsOn(df, dt, w, h);
+    let dAB = 0;
+    if (texKeyB){
+      K[key].tex = texKeyB;
+      drawScene(c, fr, {textured:true, particles:false, only:key});
+      const db = c.getImageData(0,0,w,h).data;
+      dAB = diffPct(dt, db);
+      K[key].tex = texKey;
+    }
+    if (!s) continue;
+    if (!acc) acc = {n:0,bF:0,bT:0,sF:0,sT:0,cF:0,cT:0,dp:0,ab:0,k:0};
+    acc.n+=s.n; acc.bF+=s.bF; acc.bT+=s.bT; acc.sF+=s.sF; acc.sT+=s.sT;
+    acc.cF+=s.cF; acc.cT+=s.cT; acc.dp+=s.dp; acc.ab+=dAB; acc.k++;
+  }
+  K[key].tex = save; K[key].blend = saveBlend; K[key].texOn = saveTexOn;
+  if (!acc || acc.k===0) return null;
+  const k=acc.k;
+  return { bF:acc.bF/k, bT:acc.bT/k, sF:acc.sF/k, sT:acc.sT/k, cF:acc.cF/k, cT:acc.cT/k,
+           dp:acc.dp/k, ab:acc.ab/k, px:Math.round(acc.n/k) };
+}
+const JUDGE_ALT = {cone:'noise_vein', blob:'noise_streak', halo:'mask_glow_soft', ember:'noise_streak', smoke:'noise_grainy'};
+function judgeCurrent(){
+  const lv=parseInt(els.level.value,10), attr=els.attr.value, w=380, h=250;
+  let html = '<table class="jtable"><tr><th>레이어</th><th>스프라이트</th><th>덮임</th>'+
+    '<th>밝기 단색</th><th>텍스처</th><th>비</th>'+
+    '<th>채도 단색</th><th>텍스처</th><th>비</th>'+
+    '<th>국소대비 단색</th><th>텍스처</th><th>비</th>'+
+    '<th>단색→텍스처 화소</th><th>텍스처 두 장 사이</th><th>판정</th></tr>';
+  for (const L of LAYERS){
+    const tk = K[L.key].tex;
+    if (tk === '__none'){
+      html += `<tr><td>${L.name}</td><td colspan="13">— 단색으로 두었습니다 —</td><td></td></tr>`;
+      continue;
+    }
+    const alt = JUDGE_ALT[L.key]===tk ? 'noise_spokes' : JUDGE_ALT[L.key];
+    const r = judgeLayer(L.key, tk, lv, attr, w, h, alt);
+    if (!r){ html += `<tr><td>${L.name}</td><td>${TEX[tk].label}</td><td colspan="12">이 시각엔 안 켜집니다</td><td></td></tr>`; continue; }
+    const br=r.bT/r.bF, sr=r.sT/Math.max(1e-6,r.sF), cr=r.cT/Math.max(1e-6,r.cF);
+    const win = cr>=1.15 && br>=0.85 && br<=1.20;
+    html += `<tr><td>${L.name}</td><td>${TEX[tk].label}</td><td>${(TEX[tk].meanCov*100).toFixed(0)}%</td>`+
+      `<td>${r.bF.toFixed(1)}</td><td>${r.bT.toFixed(1)}</td><td class="${br>=0.85&&br<=1.2?'g':'b'}">${br.toFixed(2)}×</td>`+
+      `<td>${r.sF.toFixed(3)}</td><td>${r.sT.toFixed(3)}</td><td class="${sr>=0.9?'g':'b'}">${sr.toFixed(2)}×</td>`+
+      `<td>${r.cF.toFixed(2)}</td><td>${r.cT.toFixed(2)}</td><td class="${cr>=1.15?'g':'b'}">${cr.toFixed(2)}×</td>`+
+      `<td>${r.dp.toFixed(1)}%</td><td>${r.ab.toFixed(1)}%</td>`+
+      `<td class="${win?'g':'b'}">${win?'텍스처 승':'단색이 나음'}</td></tr>`;
+  }
+  html += '</table><div style="margin-top:8px">판정 기준 — 국소 대비가 <b>1.15배 이상</b>이고 밝기가 단색의 <b>0.85~1.20배</b> 안이면 텍스처 승입니다. '+
+    '채도는 균일 RGB 배로 보상하므로 원리상 안 떨어집니다(HSV 채도는 균일 스케일에 불변입니다). '+
+    '「텍스처 두 장 사이」는 스프라이트를 다른 것으로 갈았을 때 화소가 얼마나 달라지는지입니다 — 이 값이 0 에 가까우면 텍스처가 실제로는 안 들어간 것입니다.</div>';
+  document.getElementById('judgeBody').innerHTML = html;
+}
+
+/* ── 용어집 ─────────────────────────────────────────────────────────────── */
+const GLOSS = [
+ ['g-emissionrate','이미션 레이트(Emission Rate)',
+  '초당 몇 알을 새로 뿜는지 정합니다. 화면에 동시에 몇 알이 있는지(Live Particles)와는 다른 값입니다 — 동시 수는 <code>방출량 × 수명</code>으로 정해집니다. 그래서 수명을 두 배로 늘리면 방출량을 건드리지 않아도 화면의 알갱이가 두 배가 됩니다. 밀도를 잡으실 때는 이 둘 중 어느 쪽을 만질지 먼저 정하셔야 합니다.'],
+ ['g-liveparticles','라이브 파티클(Live Particles)',
+  '지금 이 순간 살아 있는 알갱이 수입니다. 방출량과 수명의 결과이지 직접 정하는 값이 아닙니다. 비용을 보실 때는 이 수보다 아래의 Fill이 더 중요합니다 — 알갱이 수가 열 배가 되어도 하나하나가 작으면 값은 거의 오르지 않습니다.'],
+ ['g-lifetime','라이프타임(Lifetime)',
+  '알갱이 하나가 태어나서 사라질 때까지의 시간입니다. 사거리를 정하는 것도 사실상 이 값입니다 — 속도가 같으면 오래 사는 알갱이가 더 멀리 갑니다. 그래서 수명을 늘리면 불길이 길어지고, 동시에 화면의 알갱이 수도 같이 늘어납니다.'],
+ ['g-startsize','스타트 사이즈(Start Size)',
+  '태어나는 순간의 크기입니다. 총구 근처가 빽빽해 보이는지는 대부분 이 값이 정합니다 — 시작이 너무 작으면 어린 알갱이가 보이지 않아 총구가 비어 보입니다.'],
+ ['g-sizeoverlife','사이즈 오버 라이프(Size over Life)',
+  '수명이 흐르는 동안 크기가 어떻게 변하는지를 정합니다. 원래 업계에서는 곡선을 통째로 가리키는 말이라 커질 수도 작아질 수도 있는데, 여기 손잡이는 그 변화 폭만 배수로 굴립니다. 불은 커지면서 식으므로 이 값이 클수록 멀리 갈수록 뭉툭해집니다.'],
+ ['g-opacity','오패시티(Opacity)',
+  '불투명도입니다. 낮추면 뒤가 비칩니다. 밝기와 헷갈리기 쉬운데 다릅니다 — 오패시티를 올리면 뒤가 덜 비칠 뿐 더 밝아지지는 않습니다. 그리고 알갱이가 서로 겹치는 이펙트에서는 이 값을 올리는 것보다 개수를 줄이고 크기를 키우는 편이 결이 살아남습니다.'],
+ ['g-spreadangle','스프레드 앵글(Spread Angle)',
+  '뿜는 원뿔이 벌어지는 각입니다. 좁으면 빔처럼, 넓으면 퍼지는 불길처럼 보입니다.'],
+ ['g-texblend','텍스처 블렌드(Texture Blend)',
+  '단색으로 칠한 것과 텍스처를 입힌 것 사이를 오가는 값입니다. 0이면 단색, 1이면 텍스처 그대로입니다. 표준 용어는 아니고, 「텍스처가 무엇을 바꾸는지」를 손으로 밀어보시라고 이 페이지에 둔 손잡이입니다.'],
+ ['g-sprite','스프라이트(Sprite)',
+  '알갱이 하나에 입히는 그림 한 장입니다. 원래는 배경과 따로 움직이는 작은 2D 이미지를 부르던 말인데, 지금은 파티클에 붙이는 낱장 텍스처를 가리킬 때도 그대로 씁니다.'],
+ ['g-emissive','에미시브 인텐시티(Emissive Intensity)',
+  '스스로 내는 빛의 세기입니다. 반사가 아니라 발광이라 어두운 배경에서도 밝게 뜹니다. 오패시티와 다른 이유가 여기 있습니다 — 오패시티는 「얼마나 가리는가」이고 이것은 「얼마나 빛나는가」입니다.'],
+ ['g-fill','필(Fill)',
+  '칠한 화소 수입니다. 업계에서 <code>Fill Rate</code>는 원래 GPU가 초당 칠할 수 있는 화소량, 즉 하드웨어 능력을 가리킵니다. 우리가 재는 것은 능력이 아니라 실제로 칠한 양이라 엄밀히는 다른 값이고, 그래서 <code>Fill</code>로 씁니다. 이 게임의 진짜 병목이 여기입니다 — 알갱이 개수가 아니라 칠하는 넓이가 값을 정합니다. 크기를 두 배로 올리면 넓이는 네 배가 됩니다.'],
+ ['g-overdraw','오버드로(Overdraw)',
+  '같은 화소를 몇 번 겹쳐 칠하는지입니다. 반투명한 알갱이를 겹치면 한 화소를 여러 번 칠하게 되고, GPU는 알파가 낮든 높든 매번 계산합니다. 그래서 「어차피 반투명이니 싸겠지」가 틀립니다 — 겹치는 만큼 그대로 값이 됩니다.'],
+ ['g-blendmode','블렌드 모드(Blend Mode)',
+  '레이어를 겹칠 때 색을 어떻게 섞는지 정합니다. 여기서는 <code>Screen</code>을 씁니다 — 겹칠수록 밝아지되 흰색을 넘지 못합니다. <code>Add</code>(그냥 더하기)는 금세 하얗게 타서 3단 계조가 뭉개지고, <code>Multiply</code>(곱하기)는 어두워집니다.'],
+ ['g-layer','레이어(Layer)',
+  '겹쳐 그리는 한 겹입니다. 이 화염방사는 다섯 겹으로 되어 있고 각각이 다른 일을 합니다.'],
+ ['g-solo','솔로(Solo)',
+  '이 레이어만 보는 기능입니다. 음향에서 온 말로, 한 트랙만 남기고 나머지를 끄는 것과 같습니다.'],
+ ['g-enable','이네이블(Enable)',
+  '이 레이어를 켤지 끌지입니다. 솔로와 달리 다른 레이어에는 영향을 주지 않습니다.'],
+ ['g-spawnoffset','스폰 오프셋(Spawn Offset)',
+  '알갱이가 태어나는 자리를 밀어내는 값입니다. 이 페이지에서는 덩어리 폴리곤의 꼭짓점 반지름에 곱합니다 — 0이면 덩어리 한가운데, 1이면 실루엣 위, 1보다 크면 실루엣 바깥에서 태어납니다. 태어나는 자리의 <b>모양</b>을 바꾸는 <code>Emission Shape</code>과는 다른 값이라 이 이름을 씁니다.'],
+];
+function buildGloss(){
+  document.getElementById('glossBody').innerHTML =
+    GLOSS.map(([a,t,d]) => `<div class="gitem" id="${a}"><div class="gt">${t}</div><p class="gd">${d}</p></div>`).join('');
+}
+
+/* ── 값 복사 · 초기화 ───────────────────────────────────────────────────── */
+function changedOnly(){
+  const out={};
+  for (const g in KD){
+    const diff={};
+    for (const k in KD[g]) if (K[g][k] !== KD[g][k]) diff[k] = K[g][k];
+    if (Object.keys(diff).length) out[g]=diff;
+  }
+  return out;
+}
+document.getElementById('btnCopy').addEventListener('click', async () => {
+  const d = changedOnly();
+  const txt = Object.keys(d).length ? JSON.stringify(d, null, 1) : '{}  // 기본값 그대로입니다';
+  try { await navigator.clipboard.writeText(txt); } catch(e){}
+  const b=document.getElementById('btnCopy'); const s=b.textContent;
+  b.textContent = Object.keys(d).length ? '복사했습니다' : '바뀐 값이 없습니다';
+  setTimeout(()=>{ b.textContent=s; }, 1400);
+});
+document.getElementById('btnResetAll').addEventListener('click', ()=>{ K = defKnobs(); syncDeck(); });
+document.getElementById('btnJudge').addEventListener('click', judgeCurrent);
+
+/* ── 메인 루프 ───────────────────────────────────────────────────────────── */
+let simTime = 0, lastNow = null, frameCount = 0, _det = 0, _lastFr = null;
+let _frameMs = 0, _bakeRate = 0;
+function cacheSize(){ let n=0; for (const k in TEX) n += TEX[k].tint.size; return n; }
+function cacheBytes(){ return _tintBytesAll; }
+function stepFrame(){
+  const t0 = performance.now();
+  if (_recActive && _recPrev > 0) _recGap.push(t0 - _recPrev);
+  if (_recActive) _recPrev = t0;
+  const b0 = _bakes;
+  poolFlushRetired();
+  fitAllCanvases();
+  const now = performance.now();
+  if (lastNow == null) lastNow = now;
+  const dt = Math.min(0.05, (now-lastNow)/1000);
+  lastNow = now;
+  if (!els.freeze.checked) simTime += dt*parseFloat(els.speed.value);
+  const t = simTime;
+  const lv = parseInt(els.level.value,10), attr = els.attr.value;
+
+  const fr = buildFrame(t, lv, attr, cA.width, cA.height);
+  const texOn = els.texToggle.checked, parOn = els.parToggle.checked;
+  const optC = {textured:texOn, particles:parOn};
+  _bakeBudget = BAKE_BUDGET;                 // 화면 세 판에만 예산을 겁니다.
+  drawScene(ctxA, fr, {textured:false, particles:false});
+  drawScene(ctxB, fr, {textured:texOn, particles:false});
+  // 판 ③ = 판 ② ⊕ 얹은 파티클. 크기가 어긋나면(레이아웃 반올림) 직접 그립니다.
+  if (cB.width===cC.width && cB.height===cC.height) drawSceneFrom(ctxC, cB, fr, optC);
+  else drawScene(ctxC, fr, optC);
+  _bakeBudget = Infinity;
+
+  _lastFr = fr;
+  frameCount++;
+  _bakeRate = _bakes - b0;
+  /* 기록 중에는 패널을 멈춥니다 — 재는 도구가 재려는 대상을 흔들면 안 됩니다.
+   * 검산 줄은 이제 설정이 바뀐 뒤에만 돕니다(_vPending). 상시 갱신이 아닙니다. */
+  if (!window.__quiet && !_recActive){
+    if (_vPending || _vStage !== 0) updateVerify(fr);
+    if (frameCount % 6 === 0){ updateCostPanel(fr); updateDerived(fr); }
+  }
+  // 시간은 **맨 끝**에서 잽니다 — 패널 갱신까지 들어가야 표시가 진실을 말합니다.
+  _frameMs = performance.now() - t0;
+  _frameRing[_frameRingI++ % FRAME_RING] = _frameMs;
+  if (_recActive){
+    _recJs.push(_frameMs);
+    if (t0 >= _recEnd) finishRecording();
+  }
+}
+const FRAME_RING = 120;
+const _frameRing = new Float64Array(FRAME_RING);
+let _frameRingI = 0;
+function framePct(p){
+  const n = Math.min(_frameRingI, FRAME_RING);
+  if (!n) return 0;
+  const a = Array.prototype.slice.call(_frameRing, 0, n).sort((x,y)=>x-y);
+  return a[Math.min(n-1, Math.round(p*(n-1)))];
+}
+
+/* ── 프레임 기록 ──────────────────────────────────────────────────────────
+ *   헤드리스는 화면 배율이 1배라 화소가 4분의 1입니다 — 거기서 여유롭던 것이
+ *   레티나에서는 빠듯할 수 있습니다. 그래서 **이 화면에서** 재는 자를 답니다.
+ *   누르시면 10초 동안 프레임 사이 간격을 모으고, 그동안 비용 표와 검산 줄은
+ *   멈춥니다(재는 도구가 재려는 대상을 흔들면 안 됩니다).
+ * ──────────────────────────────────────────────────────────────────────── */
+const REC_SECONDS = 10;
+let _recActive = false, _recPrev = 0, _recEnd = 0, _recGap = [], _recJs = [], _recMeta = null;
+let _recText = '';
+const recBoxEl = document.getElementById('recBox');
+const recBodyEl = document.getElementById('recBody');
+const btnRecEl = document.getElementById('btnRec');
+function _q(sorted, p){ return sorted[Math.min(sorted.length-1, Math.round(p*(sorted.length-1)))]; }
+function _f1(v){ return v.toFixed(1); }
+function startRecording(sec){
+  if (_recActive) return;
+  const secs = (typeof sec === 'number' && sec > 0) ? sec : REC_SECONDS;
+  _recActive = true;
+  _recPrev = 0; _recGap = []; _recJs = [];
+  _recEnd = performance.now() + secs*1000;
+  _recMeta = {
+    dpr: deviceDpr, pxr: _pxr,
+    cw: cA.width, ch: cA.height,
+    lv: els.level.value, attr: els.attr.options[els.attr.selectedIndex].textContent,
+    tex: els.texToggle.checked, par: els.parToggle.checked,
+    speed: parseFloat(els.speed.value), freeze: els.freeze.checked,
+    cache0: cacheSize(), mb0: cacheBytes()/1048576,
+  };
+  btnRecEl.disabled = true;
+  btnRecEl.textContent = '기록 중입니다… '+secs+'초';
+  recBoxEl.style.display = '';
+  recBodyEl.innerHTML = '<i>기록 중입니다. '+secs+'초 동안 화면을 그대로 두시고 다른 창으로 넘어가지 말아 주십시오 — '+
+                        '탭이 뒤로 가면 브라우저가 프레임을 일부러 늦춥니다.</i>';
+}
+function finishRecording(){
+  _recActive = false;
+  btnRecEl.disabled = false;
+  btnRecEl.textContent = '프레임 기록('+REC_SECONDS+'초)';
+  const gaps = _recGap, js = _recJs;
+  if (gaps.length < 10){
+    recBodyEl.innerHTML = '<i>프레임이 너무 적게 모여 판정할 수 없습니다. 다시 눌러 주십시오.</i>';
+    return;
+  }
+  const gs = gaps.slice().sort((a,b)=>a-b);
+  const jsS = js.slice().sort((a,b)=>a-b);
+  let elapsed = 0; for (const g of gaps) elapsed += g;
+  const frames = gaps.length + 1;
+  /* 한 화면 주기 — 가장 짧은 축(하위 5%)이 이 화면이 낸 최선입니다. 다만 모든
+   * 프레임을 고르게 놓치고 있으면 그 최선마저 이미 늦은 값이라 「안 놓쳤다」로
+   * 보입니다. 그래서 60Hz(16.7ms) 자로도 같이 재고 **나쁜 쪽**으로 판정합니다. */
+  const period = Math.max(4, _q(gs, 0.05));
+  const missOf = p => { let n=0; for (const g of gaps){ const k = Math.round(g/p) - 1; if (k > 0) n += k; } return n; };
+  const missed = missOf(period), missed60 = missOf(1000/60);
+  const fpsEff = frames / (elapsed/1000);
+  const missPctObs = 100*missed/(frames+missed);
+  const missPct60 = 100*missed60/(frames+missed60);
+  const missPct = Math.max(missPctObs, missPct60);
+  // 튀는 프레임 — 한 주기의 1.5배(또는 +4ms)를 넘은 간격입니다.
+  const thr = Math.max(period*1.5, period+4);
+  const at = [];
+  for (let i=0;i<gaps.length;i++) if (gaps[i] > thr) at.push(i);
+  const hist = new Map();
+  for (let i=1;i<at.length;i++){ const d = at[i]-at[i-1]; hist.set(d, (hist.get(d)||0)+1); }
+  const histTop = Array.from(hist.entries()).sort((a,b)=> b[1]-a[1] || a[0]-b[0]).slice(0,10);
+  const m = _recMeta;
+  const px1 = m.cw*m.ch;
+  const L = [];
+  L.push(`잰 구간 ${(elapsed/1000).toFixed(1)}초 · ${frames}프레임`);
+  L.push(`화면 배율 ${m.dpr.toFixed(1)}배 · 해상도 배율 ${m.pxr.toFixed(2)}배 · 판 하나 ${m.cw}×${m.ch}(${px2(px1)}화소) · 판 셋 ${px2(px1*3)}화소`);
+  L.push(`레벨 L${m.lv} · 속성 ${m.attr} · 텍스처 ${m.tex?'켬':'끔'} · 파티클 ${m.par?'켬':'끔'} · 타임 스케일 ${m.speed.toFixed(1)}배${m.freeze?' · 정지':''}`);
+  L.push(`색칠본 캐시 ${m.cache0}장 · ${m.mb0.toFixed(1)}MB → ${cacheSize()}장 · ${(cacheBytes()/1048576).toFixed(1)}MB (상한 ${(TINT_BYTES_CAP_ALL/1048576).toFixed(0)}MB)`);
+  L.push('');
+  L.push(`프레임 간격(ms)   중앙값 ${_f1(_q(gs,.5))} · p95 ${_f1(_q(gs,.95))} · p99 ${_f1(_q(gs,.99))} · 최댓값 ${_f1(gs[gs.length-1])} · 최솟값 ${_f1(gs[0])}`);
+  L.push(`한 프레임 JS(ms)  중앙값 ${_f1(_q(jsS,.5))} · p95 ${_f1(_q(jsS,.95))} · p99 ${_f1(_q(jsS,.99))} · 최댓값 ${_f1(jsS[jsS.length-1])}`);
+  L.push(`실효 ${fpsEff.toFixed(1)}fps — ${frames}프레임을 ${(elapsed/1000).toFixed(1)}초에 냈습니다`);
+  L.push(`  이 화면이 낸 가장 짧은 간격 ${_f1(period)}ms 자로 — 놓친 프레임 ${missed}장(${missPctObs.toFixed(1)}%)`);
+  L.push(`  60Hz(16.7ms) 자로 — 놓친 프레임 ${missed60}장(${missPct60.toFixed(1)}%)`);
+  L.push('');
+  L.push(`튀는 프레임 — 간격이 ${_f1(thr)}ms 를 넘은 것 ${at.length}회`);
+  L.push(`  튄 자리 사이 간격(프레임 수 : 횟수)  ${histTop.length ? histTop.map(([d,n])=>d+':'+n+'회').join('  ') : '— 없습니다'}`);
+  L.push(`  튄 자리(프레임 번호, 앞에서 24개)  ${at.length ? at.slice(0,24).join(', ') : '— 없습니다'}`);
+  L.push(`  튄 간격(ms, 앞에서 24개)  ${at.length ? at.slice(0,24).map(i=>_f1(gaps[i])).join(', ') : '— 없습니다'}`);
+  L.push('');
+  L.push('※ 기록 중에는 비용 표와 검산 줄을 멈춰 두었습니다. JS 가 낮은데 간격이 벌어지면 화소를 칠하는 쪽이 못 따라오는 것입니다 — 「해상도 배율」을 낮춰 보십시오.');
+  _recText = L.join('\n');
+  const verdict = missPct < 10
+    ? '<b style="color:var(--good)">놓친 프레임이 10% 아래입니다 — 이 설정에서는 화면을 따라가고 있습니다.</b>'
+    : (missPct < 25
+      ? '<b style="color:var(--warn)">놓친 프레임이 10%를 넘습니다 — 「해상도 배율」을 한 눈금 낮춰 다시 재 보십시오.</b>'
+      : '<b style="color:var(--bad)">놓친 프레임이 25%를 넘습니다 — 화소를 칠하는 쪽이 못 따라오고 있습니다. 「해상도 배율」을 1배로 낮춰 다시 재 보십시오.</b>');
+  recBodyEl.innerHTML = verdict +
+    '<pre class="recpre">' + _recText.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</pre>' +
+    '<div style="margin-top:7px"><span class="reccopy" id="recCopy">이 결과를 클립보드에 복사합니다</span></div>';
+  const cp = document.getElementById('recCopy');
+  cp.addEventListener('click', ()=>{ copyRecText(cp); });
+  copyRecText(cp);            // 손이 안 가게 먼저 한 번 시도합니다.
+}
+function copyRecText(el){
+  if (!navigator.clipboard || !_recText){ if (el) el.textContent = '복사가 안 됩니다 — 위 상자를 직접 긁어 주십시오'; return; }
+  navigator.clipboard.writeText(_recText).then(
+    ()=>{ if (el) el.textContent = '복사했습니다 — 그대로 붙여 넣어 주시면 됩니다'; },
+    ()=>{ if (el) el.textContent = '이 줄을 누르시면 클립보드에 복사합니다'; });
+}
+btnRecEl.addEventListener('click', ()=>startRecording());
+window.__rec = startRecording;
+window.__recDone = function(){ return _recActive ? null : _recText; };
+
+/* ── 무대 높이 — 창이 바뀔 때만 다시 잽니다 ───────────────────────────────
+ *   매 프레임 offsetHeight 를 읽으면 강제 동기 레이아웃이 걸리고, body 에
+ *   변수를 쓰면 문서 전체 스타일이 무효화돼 슬라이더 44개와 용어집이 매
+ *   프레임 다시 계산됩니다. 무대 높이는 창 크기가 바뀔 때만 달라집니다.
+ * ──────────────────────────────────────────────────────────────────────── */
+const stageWrapEl = document.getElementById('fxstagewrap');
+let _stageH = -1;
+function syncStageHeight(){
+  if (!stageWrapEl) return;
+  const h = stageWrapEl.offsetHeight + 10;
+  if (h === _stageH) return;
+  _stageH = h;
+  document.body.style.setProperty('--stageh', h+'px');
+}
+if (window.ResizeObserver && stageWrapEl) new ResizeObserver(syncStageHeight).observe(stageWrapEl);
+window.addEventListener('resize', syncStageHeight);
+
+/* ── 색칠본 미리 굽기 ─────────────────────────────────────────────────────
+ *   색은 판 크기와 무관합니다(사다리 자리와 알파만으로 정해집니다). 그래서
+ *   작은 판에서 한 주기를 훑으면 실제로 쓰일 열쇠가 다 나옵니다. 시작할 때
+ *   한 번 구워 두면 돌아가는 중에는 찾아 쓰기만 합니다.
+ * ──────────────────────────────────────────────────────────────────────── */
+const PREWARM_W = 200, PREWARM_H = 134, PREWARM_N = 64;
+let _prewarmTimer = null, _prewarmMs = 0, _prewarmBakes = 0, _warmCtx = null;
+function prewarmTints(){
+  const t0 = performance.now(), b0 = _bakes;
+  if (!_warmCtx) _warmCtx = makeCanvas(PREWARM_W, PREWARM_H).getContext('2d');
+  const g = _warmCtx;
+  const lv = parseInt(els.level.value,10), attr = els.attr.value;
+  const save = _bakeBudget;
+  _bakeBudget = Infinity;
+  for (let i=0;i<PREWARM_N;i++){
+    const t = kFlamerCycle*i/PREWARM_N;
+    drawScene(g, buildFrame(t, lv, attr, PREWARM_W, PREWARM_H), {textured:true, particles:true});
+  }
+  _bakeBudget = save;
+  _prewarmMs = performance.now()-t0;
+  _prewarmBakes = _bakes-b0;
+}
+// 손잡이를 놓은 뒤(change) 한 번만 부릅니다 — 끄는 동안엔 안 부릅니다.
+function schedulePrewarm(){
+  if (_prewarmTimer) clearTimeout(_prewarmTimer);
+  _prewarmTimer = setTimeout(()=>{ _prewarmTimer = null; prewarmTints(); }, 120);
+}
+
+/* ── 헤드리스 실측용 — 프레임 시간과 픽셀 해시. 그림에는 안 쓰입니다. ─────
+ *   __step  : 한 프레임만 그립니다(?static=1 과 짝).
+ *   __hash  : 세 판의 화소를 FNV-1a 로 접습니다 — 고치기 전/후 픽셀 동일 검산.
+ *   __bench : 프레임을 연달아 돌리며 stepFrame 의 JS 시간을 모읍니다.
+ *             sweep 를 주면 hold 프레임마다 레벨·속성을 갈아 캐시를 일부러
+ *             흔듭니다(= 최악의 경우).
+ * ──────────────────────────────────────────────────────────────────────── */
+window.__step = function(){ stepFrame(); };
+function _fnv1a(d){ let h=0x811c9dc5>>>0; for (let i=0;i<d.length;i++){ h^=d[i]; h=Math.imul(h,0x01000193)>>>0; } return h>>>0; }
+window.__hash = function(){
+  const one = (cv,cx) => _fnv1a(cx.getImageData(0,0,cv.width,cv.height).data).toString(16);
+  return { w:cA.width, h:cA.height, A:one(cA,ctxA), B:one(cB,ctxB), C:one(cC,ctxC) };
+};
+function _stat(a){
+  if (!a.length) return null;
+  const s=a.slice().sort((x,y)=>x-y), q=p=>s[Math.min(s.length-1, Math.round(p*(s.length-1)))];
+  let m=0; for (const v of s) m+=v;
+  return { n:s.length, mean:+(m/s.length).toFixed(2), p50:+q(.50).toFixed(2),
+           p95:+q(.95).toFixed(2), p99:+q(.99).toFixed(2), max:+s[s.length-1].toFixed(2) };
+}
+window.__bench = function(opt){
+  opt = opt || {};
+  const frames = opt.frames || 240, warm = opt.warm || 30, hold = opt.hold || 0;
+  const sweep = opt.sweep || null;
+  const js=[], raf=[];
+  let i=0, si=0, _prev=null;
+  const b0 = _bakes, p0 = _patNew;
+  return new Promise(res => {
+    function tick(){
+      if (sweep && hold>0 && i%hold===0){
+        const s = sweep[(si++)%sweep.length];
+        if (s.lv!=null) els.level.value = String(s.lv);
+        if (s.attr) els.attr.value = s.attr;
+        if (s.tex!=null) els.texToggle.checked = !!s.tex;
+        if (s.par!=null) els.parToggle.checked = !!s.par;
+        if (s.texMap) for (const k in s.texMap) if (K[k]) K[k].tex = s.texMap[k];
+        if (s.knob) for (const g in s.knob) for (const k in s.knob[g]) K[g][k] = s.knob[g][k];
+      }
+      const nw = performance.now();
+      if (_prev!=null) raf.push(nw-_prev);
+      _prev = nw;
+      const t0 = performance.now();
+      stepFrame();
+      if (!opt.raf) ctxC.getImageData(0,0,1,1);   // 지연 래스터를 강제로 끝내 실제 비용을 잽니다.
+      const t1 = performance.now();
+      js.push(t1-t0);
+      i++;
+      if (i < frames+warm){ if (opt.raf) requestAnimationFrame(tick); else setTimeout(tick, 0); }
+      else res({ n:frames, js:_stat(js.slice(warm)), raf:_stat(raf.slice(warm)),
+                 bakes:_bakes-b0, pats:_patNew-p0, cache:cacheSize() });
+    }
+    if (opt.raf) requestAnimationFrame(tick); else setTimeout(tick, 0);
+  });
+};
+// 판 사이 화소 차이 — 판 크기 그대로 잽니다.
+window.__diff = function(t, lv, attr, w, h){
+  w = w||cA.width; h = h||cA.height;
+  const flat = snapshot(w,h,t,lv,attr,{textured:false,particles:false}).slice();
+  const texd = snapshot(w,h,t,lv,attr,{textured:true, particles:false}).slice();
+  const full = snapshot(w,h,t,lv,attr,{textured:true, particles:true }).slice();
+  let n=0, s=0, lit=0, ln=0, ls=0;
+  for (let i=0;i<texd.length;i+=4){
+    const d = Math.abs(texd[i]-full[i])+Math.abs(texd[i+1]-full[i+1])+Math.abs(texd[i+2]-full[i+2]);
+    const on = lum(texd,i) > LIT_L;
+    if (on) lit++;
+    if (d>0){ n++; s+=d/3; if (on){ ln++; ls+=d/3; } }
+  }
+  const tot = texd.length/4;
+  return { w, h, dTex:+diffPct(flat,texd).toFixed(2), dPar:+(100*n/tot).toFixed(2),
+           meanPar:+(s/tot).toFixed(3), litPct:+(100*lit/tot).toFixed(2),
+           dParOnLit:+(100*ln/Math.max(1,lit)).toFixed(2), meanOnLit:+(ls/Math.max(1,lit)).toFixed(3),
+           grains:0 };
+};
+// ①→② · ②→③ 화소 차이를 여러 시각에서 재 평균냅니다. ?probe=1 이 이걸 부르고
+// 결과를 검산 줄에 그대로 적습니다 — 헤드리스가 DOM 한 번만 읽으면 되게요.
+window.__probe = function(lv, attr, times, w, h){
+  times = times || [0.83, 2.00, 2.44, 4.10, 4.95];
+  w = w||300; h = h||200;
+  let dt=0, dp=0, gn=0, bn=0;
+  for (const t of times){
+    const flat = snapshot(w,h,t,lv,attr,{textured:false,particles:false}).slice();
+    const texd = snapshot(w,h,t,lv,attr,{textured:true, particles:false}).slice();
+    const full = snapshot(w,h,t,lv,attr,{textured:true, particles:true }).slice();
+    dt += diffPct(flat, texd); dp += diffPct(texd, full);
+    const fr = buildFrame(t, lv, attr, w, h);
+    gn += fr.grains.length; bn += fr.blobs.length;
+  }
+  const n = times.length;
+  return { lv, attr, n, dTex:+(dt/n).toFixed(2), dPar:+(dp/n).toFixed(2),
+           grains:+(gn/n).toFixed(1), blobs:+(bn/n).toFixed(1), det:_det };
+};
+// 손잡이를 양 끝까지 굴려도 견디는지 — 기본값 · 전부 최대 · 전부 최소 세 판을
+// 그려 보고, 최대에서 결정론이 살아 있는지까지 봅니다.
+window.__stress = function(){
+  const save = JSON.parse(JSON.stringify(K)), wasFreeze = els.freeze.checked;
+  els.freeze.checked = true;
+  const runs = [];
+  const snap = name => {
+    const t0 = performance.now();
+    stepFrame();
+    const ms = performance.now()-t0;
+    const fr = _lastFr, c = fillOf(fr, true);
+    runs.push({ name, ms:+ms.toFixed(1), live:c.live, pieces:c.pieces,
+                fill:Math.round(c.fill), blobs:fr.blobs.length, grains:fr.grains.length,
+                embers:fr.embers.length, extras:fr.extras.length, smokes:fr.smokes.length,
+                cache:cacheSize(), sane:isFinite(c.fill) && !isNaN(c.fill) });
+  };
+  const roll = pick => { K = defKnobs(); for (const G of GROUPS) for (const kb of KNOBS[G.g]) K[G.g][kb.k] = pick(kb); };
+  K = defKnobs(); snap('기본값');
+  roll(kb=>kb.max); snap('전부 최대');
+  const detMax = checkDeterminism();
+  roll(kb=>kb.min); snap('전부 최소');
+  K = defKnobs();
+  const detBack = checkDeterminism();
+  K = save; els.freeze.checked = wasFreeze; syncDeck(); stepFrame();
+  return { runs, detMax, detBack };
+};
+/* 판 ③ 재활용 검산 — 직접 그린 판 ③과 판 ②를 베껴 얹은 판 ③을 바이트로 견줍니다.
+ * 텍스처 켜짐·꺼짐, 파티클 켜짐·꺼짐 네 갈래를 다 봅니다. */
+window.__recycleCheck = function(times, lv, attr, w, h){
+  times = times || [0.83, 2.00, 2.44, 4.10, 4.95];
+  lv = lv || parseInt(els.level.value,10); attr = attr || els.attr.value;
+  w = w || 300; h = h || 200;
+  const cb = makeCanvas(w,h), cd = makeCanvas(w,h), cr = makeCanvas(w,h);
+  const gb = cb.getContext('2d');
+  const gd = cd.getContext('2d', {willReadFrequently:true});
+  const gr = cr.getContext('2d', {willReadFrequently:true});
+  const out = [];
+  const saveB = _bakeBudget;
+  _bakeBudget = Infinity;
+  for (const tex of [true,false]) for (const par of [true,false]){
+    let bytes = 0, worst = 0, px = 0;
+    for (const t of times){
+      const fr = buildFrame(t, lv, attr, w, h);
+      drawScene(gb, fr, {textured:tex, particles:false});         // 판 ②
+      drawScene(gd, fr, {textured:tex, particles:par});           // 직접 그린 판 ③
+      drawSceneFrom(gr, cb, fr, {textured:tex, particles:par});   // 베껴 얹은 판 ③
+      const a = gd.getImageData(0,0,w,h).data, b = gr.getImageData(0,0,w,h).data;
+      for (let i=0;i<a.length;i++){
+        const d = a[i]-b[i];
+        if (d){ bytes++; const ad = d<0?-d:d; if (ad>worst) worst = ad; }
+      }
+      px += w*h;
+    }
+    out.push({ tex, par, diffBytes:bytes, worstChannel:worst, pixels:px });
+  }
+  _bakeBudget = saveB;
+  return out;
+};
+/* 색 눈금을 굵혔을 때 그림이 얼마나 달라지는지 — 「계단이 보이나」를 수치로. */
+window.__stepDiff = function(stepTo, times, lv, attr, w, h){
+  times = times || [0.83, 2.44, 4.10];
+  lv = lv || parseInt(els.level.value,10); attr = attr || els.attr.value;
+  w = w || 300; h = h || 200;
+  const g = offAt(w,h);
+  const save = TINT_STEP, saveB = _bakeBudget;
+  _bakeBudget = Infinity;
+  let nPix = 0, chg = 0, sum = 0, worst = 0, tot = 0;
+  for (const t of times){
+    const fr = buildFrame(t, lv, attr, w, h);
+    TINT_STEP = save;
+    drawScene(g, fr, {textured:true, particles:true});
+    const a = g.getImageData(0,0,w,h).data.slice();
+    TINT_STEP = stepTo;
+    drawScene(g, fr, {textured:true, particles:true});
+    const b = g.getImageData(0,0,w,h).data;
+    for (let i=0;i<a.length;i+=4){
+      const d = Math.max(Math.abs(a[i]-b[i]), Math.abs(a[i+1]-b[i+1]), Math.abs(a[i+2]-b[i+2]));
+      tot++;
+      if (d){ chg++; sum += d; if (d>worst) worst = d; }
+    }
+    nPix += w*h;
+  }
+  TINT_STEP = save; _bakeBudget = saveB;
+  return { stepFrom:save, stepTo, changedPct:+(100*chg/tot).toFixed(2),
+           meanDeltaOnChanged:+(chg?sum/chg:0).toFixed(2), worstChannel:worst };
+};
+// 색칠본 열쇠가 한 주기 동안 몇 가지나 나오는지 — 눈금을 몇으로 자를지
+// 정하려고 재는 것입니다. 굽지 않고 세기만 하므로 쌉니다.
+window.__survey = function(steps, nT, w, h){
+  steps = steps || [4, 8, 12, 16, 24, 32];
+  nT = nT || 96; w = w || cA.width; h = h || cA.height;
+  const lv = parseInt(els.level.value,10), attr = els.attr.value;
+  const g = offAt(w,h);
+  const save = TINT_STEP, out = {};
+  for (const st of steps){
+    TINT_STEP = st;
+    _keyProbe = new Set(); _probePat = null;
+    for (let i=0;i<nT;i++){
+      const t = kFlamerCycle*i/nT;
+      drawScene(g, buildFrame(t, lv, attr, w, h), {textured:true, particles:true});
+    }
+    const per = {};
+    for (const k of _keyProbe){ const tk = k.split('|')[0]; per[tk] = (per[tk]||0)+1; }
+    out['step'+st] = { total:_keyProbe.size, per };
+    _keyProbe = null; _probePat = null;
+  }
+  TINT_STEP = save;
+  const sz = {};
+  for (const k in TEX) sz[k] = TEX[k].w + 'x' + TEX[k].h;
+  return { out, texSize:sz, canvas:[w,h] };
+};
+// 한 프레임의 **진짜** 비용 — 그리기부터 패널 갱신·레이아웃까지 통째로 잽니다.
+// setTimeout/rAF 없이 제자리에서 도는 동기 고리라 헤드리스에서도 안 늘어집니다.
+window.__benchSync = function(opt){
+  opt = opt || {};
+  const frames = opt.frames || 120, warm = opt.warm || 20;
+  const js = [];
+  const bake0 = _bakes;
+  const wasQuiet = window.__quiet;
+  window.__quiet = false;              // 비용 표까지 켠 채로 잽니다(검산 줄은 설정이 바뀔 때만 도므로 여기선 안 돕니다).
+  const bakeSer = [];
+  for (let i=0; i<frames+warm; i++){
+    const b0 = _bakes;
+    const t0 = performance.now();
+    stepFrame();
+    ctxC.getImageData(0,0,1,1);        // 지연 래스터를 그 자리에서 끝냅니다.
+    js.push(performance.now()-t0);
+    bakeSer.push(_bakes-b0);
+  }
+  window.__quiet = wasQuiet;
+  const ser = js.slice(warm);
+  const st = _stat(ser);
+  // 튀는 주기 — 중앙값의 세 배를 넘는 프레임이 몇 프레임마다 오는지 봅니다.
+  const thr = Math.max(st.p50*3, st.p50+4);
+  const at = [];
+  for (let i=0;i<ser.length;i++) if (ser[i] > thr) at.push(i);
+  const gaps = [];
+  for (let i=1;i<at.length;i++) gaps.push(at[i]-at[i-1]);
+  st.spikeThresholdMs = +thr.toFixed(2);
+  st.spikeAt = at;
+  st.spikeGaps = gaps;
+  st.spikeGapMed = gaps.length ? gaps.slice().sort((a,b)=>a-b)[gaps.length>>1] : null;
+  st.bakesTotal = _bakes - bake0;
+  const bs = bakeSer.slice(warm);
+  const sum = a => a.reduce((x,y)=>x+y,0);
+  const q = Math.max(1, bs.length>>2);
+  st.bakesFirstQ = sum(bs.slice(0,q));
+  st.bakesLastQ = sum(bs.slice(-q));
+  st.bakesMaxFrame = Math.max.apply(null, bs);
+  st.cacheEnd = cacheSize();
+  st.simTime = +simTime.toFixed(2);
+  return st;
+};
+window.__grainInfo = function(t, lv, attr, w, h){
+  const fr = buildFrame(t, lv, attr, w||cA.width, h||cA.height);
+  const rs = fr.grains.map(g=>+g.r.toFixed(2)).sort((a,b)=>a-b);
+  const as = fr.grains.map(g=>+g.ga.toFixed(3)).sort((a,b)=>a-b);
+  const q = (arr,p)=> arr.length? arr[Math.min(arr.length-1, Math.round(p*(arr.length-1)))] : 0;
+  return { blobs:fr.blobs.length, grains:fr.grains.length, extras:fr.extras.length,
+           rMin:q(rs,0), rMed:q(rs,.5), rMax:q(rs,1), aMed:q(as,.5), aMax:q(as,1),
+           blobRMed:+(fr.blobs.length?fr.blobs.map(b=>b.r).sort((a,b)=>a-b)[fr.blobs.length>>1]:0).toFixed(2) };
+};
+window.__judgeMatrix = function(lv, attr, onlyLayer, alt){
+  const w=380, h=250, out={};
+  for (const L of LAYERS){
+    if (onlyLayer && L.key !== onlyLayer) continue;
+    out[L.key] = {};
+    for (const m of TEX_MANIFEST){
+      const r = judgeLayer(L.key, m.key, lv||3, attr||'fire', w, h,
+                           alt ? (m.key===alt ? 'noise_spokes' : alt) : (JUDGE_ALT[L.key]===m.key ? 'noise_spokes' : JUDGE_ALT[L.key]));
+      if (!r) continue;
+      out[L.key][m.key] = {
+        cov:+TEX[m.key].meanCov.toFixed(3), px:r.px,
+        b:+(r.bT/r.bF).toFixed(3), s:+(r.sT/Math.max(1e-6,r.sF)).toFixed(3),
+        c:+(r.cT/Math.max(1e-6,r.cF)).toFixed(3), dp:+r.dp.toFixed(2), ab:+r.ab.toFixed(2),
+      };
+    }
+  }
+  return out;
+};
+// 굽는 비용 — 거울 타일(가로세로 2배 = 화소 4배) vs 낱장 한 장.
+window.__bakeCost = function(n){
+  n = n || 200;
+  const out = {};
+  for (const key of ['noise_streak','noise_grainy','noise_vein']){
+    const tex = TEX[key], r = {};
+    for (const mirror of [false, true]){
+      const t0 = performance.now();
+      for (let i=0;i<n;i++) makeTinted(tex, '#'+(0x100000+((i*7919)%0xefffff)).toString(16), mirror, 1);
+      r[mirror?'mirror':'single'] = +((performance.now()-t0)/n).toFixed(3);
+    }
+    r.px = tex.w*tex.h; r.ratio = +(r.mirror/r.single).toFixed(2);
+    out[key] = r;
+  }
+  return out;
+};
+window.__K = () => K;
+window.__setK = function(o){ for (const g in o) for (const k in o[g]) if (K[g]) K[g][k]=o[g][k]; syncDeck(); };
+window.__setTex = function(map){ for (const k in map) if (K[k]) K[k].tex = map[k]; syncDeck(); };
+window.__set = function(o){
+  if (o.level!=null) els.level.value = String(o.level);
+  if (o.attr) els.attr.value = o.attr;
+  if (o.tex!=null) els.texToggle.checked = !!o.tex;
+  if (o.par!=null) els.parToggle.checked = !!o.par;
+  if (o.t!=null){ simTime=o.t; els.freeze.checked=true; }
+  if (o.freeze!=null) els.freeze.checked=!!o.freeze;
+};
+window.TEX = TEX;
+window.LAYERS_DEF = LAYERS;
+window.__det = function(){ return _det; };
+window.__cache = cacheSize;
+
+// 주소창 인자 — 캡처·실측 스크립트가 같은 장면을 다시 세울 수 있게 합니다.
+function applyUrlParams(){
+  const q = new URLSearchParams(location.search);
+  if (q.has('lv')) els.level.value = q.get('lv');
+  if (q.has('attr')) els.attr.value = q.get('attr');
+  if (q.has('tex')) els.texToggle.checked = q.get('tex') !== '0';
+  if (q.has('par')) els.parToggle.checked = q.get('par') !== '0';
+  if (q.has('t')){ simTime = parseFloat(q.get('t')); els.freeze.checked = true; }
+  if (q.has('pxr')){ els.pxr.value = q.get('pxr'); els.pxr.dispatchEvent(new Event('input')); }
+  const texParam = {cone:'texCone', blob:'texBlob', halo:'texHalo', ember:'texEmber', smoke:'texSmoke'};
+  for (const k in texParam) if (q.has(texParam[k])) K[k].tex = q.get(texParam[k]);
+  if (q.has('k')){ try { const o=JSON.parse(q.get('k')); for (const g in o) for (const kk in o[g]) if (K[g]) K[g][kk]=o[g][kk]; } catch(e){} }
+  syncDeck();
+}
+
+loadAllTextures().then(() => {
+  document.getElementById('loading').style.display='none';
+  buildDeck();
+  buildGloss();
+  applyUrlParams();
+  _det = checkDeterminism();
+  prewarmTints();          // 돌아가기 전에 색칠본을 미리 구워 둡니다.
+  syncStageHeight();
+  els.level.addEventListener('change', ()=>{ _det = checkDeterminism(); schedulePrewarm(); markVerifyStale(); });
+  els.attr.addEventListener('change', ()=>{ schedulePrewarm(); markVerifyStale(); });
+  els.texToggle.addEventListener('change', ()=>{ schedulePrewarm(); markVerifyStale(); });
+  els.parToggle.addEventListener('change', markVerifyStale);
+  markVerifyStale();          // 처음 한 번은 스스로 잽니다.
+  // ?static=1 — 실측 스크립트가 애니메이션 없이 한 프레임씩만 재도록 하는 문입니다.
+  if (!/[?&]static=1/.test(location.search)){
+    function frame(){ requestAnimationFrame(frame); stepFrame(); }
+    requestAnimationFrame(frame);
+  } else {
+    stepFrame();
+    const q = new URLSearchParams(location.search);
+    // 정지 모드에서는 rAF 가 안 도니 검산 세 단계를 그 자리에서 돌려 끝냅니다.
+    if (_vTimer){ clearTimeout(_vTimer); _vTimer = null; }
+    _vPending = false;
+    if (!q.has('probe') && !q.has('bench')){ updateVerify(_lastFr); updateVerify(_lastFr); updateVerify(_lastFr); }
+    updateCostPanel(_lastFr); updateDerived(_lastFr);
+    if (q.has('bench')){
+      const r = { canvas:[cA.width, cA.height], dpr:Math.min(2, window.devicePixelRatio||1),
+                  js: window.__benchSync({frames: parseInt(q.get('bench'),10)||120}) };
+      if (q.has('survey')) r.survey = window.__survey();
+      if (q.has('audit')){
+        r.recycle = window.__recycleCheck();
+        r.stepDiff = [window.__stepDiff(16), window.__stepDiff(32)];
+        r.det = checkDeterminism();
+        // 정지 상태에서 프레임당 굽는 것 — 세 프레임 연속으로 봅니다.
+        els.freeze.checked = true;
+        const bb = [];
+        for (let i=0;i<3;i++){ const b0=_bakes; stepFrame(); bb.push(_bakes-b0); }
+        r.bakesWhenFrozen = bb;
+        r.prewarm = { ms:+_prewarmMs.toFixed(1), bakes:_prewarmBakes,
+                      cache:cacheSize(), cacheKB:Math.round(cacheBytes()/1024) };
+      }
+      verifyBar.textContent = 'BENCH ' + JSON.stringify(r);
+    } else if (q.has('probe')){
+      const r = window.__probe(parseInt(els.level.value,10), els.attr.value);
+      if (q.has('stress')) r.stress = window.__stress();
+      verifyBar.textContent = 'PROBE ' + JSON.stringify(r);
+    }
+  }
+}).catch(err => {
+  document.getElementById('loading').textContent = '텍스처 로드 실패: ' + err.message;
+});
+</script>
+</div><!-- .wrap -->
+<script src="nav.js"></script>
+</body>
+</html>

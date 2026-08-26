@@ -1,0 +1,118 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다(16장 전부 빠져 있었다). -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 셀 VFX 시안</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
+     2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-state">상태이상 19종</a><a href="#s-buff">버프 9종</a><a href="#s-mark">상태 표식</a><a href="#s-stateicon">아이콘</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 셀 VFX 시안</p>
+  <h1>빼앗는 것과 되돌리는 것</h1>
+  
+</header>
+<h2 id="s-state">상태이상 19종</h2>
+<h3>도트데미지 (초당 피해 데미지)</h3>
+<table class="st">
+<tr><th>상태</th><th>키</th><th>속성</th><th>무엇인가</th></tr>
+<tr><td><b>점화</b></td><td><code>burn</code></td><td>염 炎</td><td>불에 타는 것</td></tr>
+<tr><td><b>동상</b></td><td><code>frost</code></td><td>빙 氷</td><td>얼어서 피해를 입는 것</td></tr>
+<tr><td><b>감전</b></td><td><code>shock</code></td><td>뇌 雷</td><td>전기가 올라 피해를 입는 것</td></tr>
+<tr><td><b>중독</b></td><td><code>poison</code></td><td>독 毒</td><td>독에 걸린 것</td></tr>
+<tr><td><b>출혈</b></td><td><code>bleed</code></td><td>무 無</td><td>상처가 나서 피해를 입는 것</td></tr>
+</table>
+
+<h3>디버프 (No moving)</h3>
+<table class="st">
+<tr><th>상태</th><th>키</th><th>속성</th><th>무엇인가</th></tr>
+<tr><td><b>빙결</b></td><td><code>freeze</code></td><td>빙 氷</td><td>얼어붙어 멈춘다</td></tr>
+<tr><td><b>속박</b></td><td><code>bind</code></td><td>풍 風</td><td>묶여서 못 움직인다</td></tr>
+<tr><td><b>봉인</b></td><td><code>seal</code></td><td>암 影</td><td>봉해져 못 움직인다</td></tr>
+</table>
+
+<h3>디버프 (No attack)</h3>
+<table class="st">
+<tr><th>상태</th><th>키</th><th>속성</th><th>무엇인가</th></tr>
+<tr><td><b>실명</b></td><td><code>blind</code></td><td>암 影</td><td>앞이 안 보인다 — 공격 불가 +
+<b>움직임 제어가 안 되고 적을 안 향해 길을 잃는다</b></td></tr>
+<tr><td><b>침묵</b></td><td><code>silence</code></td><td>암 影</td><td>움직임과 적을 보는 것은 되나
+<b>일반 공격·스킬을 못 쓴다</b></td></tr>
+<tr><td><b>석화</b></td><td><code>stone</code></td><td>무 無</td><td>돌이 되어 <b>공격도 이동도</b> 못 한다</td></tr>
+</table>
+
+<h3>디버프 (능력치 하락)</h3>
+<table class="st">
+<tr><th>상태</th><th>키</th><th>속성</th><th>무엇인가</th></tr>
+<tr><td><b>둔화</b></td><td><code>slow</code></td><td>풍 風</td><td><b>이동속도</b> 하락</td></tr>
+<tr><td><b>저주</b></td><td><code>curse</code></td><td>독 毒 (폭마)</td><td><b>공격력</b> 하락</td></tr>
+<tr><td><b>역병</b></td><td><code>plague</code></td><td>독 毒 (역병)</td><td><b>공격속도</b> 하락</td></tr>
+<tr><td><b>감쇄</b></td><td><code>damp</code></td><td>무 無</td><td><b>치명타 불가</b> — 공격은 되나 결정타가 안 난다</td></tr>
+<tr><td><b>풍화</b></td><td><code>weather</code></td><td>풍 風</td><td><b>방어력</b> 하락</td></tr>
+</table>
+
+<h3>디버프 (Other) — 위치를 건드린다</h3>
+<table class="st">
+<tr><th>상태</th><th>키</th><th>무엇인가</th></tr>
+<tr><td><b>넉백</b></td><td><code>knock</code></td><td>스킬 시전이 <b>중단되고</b> 뒤로 밀려난다</td></tr>
+<tr><td><b>그랩</b></td><td><code>grab</code></td><td><b>넉백의 반대</b> — 순간적으로 끌어당겨 못 움직이게 한다(블랙홀)</td></tr>
+<tr><td><b>돌진</b></td><td><code>rush</code></td><td>상대를 향해 나아간다</td></tr>
+</table>
+
+<h2 id="s-buff">버프 9종</h2>
+<h3>단일 해제 — 상태 하나를 집어 없앤다</h3>
+<table class="st">
+<tr><th>버프</th><th>키</th><th>무엇을 없애나</th></tr>
+<tr><td><b>지혈</b></td><td><code>staunch</code></td><td><b>출혈</b> 멈춤</td></tr>
+<tr><td><b>해독</b></td><td><code>antidote</code></td><td><b>중독</b> 제거</td></tr>
+<tr><td><b>접지</b></td><td><code>ground</code></td><td><b>감전</b> 회복</td></tr>
+<tr><td><b>해방</b></td><td><code>release</code></td><td><b>속박</b> 제거</td></tr>
+</table>
+
+<h3>회복</h3>
+<table class="st">
+<tr><th>버프</th><th>키</th><th>무엇인가</th></tr>
+<tr><td><b>치유</b></td><td><code>mend</code></td><td>회복 효과 — 아홉 중 <b>유일하게 없애는 게 아니라 채운다</b></td></tr>
+</table>
+
+<h3>무리 해제 — 무리 하나를 통째로 없앤다</h3>
+<table class="st">
+<tr><th>버프</th><th>키</th><th>없애는 무리</th><th>몇 종</th></tr>
+<tr><td><b>축복</b></td><td><code>blessing</code></td><td>디버프 <b>도트데미지</b></td><td>점화·동상·감전·중독·출혈 5</td></tr>
+<tr><td><b>성전</b></td><td><code>crusade</code></td><td>디버프 <b>No moving</b></td><td>빙결·속박·봉인 3</td></tr>
+<tr><td><b>은총</b></td><td><code>grace</code></td><td>디버프 <b>No attack</b></td><td>실명·침묵·석화 3</td></tr>
+<tr><td><b>가호</b></td><td><code>aegis</code></td><td>디버프 <b>능력치 하락</b></td><td>둔화·저주·역병·감쇄·풍화 5</td></tr>
+</table>
+
+<h2 id="s-mark">상태 표식</h2>
+<div class="grid" id="marks"></div>
+
+<h2 id="s-buffmark">버프 표식</h2>
+<div class="grid" id="buffmarks"></div>
+
+<h2 id="s-stateicon">아이콘</h2>
+<div class="grid" id="stateicon"></div>
+
+<h2 id="s-bufficon">버프 아이콘</h2>
+<div class="grid" id="bufficon"></div>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 시안을 고쳐도 새로고침에
+     반영이 안 돼 「왜 똑같지?」가 났다(2026-08-10). 매 로드마다 쿼리를 갈아
+     항상 새로 읽게 한다. file:// 에서도 쿼리 문자열은 먹는다(확인함). -->
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

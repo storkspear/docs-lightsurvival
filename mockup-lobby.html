@@ -1,0 +1,120 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다(16장 전부 빠져 있었다). -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 로비</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
+     2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-land">가로 네 화면</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 로비</p>
+  <h1>출격 준비 허브</h1>
+  
+</header>
+
+<h2 id="s-land">가로 — 무대 하나 · 왼쪽 레일 · 출격 하나</h2>
+
+<table class="t">
+  <tr><th>가로 문법</th><th>무슨 뜻</th><th>어긴 예</th></tr>
+  <tr><td>① 가운데는 무대</td><td>UI 는 테두리에만</td><td>기둥으로 쪼개기</td></tr>
+  <tr><td>② 넓어진 폭</td><td>더 많이 아니라 더 크게</td><td>칸을 더 채우기</td></tr>
+  <tr><td>③ 깊이</td><td>화면 전환으로 푼다</td><td>한 화면에 다 넣기</td></tr>
+</table>
+
+<p class="note"><b>제단=로비 · 패=편성 · 성도=스테이지 선택</b> — 셋으로 나눈 이유는 세로 한 화면에 다 못 넣어서다.</p>
+
+<p class="note">왼쪽 레일은 <a href="mockup-flow.html#s-hub">허브 탭바</a> 5칸(도감·기록·<b>홈</b>·상점·업적) 그대로 — 가로에서 하단 탭바는 <b>364px 중 56px(15%)</b>, 순서는 안 바꿨다.</p>
+
+<div class="ctl">
+  <span class="cl">검증</span>
+  <button id="thumbBtn2">엄지 존 표시</button>
+</div>
+
+<div class="rack land">
+
+  <!-- ══ 홈 — 캐릭터와 내 수치 ════════════════════════════════════════════ -->
+  <div class="col">
+   <div class="rl">홈 — 캐릭터에서 선이 뻗어 수치를 가리킨다 · <b>발현이 곧 진행도</b> — 1~30 은 구가 커지고, 40~99 는 밝아진다
+     <span id="bloom-ctl" class="bctl"></span>
+     <span class="bval">평균레벨 <b id="bloom-val">평균 40 · 4단 · 구 100% · 밝기 126%</b></span></div>
+   <div class="phone land"><div class="screen">
+    <canvas class="bg" id="lb-la-bg"></canvas>
+    <div class="scrim"></div>
+    <div class="topbar"><span><b>일반</b></span>
+      <span class="setico" id="set-a" title="설정"></span></div>
+    <div class="thumb"></div>
+    <div class="ui">
+      <div class="rail" id="rail-a"></div>
+      <div class="hstage" id="lb-home">
+        <canvas id="lb-la-hero" style="width:150px;height:150px"></canvas>
+      </div>
+    </div>
+   </div></div>
+  </div>
+
+
+</div>
+
+<h2 id="s-log">우주일지 宇宙日誌</h2>
+
+<p class="note">
+  나가는 문은 관측소 스테이지 팝업 하나뿐 — 편성·부족 사유·출격을 거기서 다 하니 문을 안 늘린다.<br>
+  이 화면은 <b>「어디까지 갔나」</b>만 답한다(「얼마나 했나」는 아니다) — 담기는 건 <b>스토리</b> + <b>클리어 기록</b>.
+</p>
+
+<table class="t">
+  <tr><th>규칙</th><th>그래서 화면에</th><th>안 지키면</th></tr>
+  <tr><td>같은 난이도는 <b>최고 별 하나</b>만</td><td><code>1-1 보통★3·쉬움★2·어려움★1·보통★3</code> →<br><code>첫 장 — 쉬움★2·보통★3·어려움★1</code></td><td>줄이 계속 늘어난다</td></tr>
+  <tr><td><b>기록 없는 것은 안 그린다</b></td><td>안 깬 스테이지=줄 없음 · 안 깬 난이도=칸 없음</td><td>「매우어려움 ―」 빈 자리가 절반 → 일지가 성적표가 된다</td></tr>
+  <tr><td>별은 <b>숫자 아니라 모양</b></td><td>못 딴 별은 지우지 않고 <b>죽인다</b></td><td>3 이 만점인지 안 보여 ★2 를 못 읽는다</td></tr>
+</table>
+<p class="sub">스토리는 기획 전이라 자리만 뒀다 — 한 번 본 것을 다시 보는 곳.</p>
+
+<div class="rack land">
+  <div class="col">
+   <div class="cap">우주일지 — 기록 있음</div>
+   <div class="phone land"><div class="screen">
+    <canvas class="bg" id="lb-log1-bg"></canvas>
+    <div class="scrim"></div>
+    <div class="topbar"><span><b>우주일지</b></span>
+      <span class="setico" id="set-log1" title="설정"></span></div>
+    <div class="ui">
+      <div class="rail" id="rail-log1"></div>
+      <div class="hstage" id="lb-log1"></div>
+    </div>
+   </div></div>
+  </div>
+  <div class="col">
+   <div class="cap">우주일지 — 첫 판 (깬 곳 없음)</div>
+   <div class="phone land"><div class="screen">
+    <canvas class="bg" id="lb-log2-bg"></canvas>
+    <div class="scrim"></div>
+    <div class="topbar"><span><b>우주일지</b></span>
+      <span class="setico" id="set-log2" title="설정"></span></div>
+    <div class="ui">
+      <div class="rail" id="rail-log2"></div>
+      <div class="hstage" id="lb-log2"></div>
+    </div>
+   </div></div>
+  </div>
+</div>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

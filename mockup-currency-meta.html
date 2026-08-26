@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Light Survival — 아웃게임재화(메타재화)</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<style>
+  h1{font-size:15px;letter-spacing:.18em;color:#9C9CAC;font-weight:400;margin:0 0 4px;}
+  .sub{font-size:11.5px;color:#66667A;margin:0 0 20px;line-height:1.75;}
+  .sub b{color:#A6A6B8;font-weight:600;}
+  .note{font-size:11px;color:#66667A;margin:14px 0 8px;letter-spacing:.02em;}
+  .note b{color:#E8C879;font-weight:600;}
+  .board{position:relative;width:100%;height:400px;margin:0 0 6px;
+    background:#0A0910;border:1px solid rgba(180,180,200,.16);
+    clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,13px 100%,0 calc(100% - 13px));
+    overflow:hidden;}
+  .board.short{height:250px;}
+  .board canvas{display:block;position:absolute;inset:0;width:100%;height:100%;}
+  table.t{border-collapse:collapse;font-size:11.5px;color:#8B8B99;margin:6px 0 18px;}
+  table.t th,table.t td{border:1px solid rgba(180,180,200,.14);padding:5px 11px;text-align:left;}
+  table.t th{color:#9C9CAC;font-weight:600;background:rgba(180,180,200,.05);}
+  table.t b{color:#E8E8F0;}
+  code{color:#C8A87A;}
+  h2.sec{font-size:13px;letter-spacing:.16em;color:#E8C879;font-weight:600;
+    margin:34px 0 10px;padding-top:10px;border-top:1px solid rgba(232,200,121,.2);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-drop">무엇이 나오나</a><a href="#s-gate">어디에 쓰나</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+
+
+
+<h1 id="s-drop">아웃게임재화 (메타재화)</h1>
+<p class="sub">
+  판이 끝나도 남는 것. 설계 근거는 <code>docs/design/채굴-파밍.md</code> 다.
+  <br>운석 장은 <b>맵에 뿌려진 모습</b>을, 여기는 <b>깨서 나오는 것</b>을 다룬다.
+</p>
+
+<h2 class="sec" id="s-drop-sec">1 · 무엇이 나오나</h2>
+<p class="sub">
+  <b>무엇이</b>(1-2) · <b>얼마나</b>(1-3) · <b>어디서</b>(1-4).
+</p>
+
+<p class="note">1-1 <b>강화석 셋</b></p>
+<div class="board short"><canvas id="r-stones"></canvas></div>
+<table class="t">
+  <tr><th>강화석</th><th>겉</th><th>올리는 구간</th><th>혼자 쓰나</th></tr>
+  <tr><td><b>일반</b></td><td>무채</td><td><b>Lv1~20</b></td><td>혼자 쓴다</td></tr>
+  <tr><td><b>색</b> <span style="color:#66667A">(공격석 · 치명석 · 생존석 · 중력석)</span></td><td>운석과 같은 색</td><td><b>Lv21~99</b></td><td>Lv21~70 은 혼자,<br><b>Lv71~99 는 유니크와 결합</b></td></tr>
+  <tr><td><b>유니크</b></td><td><span style="color:#FFC64A">■</span> 황금빛</td><td><b>Lv71~99</b></td><td><b>혼자서는 못 올린다</b> — 색과 결합해야 쓰인다</td></tr>
+</table>
+<p class="sub">
+  <b>유니크는 혼자 못 올린다</b> — 색 강화석과 짝을 이뤄야 Lv71 위로
+  오른다. 유니크가 색 운석에서 50배 잘 나오는 것(5% ↔ 0.1%)이 <b>「색을
+  캐라」로 이어진다.</b><br>
+  <b>재화의 겉은 「조각」이다</b> — 작은 운석이며 색이 등급을 말한다.
+  운석은 빛을 <b>받고</b> 재화는 빛을 <b>낸다.</b>
+</p>
+
+<p class="note">1-2 <b>무엇이</b> — 드랍 확률</p>
+<table class="t">
+  <tr><th>캔 운석</th><th>나오는 것</th><th>확률</th></tr>
+  <tr><td rowspan="3"><b>일반 운석</b></td><td>일반 강화석</td><td><b>보통</b> — 일반 운석에서만 나온다</td></tr>
+  <tr><td>색 강화석 <span style="color:#66667A">(넷 중 무작위)</span></td><td><b>10% 미만</b></td></tr>
+  <tr><td><b>유니크</b></td><td><b>0.1% 미만</b></td></tr>
+  <tr><td rowspan="2"><b>색 운석</b></td><td>같은 색의 강화석</td><td><b>보통</b> — 자기 색에서만 나온다</td></tr>
+  <tr><td><b>유니크</b></td><td><b>5% 미만</b></td></tr>
+</table>
+
+<p class="note">1-3 <b>얼마나</b> — 크기별 최대 개수</p>
+<table class="t">
+  <tr><th>크기</th><th>소형</th><th>중형</th><th>대형</th><th>거대형</th><th>특거대형</th></tr>
+  <tr><td><b>최대 드롭</b></td><td><b>1~3</b></td><td><b>3~5</b></td><td><b>8~12</b></td><td><b>24~36</b></td><td><b>잭팟 80</b></td></tr>
+</table>
+
+<p class="note">1-4 <b>어디서</b> — 스테이지별</p>
+<table class="t">
+  <tr><th>스테이지</th><th>뜨는 운석</th></tr>
+  <tr><td>1 · 2 · 3</td><td><b>일반 운석</b></td></tr>
+  <tr><td>1</td><td><b>공격</b> · <b>중력</b></td></tr>
+  <tr><td>2</td><td><b>치명</b> · <b>생존</b></td></tr>
+  <tr><td>3</td><td><b>생존</b> · <b>공격</b></td></tr>
+  <tr><td>1 · 2 · 3 <b>보스</b></td><td><b>유니크</b></td></tr>
+</table>
+<p class="sub">
+  축마다 돌아야 할 판이 있다 — 파밍 스테이지로 배치한 것이다.<br>
+  <b>진행 시뮬에서 잴 것</b>
+</p>
+<table class="t">
+  <tr><th>잴 것</th><th>이유</th></tr>
+  <tr><td><b>스1 클리어율</b></td><td>생존이 2·3 에만 있어 스1 전엔 방어력·체력을 못 올린다</td></tr>
+  <tr><td><b>보스 유니크</b></td><td>확정 드랍이라 운석 유니크와 양이 겹친다</td></tr>
+  <tr><td><b>맵별 등장 확률</b></td><td>위 확률·개수도 시뮬로 확정한다</td></tr>
+</table>
+
+
+<h2 class="sec" id="s-gate">2 · 어디에 쓰나 — <b style="color:#E8C879">메타 게이트</b></h2>
+<p class="sub">
+  <b>강화석은 메타 스탯을 올린다</b> — 그 하나뿐이다. 몹이 흘리는 <b>암흑물질</b>은
+  상점(스킬 · 궁극기)으로 돌아간다: <b>끝이 있는 것</b>은 암흑물질이,
+  <b>끝없이 오르는 것</b>은 강화석이 산다.<br>
+  <b>왜 갈라야 하나</b> — 하나로만 열면 판당 처치 수가 곧 성장이라
+  <b>스1 아홉 판이면 여덟 축이 만렙</b>이었다(2026-08-21 실측). 출처가 갈려야
+  「어디를 갈까」가 생긴다.
+</p>
+
+<p class="note">2-1 <b>축 ↔ 색</b> — 무슨 돌이 무슨 스탯을 올리나</p>
+<table class="t">
+  <tr><th>색</th><th>강화석</th><th>올리는 축</th><th>뜨는 판</th></tr>
+  <tr><td><span style="color:#FF6A1E">■</span> 주황</td><td><b>공격석</b></td>
+    <td>공격력 · <b>마법력</b> · <b>공격속도</b></td><td>스<b>1</b> · 스<b>3</b></td></tr>
+  <tr><td><span style="color:#E14CFF">■</span> 보라</td><td><b>치명석</b></td>
+    <td>치명타 확률 · 치명타 피해</td><td>스<b>2</b></td></tr>
+  <tr><td><span style="color:#6E8AE8">■</span> 강철빛</td><td><b>생존석</b></td>
+    <td>방어력 · 체력</td><td>스<b>2</b> · 스<b>3</b></td></tr>
+  <tr><td><span style="color:#A8C43C">■</span> 황록</td><td><b>중력석</b></td>
+    <td>이동속도 <span style="color:#66667A">(· 흡수 반경 — 아홉째 축은 아직 없다)</span></td>
+    <td>스<b>1</b></td></tr>
+</table>
+<p class="sub">
+  <b>여덟 축이 넷에 다 들어간다</b> — 빠진 색이 있으면 그 판이 파밍 목적지가
+  아니게 된다.<br>
+  ⭐⭐ <b>생존이 2·3 에만 있어 스1 만 돌면 방어력·체력을 못 올린다</b>(1-4 표).
+  그것이 「스1 무한 반복이 최적해」를 깨는 자리다.
+</p>
+
+<p class="note">2-2 <b>레벨대 셋</b> — 한 단에 무엇이 드나</p>
+<table class="t">
+  <tr><th>대</th><th>드는 것</th><th>어디서 캐나</th></tr>
+  <tr><td><b>Lv1~20</b></td><td><b>일반 강화석</b> 1</td>
+    <td>전 스테이지 공통 — <b>게이트가 없다</b></td></tr>
+  <tr><td><b>Lv21~70</b></td><td><b>그 축의 색</b> 1</td>
+    <td>그 색이 뜨는 판(2-1) — <b>여기서 갈린다</b></td></tr>
+  <tr><td><b>Lv71~99</b></td><td><b>색 1 + 유니크 1</b></td>
+    <td>유니크는 보스 확정 1 + 색 운석 5%</td></tr>
+</table>
+<p class="sub">
+  <b>개수가 아니라 종이 사다리다</b> — 한 단은 어느 대에서나 <b>하나</b>씩이다.
+  값을 올려 길이를 늘리는 대신 <b>무슨 돌이냐</b>로 늘린다: 색은 뜨는 판이
+  정해져 있어 개수를 안 건드려도 <b>분모가 판마다 달라진다.</b><br>
+  <b>유니크는 혼자 못 올린다</b> — 짝을 이뤄야 하는 것이 「색을 캐라」로 이어진다(2-1 ⇒).
+</p>
+
+<p class="note">2-3 <b>어느 화면에 서나</b> — 셋</p>
+<table class="t">
+  <tr><th>화면</th><th>무엇을 말하나</th><th>정본</th></tr>
+  <tr><td><b>판 끝 정산</b></td>
+    <td>이번 판에 <b>무슨 강화석을 몇 개</b> 벌었나 — 암흑물질 줄과 <b>따로</b> 선다
+      (출처가 갈리므로 줄도 갈린다)</td>
+    <td><code>mockup-ui.html</code> 「결과」</td></tr>
+  <tr><td><b>지갑</b></td>
+    <td>종별로 <b>얼마 갖고 있나</b>(여섯 칸). <b>0 인 종도 자리를 지킨다</b> —
+      「아직 한 번도 안 캤다」가 보여야 막힌 칸과 이어진다</td>
+    <td><code>mockup-shop.html</code> 「2층 · 일반」</td></tr>
+  <tr><td><b>상점(메타 강화)</b></td>
+    <td>이 축을 올리려면 <b>무슨 돌이 몇 개</b> 드나 · 없으면 <b>어디서 캐나</b></td>
+    <td>〃</td></tr>
+</table>
+<p class="sub">
+  ⚠️ <b>창틀에 여덟 칸을 밀어 넣지 않는다</b> — 암흑물질·빛의 결정은 상점 전체가
+  쓰지만 강화석은 <b>일반 갈래 하나</b>만 쓴다. 지갑을 <b>쓰는 곳</b>에 두어야
+  격자의 값과 <b>같은 눈높이</b>에서 대조된다(홈에서 재화를 걷어낸 그 판정).
+</p>
+
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script src="vfx.js"></script>
+<script>document.write(unescape("%3Cscript src=\"rock.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"))</script>
+</div>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다(16장 전부 빠져 있었다). -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 인터페이스</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
+     2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<!-- 오버레이 3종(멈춤·설정·결과) 전용 규칙 — 접두사 ov.
+     vfx.css/vfx.js 는 지금 다른 손이 같이 고치는 중이라 이 장 전용만 여기 둔다.
+     이름이 ov- 로 갈려 있어 나중에 vfx.css 로 옮겨도 안 부딪힌다. -->
+<style>
+/* 멈춘 세계 — 캔버스 없이 CSS 로만. 「뒤에 세계가 있다」만 말하면 된다. */
+.ovworld{position:absolute;inset:0;z-index:0;background:
+  radial-gradient(120px 80px at 26% 40%,rgba(255,138,61,.16),transparent 70%),
+  radial-gradient(90px 60px at 72% 28%,rgba(122,180,255,.10),transparent 70%),
+  radial-gradient(160px 110px at 56% 74%,rgba(255,210,122,.09),transparent 70%),
+  radial-gradient(14px 14px at 26% 40%,rgba(255,220,170,.5),transparent 70%),
+  #0B0B10}
+/* 어둠막 — 3택(0xB3)보다 짙은 0xD9. 판을 떠날지 묻는 자리라 세계에서 눈을 뗀다. */
+.ovdim{position:absolute;inset:0;z-index:1;background:rgba(10,10,14,.85)}
+.ovui{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;color:var(--ink)}
+.ovttl{font-size:21px;font-weight:600;letter-spacing:.42em;text-indent:.42em}
+.ovctx{font-size:11.5px;color:var(--dim);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.ovcol{display:flex;flex-direction:column;gap:10px;width:330px;margin-top:6px}
+.ovcol.w{width:470px}
+.ovcol .ovbtn{width:100%}
+.ovfoot{font-size:10.5px;color:var(--faint);margin-top:2px}
+
+/* ── 셀 문법의 버튼 — 각진 모서리(.cut) · 3단 계조 · 흰 앞날 · 아랫굽 ──────
+   눌리는 것은 눌리게 보인다: 위 1px 흰 앞날, 면은 세 단으로 깎이고, 아래
+   3px 어두운 굽이 몸을 바닥에서 띄운다. 그림자는 clip-path 가 못 데리고
+   나가므로 겉껍데기(.ovsh)의 drop-shadow 가 든다 — 깎인 모양 그대로 진다. */
+.ovsh{filter:drop-shadow(0 6px 12px rgba(0,0,0,.55))}
+.ovsh.g{filter:drop-shadow(0 6px 12px rgba(0,0,0,.55)) drop-shadow(0 0 22px rgba(255,210,122,.26))}
+.ovsh.dn{filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.ovbtn{height:58px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;letter-spacing:.16em;text-indent:.16em;color:#FFE9C6;
+  border:1px solid rgba(255,210,122,.62);
+  background:linear-gradient(180deg,#6E5524 0 34%,#57431C 34% 70%,#3C2E11 70% 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(0,0,0,.5)}
+.ovbtn.gh{height:52px;font-size:15px;font-weight:600;letter-spacing:.10em;text-indent:.10em;color:#D6D6E2;
+  border-color:rgba(180,180,200,.30);
+  background:linear-gradient(180deg,#272733 0 34%,#1E1E27 34% 70%,#15151C 70% 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.20),inset 0 -3px 0 rgba(0,0,0,.45)}
+/* 나가는 문 — 계조 2단·앞날 9%. 일부러 덜 버튼답다: 파괴적 행동은 눌리기
+   어려워야 한다. */
+.ovbtn.low{height:44px;font-size:12.5px;font-weight:500;letter-spacing:.04em;text-indent:0;color:#8B8B99;
+  border-color:rgba(180,180,200,.14);
+  background:linear-gradient(180deg,#181820 0 40%,#12121A 40% 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -2px 0 rgba(0,0,0,.35)}
+/* 눌림 — 앞날이 그늘로 뒤집히고 굽이 사라지며 몸이 3px 내려앉는다. */
+.ovbtn.dn{transform:translateY(3px);color:#E4CB9C;
+  background:linear-gradient(180deg,#4A3A14 0 40%,#382B0E 40% 100%);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.55)}
+.ovdemo{width:250px}
+
+/* ── 설정 줄 — 줄 전체가 과녁(64px), 상태 글자는 스위치 안에 산다 ───────── */
+.ovrow{display:flex;align-items:center;gap:14px;height:64px;padding:0 16px 0 18px;
+  border:1px solid rgba(180,180,200,.20);
+  background:linear-gradient(180deg,#1D1D27 0 34%,#17171F 34% 70%,#111118 70% 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),inset 0 -3px 0 rgba(0,0,0,.4)}
+.ovrow .k{font-size:16px;font-weight:600;color:var(--ink);line-height:1.25}
+.ovrow .h{font-size:10.5px;color:var(--dim);margin-top:2px}
+.ovsw{margin-left:auto;position:relative;width:64px;height:30px;flex:0 0 auto;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+  border:1px solid rgba(180,180,200,.24);background:#101016;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.55)}
+.ovsw b{position:absolute;top:50%;transform:translateY(-50%);font-size:9px;
+  letter-spacing:.1em;color:#5E5E6C;font-weight:600}
+.ovsw b.l{left:9px}.ovsw b.r{right:9px}
+/* 노브도 물건이다 — 제 앞날과 굽을 갖는다. */
+.ovsw i{position:absolute;top:3px;left:3px;width:28px;height:22px;
+  clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+  background:linear-gradient(180deg,#3E3E4C 0 40%,#2B2B36 40% 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.30),inset 0 -2px 0 rgba(0,0,0,.4)}
+.ovsw.on{border-color:rgba(255,210,122,.55);
+  background:linear-gradient(180deg,#453310 0 50%,#2E220B 50% 100%)}
+.ovsw.on b{color:var(--gold)}
+.ovsw.on i{left:auto;right:3px;
+  background:linear-gradient(180deg,#FFE9C6 0 40%,#E3BE83 40% 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -2px 0 rgba(140,100,40,.55)}
+
+/* ── 결과 — 판이 끝나며 남긴 값(RunResult)이 전부 놓인다 ────────────────── */
+.ovui.rs{gap:9px;padding-bottom:64px}
+.ovtier{font-size:10px;letter-spacing:.30em;text-indent:.30em;color:var(--faint)}
+.ovverd{font-size:34px;font-weight:700;letter-spacing:.18em;text-indent:.18em;line-height:1.15}
+.ovverd.bad{color:#C97487}
+.ovstars{display:flex;gap:9px}
+.ovstar{width:24px;height:24px;
+  clip-path:polygon(50% 0,63% 34%,98% 37%,71% 59%,80% 94%,50% 74%,20% 94%,29% 59%,2% 37%,37% 34%);
+  background:linear-gradient(180deg,#FFE9C6 0 40%,#E8BC6E 40% 100%);
+  filter:drop-shadow(0 0 7px rgba(255,210,122,.55))}
+/* 못 딴 별은 지우지 않고 죽인다 — 3 이 만점임이 모양으로 보인다. */
+.ovstar.off{background:#23232D;filter:none}
+.ovstats{display:flex;gap:9px;margin-top:5px}
+.ovstat{width:118px;padding:9px 0 8px;text-align:center;
+  border:1px solid rgba(180,180,200,.15);background:rgba(16,16,23,.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.ovstat .n{font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.ovstat .l{font-size:9px;letter-spacing:.26em;text-indent:.26em;color:var(--faint);margin-top:2px}
+.ovloot{display:flex;align-items:center;gap:18px;font-size:13px;color:var(--ink);
+  font-variant-numeric:tabular-nums;margin-top:3px}
+.ovloot .one{display:flex;align-items:center;gap:7px}
+/* 재화 알 — 색은 재화 규약 그대로(암흑물질 #B287FF · 결정 #FFF3D8), 테두리
+   없이 면 밝기 세 단으로만 갈린다. */
+.ovloot i{display:block;width:11px;height:11px;transform:rotate(45deg);flex:0 0 auto}
+.ovloot i.cm{background:linear-gradient(135deg,#B287FF 0 34%,rgba(178,135,255,.60) 34% 67%,rgba(178,135,255,.32) 67% 100%)}
+.ovloot i.cs{background:linear-gradient(135deg,#FFF3D8 0 34%,rgba(255,243,216,.60) 34% 67%,rgba(255,243,216,.30) 67% 100%)}
+/* 강화석 줄 — **몹이 흘린 것과 갈려 있다.** 위 줄은 몹(암흑물질·빛의 결정),
+   이 줄은 **운석**(캔 것)이다. 한 줄에 섞으면 「어디서 벌었나」가 사라지고,
+   그러면 「다음 판에 어디를 갈까」도 같이 사라진다. */
+.ovloot.mine{gap:14px;font-size:12.5px;margin-top:1px}
+/* 조각 — **여섯 면 쌍뿔**(허리가 좁고 위아래로 뾰족하다). 암흑물질의 **고른
+   육각**과 실루엣으로 갈린다: 색은 이미 **등급**을 말하고 있어(무채=일반 ·
+   색 넷 · 황금=유니크) 색만으로는 재화 종류를 못 가른다. */
+.ovloot i.st{width:11px;height:14px;transform:none;
+  clip-path:polygon(50% 0,92% 38%,50% 100%,8% 38%)}
+.ovloot i.st.k0{background:linear-gradient(120deg,#9A9AA8 0 34%,rgba(154,154,168,.62) 34% 67%,rgba(154,154,168,.34) 67% 100%)}
+.ovloot i.st.k1{background:linear-gradient(120deg,#FF6A1E 0 34%,rgba(255,106,30,.62) 34% 67%,rgba(255,106,30,.34) 67% 100%)}
+.ovloot i.st.k2{background:linear-gradient(120deg,#E14CFF 0 34%,rgba(225,76,255,.62) 34% 67%,rgba(225,76,255,.34) 67% 100%)}
+.ovloot i.st.k3{background:linear-gradient(120deg,#6E8AE8 0 34%,rgba(110,138,232,.62) 34% 67%,rgba(110,138,232,.34) 67% 100%)}
+.ovloot i.st.k4{background:linear-gradient(120deg,#A8C43C 0 34%,rgba(168,196,60,.62) 34% 67%,rgba(168,196,60,.34) 67% 100%)}
+.ovloot i.st.k5{background:linear-gradient(120deg,#FFC64A 0 34%,rgba(255,198,74,.62) 34% 67%,rgba(255,198,74,.34) 67% 100%)}
+.ovunlock{display:flex;align-items:center;gap:10px;margin-top:6px;padding:9px 18px;
+  font-size:12.5px;color:#FFE9C6;letter-spacing:.04em;
+  border:1px solid rgba(255,210,122,.38);background:rgba(255,210,122,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.ovunlock .t{font-size:9px;letter-spacing:.24em;color:var(--gold)}
+/* 가로 폰의 두 엄지 — 왼 아래=한 번 더(회백), 오른 아래=로비로(금빛 하나). */
+.ovbl{position:absolute;left:16px;bottom:14px;width:200px;z-index:3}
+.ovbr{position:absolute;right:16px;bottom:14px;width:240px;z-index:3}
+.ovbl .ovbtn,.ovbr .ovbtn{width:100%}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-cards">레벨업 3택</a><a href="#s-hud">장착 HUD</a><a href="#s-pause">일시정지</a><a href="#s-set">설정</a><a href="#s-result">결과</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 인터페이스</p>
+  <h1>판이 도는 동안 화면에 얹히는 것</h1>
+  
+</header>
+
+<h2 id="s-cards">레벨업 3택</h2>
+<p class="sub">
+  판 안에서 사람이 <b>멈춰 서서 보는</b> 유일한 화면이다 — 세계가 서고, 고르고,
+  다시 흐른다. HUD 는 늘 얹혀 있는 배경이고 이쪽은 <b>사건</b>이라 먼저 온다.
+</p>
+<div class="stage">
+  <div class="lvup"><div class="big">LEVEL UP</div><div class="cnt">2 / 4 남음</div></div>
+  <div class="cards" id="cards"></div>
+</div>
+
+<h2 id="s-hud">장착 HUD</h2>
+<p class="sub">
+  <b>무엇을 끼고 있는지</b>가 보여야 「이번 판은 뭘 낄까」가 생긴다.
+</p>
+<table class="st">
+<tr><th>규칙</th><th>왜</th><th>안 지키면</th></tr>
+<tr><td><b>랙은 계열마다 선다</b><br>일반1·보조2·마법3·방어1·회복2·버프2</td><td>계열마다 상한이 다르다</td><td>한 줄로 그리면 마법 5칸 빈 게 꽉 찬 것으로 보인다</td></tr>
+<tr><td><b>안 열린 칸은 안 그린다</b><br>아래 그림=일반1·마법3·방어1 열림</td><td>칸은 레벨로 열린다</td><td>「비었는데 왜 안 채워지지」가 된다</td></tr>
+<tr><td><b>유물 칸은 없다</b></td><td>성좌가 대체 — 성좌는 판 밖(로비)에서 고른다</td><td>성좌 3칸을 이 화면에서 찾게 된다</td></tr>
+<tr><td><b>빈 칸=점선, 채운 칸=아이콘+우하단 레벨</b></td><td>뭘 끼고 있는지 한눈에 구분돼야 한다</td><td>장비 여부를 못 읽는다</td></tr>
+</table>
+<div class="hud">
+  <div class="hudtop"><div class="lv">Lv 14</div><div class="tm">3 : 21</div></div>
+  <div class="hudbar">
+    <div class="rack"><div class="rl">일반 1 / 1</div><div class="slots" id="wr-basic"></div></div>
+    <div class="rack"><div class="rl">마법 2 / 3</div><div class="slots" id="wr-magic"></div></div>
+    <div class="rack"><div class="rl">방어 1 / 1</div><div class="slots" id="wr-guard"></div></div>
+    <div class="rack"><div class="rl">방어구 2 / 3</div><div class="slots" id="ar"></div></div>
+  </div>
+  <div class="etrack">
+    <div class="rl">속성 이력 5</div>
+    <div class="slots" id="et"></div>
+  </div>
+  <div class="xpbar"><i></i></div>
+</div>
+<p class="sub">
+  <b>속성 칸은 「지금 쥔 것」이 아니라 「먹은 적 있는 것」이다.</b> 손은
+  둘뿐이라 쥔 것만 그리면 아무도 자기가 <b>백광</b>(다섯 종 누적)을 모으는
+  중인 줄 모른다 — 로얄 스트레이트를 모으는 판인데 손패만 보이는 셈이다.
+  지금 쥔 것은 그 위에 <b>테두리</b>로 겹쳐 표시한다.
+</p>
+
+<h2 id="s-pause">일시정지</h2>
+<p class="sub">
+  <b>판에서 나가는 유일한 문.</b> 3택은 「세계가 기다린다」를 보여 주지만
+  여기는 판을 떠날지 묻는 자리라 어둠막이 더 짙다 — 세계에서 눈을 뗀다.
+</p>
+<table class="st">
+<tr><th>규칙</th><th>왜</th><th>안 지키면</th></tr>
+<tr><td><b>눌리는 것은 눌리게 보인다</b><br>흰 앞날 · 3단 계조 · 아랫굽 · 바닥 그림자</td><td>손가락은 글자가 아니라 입체를 겨눈다</td><td>「평면 표의 한 셀을 누르는 느낌」</td></tr>
+<tr><td><b>엄지 자</b> — 주 버튼 58 · 줄 64 · 최소 44</td><td>가로 364px 실기에서 과녁은 엄지 크기다</td><td>「인터페이스도 너무 작음」</td></tr>
+<tr><td><b>나가는 문은 작고 어둡다</b><br>계조 2단 · 앞날 9% · 금빛 없음</td><td>파괴적 행동은 눌리기 어려워야 한다</td><td>오터치 한 번에 판이 죽는다</td></tr>
+<tr><td><b>버리는 값을 문장으로 미리 적는다</b><br>그리고 버리는 판이 무엇인지(시간·레벨·처치) 위에 보인다</td><td>확인 창을 한 겹 더 쌓지 않는다</td><td>매번 두 번 누르거나, 모르고 버린다</td></tr>
+<tr><td><b>여는 문은 좌상단 34px · 노치 밖</b>(판 위의 정지 단추)</td><td>가로에서 두 엄지 다 안 닿는 자리라 오터치가 없다</td><td>조이스틱 판이 그만큼 죽는다</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">멈춤 — 계속이 제일 크고, 나가는 문이 제일 어둡다</div>
+  <div class="phone land"><div class="screen">
+    <div class="ovworld"></div>
+    <div class="ovdim"></div>
+    <div class="ovui">
+      <div class="ovttl">멈춤</div>
+      <div class="ovctx">스테이지 3 · 어려움&ensp;—&ensp;3:21 · Lv 14 · 처치 213</div>
+      <div class="ovcol">
+        <div class="ovsh g"><div class="ovbtn cut">계속</div></div>
+        <div class="ovsh"><div class="ovbtn gh cut">설정</div></div>
+        <div class="ovsh"><div class="ovbtn low cut">판을 버리고 로비로</div></div>
+      </div>
+      <div class="ovfoot">이 판의 성장은 사라진다 · 재화는 남는다</div>
+    </div>
+  </div></div>
+ </div>
+</div>
+
+<h3>버튼의 해부 — 평상 · 눌림</h3>
+<div class="row" style="align-items:center;gap:26px;margin-top:12px">
+  <div class="ovsh g"><div class="ovbtn cut ovdemo">계속</div></div>
+  <div class="ovsh dn"><div class="ovbtn dn cut ovdemo">계속</div></div>
+</div>
+<table class="st">
+<tr><th>부위</th><th>평상</th><th>눌리면</th></tr>
+<tr><td><b>흰 앞날</b> — 위 안쪽 1px</td><td>백 50%</td><td>꺼지고 위가 그늘로 뒤집힌다</td></tr>
+<tr><td><b>3단 계조</b> — 34% · 70% 단차</td><td>밝음 → 중간 → 어둠</td><td>두 단으로 줄며 전체가 가라앉는다</td></tr>
+<tr><td><b>아랫굽</b> — 아래 안쪽 3px</td><td>검정 50%</td><td>사라진다 — 몸이 3px 내려앉는다</td></tr>
+<tr><td><b>바닥 그림자</b> — 깎인 모양 그대로</td><td>6px 띄움 + 금빛 번짐</td><td>1px 로 준다 — 바닥에 붙는다</td></tr>
+</table>
+
+<h2 id="s-set">설정</h2>
+<p class="sub">
+  <b>멈춤 위의 한 겹</b> — 판 밖 화면이 아니다. 멈춤에서 열리고 같은 판으로
+  돌아간다. 토글은 둘뿐이라(데미지 숫자 · 적 체력 바) 목록이 아니라 방이다.
+</p>
+<table class="st">
+<tr><th>규칙</th><th>왜</th><th>안 지키면</th></tr>
+<tr><td><b>줄 전체가 과녁이다</b> — 높이 64px</td><td>스위치만 노리면 실기에서 반은 빗나간다</td><td>글자를 눌렀는데 아무 일도 없다</td></tr>
+<tr><td><b>스위치는 물건이다</b> — 노브에 제 앞날과 굽이 있다</td><td>「켬/끔」 글자는 상태지 손잡이가 아니다</td><td>평면 표의 셀이 된다 — 어디를 누를지 모른다</td></tr>
+<tr><td><b>상태 글자는 스위치 안에 산다</b> — 노브 반대편</td><td>색만으로 켬을 말하면 어두운 실기에서 안 읽힌다</td><td>켜진 건지 켜라는 건지 모른다</td></tr>
+<tr><td><b>기본값</b> — 데미지 숫자 켬 · 체력 바 끔</td><td>몸이 곧 상태다(체력 바는 소음)</td><td>수백 마리 화면이 숫자로 덮인다</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">설정 — 줄이 곧 버튼, 스위치가 상태를 든다</div>
+  <div class="phone land"><div class="screen">
+    <div class="ovworld"></div>
+    <div class="ovdim"></div>
+    <div class="ovui">
+      <div class="ovttl">설정</div>
+      <div class="ovctx">멈춤에서 열렸다 — 같은 판으로 돌아간다</div>
+      <div class="ovcol w">
+        <div class="ovsh"><div class="ovrow cut">
+          <div><div class="k">데미지 숫자</div><div class="h">수백 마리 화면에서는 끄는 쪽이 잘 보인다</div></div>
+          <span class="ovsw on"><b class="l">켬</b><i></i></span>
+        </div></div>
+        <div class="ovsh"><div class="ovrow cut">
+          <div><div class="k">적 체력 바</div><div class="h">기본은 꺼짐 — 몸이 곧 상태다</div></div>
+          <span class="ovsw"><b class="r">끔</b><i></i></span>
+        </div></div>
+        <div class="ovsh"><div class="ovbtn gh cut">돌아가기</div></div>
+      </div>
+    </div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-result">결과</h2>
+<p class="sub">
+  판이 끝나며 남기는 값(<code>RunResult</code>)이 전부 놓인다 — 난이도 · 별 ·
+  시간 · 처치 · 레벨 · <b>주운</b> 재화 · <b>캔 강화석</b> · 해금.
+  문은 둘: 오른엄지가 앞으로 간다.<br>
+  <b>재화 줄이 둘이다</b> — 위는 <b>몹이 흘린 것</b>(암흑물질 · 빛의 결정),
+  아래는 <b>운석에서 캔 것</b>(강화석 여섯). 쓰는 곳도 갈린다: 위는 상점,
+  아래는 <b>메타 스탯</b>(<code>mockup-currency-meta.html</code> 2장).
+</p>
+<table class="st">
+<tr><th>규칙</th><th>왜</th><th>안 지키면</th></tr>
+<tr><td><b>난이도를 머리에 박는다</b> — 「스테이지 3 · 어려움」</td><td>별·기록이 난이도별로 갈린다(<code>RunResult.tier</code>)</td><td>어느 난이도 기록인지 화면이 침묵한다</td></tr>
+<tr><td><b>못 딴 별은 지우지 않고 죽인다</b></td><td>3 이 만점임이 모양으로 보인다</td><td>별 2 를 못 읽는다</td></tr>
+<tr><td><b>정산은 주운 것만</b> — <code>matterPicked</code>·<code>lumenPicked</code></td><td>재화는 죽은 자리에 떨어지고 주워야 들어온다</td><td>처치 수 × 환율이 되어 흡수 반경·수거가 장식이 된다</td></tr>
+<tr><td><b>캔 것은 줄이 따로다</b> — 강화석 여섯(<code>stonePicked</code>)</td><td>몹이 흘린 것(위 줄)과 <b>출처가 다르다</b> — 저건 몹, 이건 운석</td><td>「다음 판에 어디를 갈까」가 사라진다 — 색 강화석은 뜨는 판이 정해져 있다</td></tr>
+<tr><td><b>종별로 적고 0 인 종은 뺀다</b></td><td>메타 게이트가 레벨대마다 다른 돌을 받는다(<code>mockup-currency-meta.html</code> 2-2)</td><td>합쳐 적으면 게이트를 정산할 수 없고, 여섯 칸을 늘 세우면 「0 이 다섯」에 번 것이 묻힌다</td></tr>
+<tr><td><b>강화석은 난이도 배수를 안 탄다</b></td><td>운석은 판마다 <b>같은 자리에 같은 개수</b>다(<code>stage_rocks.dart</code>)</td><td>「어려운 판을 도는 것」이 「많이 캐는 것」을 이겨 파밍 스테이지 배치가 뜻을 잃는다</td></tr>
+<tr><td><b>앞으로 가는 버튼은 오른엄지 · 금빛 하나</b></td><td>가로 폰의 두 엄지 문법 — 왼쪽은 되돌이(한 번 더)</td><td>눈 갈 곳이 둘이 된다</td></tr>
+<tr><td><b>잦아든 판에도 재화 줄은 남는다</b></td><td>멈춤의 약속 「재화는 남는다」와 한 몸이다</td><td>그 약속이 거짓말이 된다</td></tr>
+<tr><td><b>죽음과 시간 초과는 다른 판정이다</b> — 「빛이 잦아들었다」/「어둠이 걷히지 않았다」(<code>RunResult.timedOut</code>)</td><td>피하지 못한 판과 화력이 모자란 판은 다음 판에 고칠 것이 다르다</td><td>왜 졌는지 화면이 침묵한다</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">어둠을 건넜다 — 별 둘 · 해금 있음</div>
+  <div class="phone land"><div class="screen">
+    <div class="ovworld"></div>
+    <div class="ovdim"></div>
+    <div class="ovui rs">
+      <div class="ovtier">스테이지 3 · 어려움</div>
+      <div class="ovverd">어둠을 건넜다</div>
+      <div class="ovstars"><span class="ovstar"></span><span class="ovstar"></span><span class="ovstar off"></span></div>
+      <div class="ovstats">
+        <div class="ovstat cut"><div class="n">12:00</div><div class="l">생존</div></div>
+        <div class="ovstat cut"><div class="n">1,204</div><div class="l">처치</div></div>
+        <div class="ovstat cut"><div class="n">23</div><div class="l">레벨</div></div>
+      </div>
+      <div class="ovloot">
+        <span class="one"><i class="cm"></i>암흑물질 +318</span>
+        <span class="one"><i class="cs"></i>빛의 결정 +2</span>
+      </div>
+      <div class="ovloot mine">
+        <span class="one"><i class="st k0"></i>일반 +12</span>
+        <span class="one"><i class="st k3"></i>생존석 +7</span>
+        <span class="one"><i class="st k1"></i>공격석 +4</span>
+        <span class="one"><i class="st k5"></i>유니크 +1</span>
+      </div>
+      <div class="ovunlock cut"><span class="t">해금</span>새 무기 — 유도탄</div>
+      <div class="ovsh ovbl"><div class="ovbtn gh cut">한 번 더</div></div>
+      <div class="ovsh g ovbr"><div class="ovbtn cut">로비로</div></div>
+    </div>
+  </div></div>
+ </div>
+ <div class="col">
+  <div class="cap">빛이 잦아들었다 — 별 0 · 해금 없음 · 주운 것은 남는다</div>
+  <div class="phone land"><div class="screen">
+    <div class="ovworld"></div>
+    <div class="ovdim"></div>
+    <div class="ovui rs">
+      <div class="ovtier">스테이지 3 · 어려움</div>
+      <div class="ovverd bad">빛이 잦아들었다</div>
+      <div class="ovstars"><span class="ovstar off"></span><span class="ovstar off"></span><span class="ovstar off"></span></div>
+      <div class="ovstats">
+        <div class="ovstat cut"><div class="n">7:42</div><div class="l">생존</div></div>
+        <div class="ovstat cut"><div class="n">641</div><div class="l">처치</div></div>
+        <div class="ovstat cut"><div class="n">15</div><div class="l">레벨</div></div>
+      </div>
+      <div class="ovloot">
+        <span class="one"><i class="cm"></i>암흑물질 +171</span>
+        <span class="one"><i class="cs"></i>빛의 결정 +1</span>
+      </div>
+      <div class="ovloot mine">
+        <span class="one"><i class="st k0"></i>일반 +6</span>
+        <span class="one"><i class="st k3"></i>생존석 +3</span>
+      </div>
+      <div class="ovfoot">주운 재화는 지갑에 들어갔다 — <b>캔 강화석도</b></div>
+      <div class="ovsh ovbl"><div class="ovbtn gh cut">한 번 더</div></div>
+      <div class="ovsh g ovbr"><div class="ovbtn cut">로비로</div></div>
+    </div>
+  </div></div>
+ </div>
+ <div class="col">
+  <div class="cap">어둠이 걷히지 않았다 — 시간 초과 패배(20분에 보스 생존, 사용자 판정 2026-08-21) · 별 0 · 생존은 꽉 찬 22:00</div>
+  <div class="phone land"><div class="screen">
+    <div class="ovworld"></div>
+    <div class="ovdim"></div>
+    <div class="ovui rs">
+      <div class="ovtier">스테이지 3 · 어려움</div>
+      <div class="ovverd bad">어둠이 걷히지 않았다</div>
+      <div class="ovstars"><span class="ovstar off"></span><span class="ovstar off"></span><span class="ovstar off"></span></div>
+      <div class="ovstats">
+        <div class="ovstat cut"><div class="n">22:00</div><div class="l">생존</div></div>
+        <div class="ovstat cut"><div class="n">1,893</div><div class="l">처치</div></div>
+        <div class="ovstat cut"><div class="n">27</div><div class="l">레벨</div></div>
+      </div>
+      <div class="ovloot">
+        <span class="one"><i class="cm"></i>암흑물질 +402</span>
+        <span class="one"><i class="cs"></i>빛의 결정 +2</span>
+      </div>
+      <div class="ovloot mine">
+        <span class="one"><i class="st k0"></i>일반 +14</span>
+        <span class="one"><i class="st k3"></i>생존석 +8</span>
+        <span class="one"><i class="st k1"></i>공격석 +5</span>
+      </div>
+      <div class="ovfoot">주운 재화는 지갑에 들어갔다 — <b>캔 강화석도</b></div>
+      <div class="ovsh ovbl"><div class="ovbtn gh cut">한 번 더</div></div>
+      <div class="ovsh g ovbr"><div class="ovbtn cut">로비로</div></div>
+    </div>
+  </div></div>
+ </div>
+</div>
+
+<!-- ⚠️⚠️ **「겹침 검증판」 절과 `#overlapcheck` 칸을 걷었다**(2026-08-21).
+     겹침의 정본은 이제 **전투 장**(`mockup-combat.html`) 하나다 — 거기서는
+     정원(`kTagCapMax`)이 허락하는 **11칸**이 한 몸에 서고, 사용자 판정
+     (「겹치면 뒤엣것이 비친다」)도 글로 박혀 있다.
+     이 절은 2026-08-20 에 「이펙트의 정본이 둘이 된다」로 한 번 걷혔다가
+     되살아나 있었다. **인터페이스 장은 화면에 얹히는 것(HUD·오버레이·3택)의
+     자리다** — 여기에 이펙트 한 장면이 서면 그 칸이 스킬 여섯 장과 나란히
+     「무엇이 무슨 모양인가」에 답해 버린다. 다시 두지 마라. -->
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Light Survival — 운석 문법</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<style>
+  h1{font-size:15px;letter-spacing:.18em;color:#9C9CAC;font-weight:400;margin:0 0 4px;}
+  .sub{font-size:11.5px;color:#66667A;margin:0 0 20px;line-height:1.75;}
+  .sub b{color:#A6A6B8;font-weight:600;}
+  .note{font-size:11px;color:#66667A;margin:14px 0 8px;letter-spacing:.02em;}
+  .note b{color:#E8C879;font-weight:600;}
+  .board{position:relative;width:100%;height:400px;margin:0 0 6px;
+    background:#0A0910;border:1px solid rgba(180,180,200,.16);
+    clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,13px 100%,0 calc(100% - 13px));
+    overflow:hidden;}
+  .board.short{height:250px;}
+  .board canvas{display:block;position:absolute;inset:0;width:100%;height:100%;}
+  table.t{border-collapse:collapse;font-size:11.5px;color:#8B8B99;margin:6px 0 18px;}
+  table.t th,table.t td{border:1px solid rgba(180,180,200,.14);padding:5px 11px;text-align:left;}
+  table.t th{color:#9C9CAC;font-weight:600;background:rgba(180,180,200,.05);}
+  table.t b{color:#E8E8F0;}
+  code{color:#C8A87A;}
+  h2.sec{font-size:13px;letter-spacing:.16em;color:#E8C879;font-weight:600;
+    margin:34px 0 10px;padding-top:10px;border-top:1px solid rgba(232,200,121,.2);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-kind">종류</a><a href="#s-size">크기</a><a href="#s-ice">얼음운석</a><a href="#s-anim">움직임</a><a href="#s-rule">그림 규약</a><a href="#s-todo">만들 것</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+
+
+
+<h1 id="s-kind">운석</h1>
+<p class="sub">
+  맵에 뿌리는 운석의 정본. 설계 근거는 <code>docs/design/채굴-파밍.md</code> 다.
+</p>
+<table class="t">
+  <tr><th>말</th><th>무엇</th><th>안 쓰는 말</th></tr>
+  <tr><td><b>운석</b></td><td>맵에 박혀 있는 덩어리 · 캐는 대상</td><td>암정 · 광맥 · 광석</td></tr>
+  <tr><td><b>강화석</b></td><td>깨면 나오는 <b>재화</b> · 메타 스탯을 올린다<br>일반 강화석 · <b>공격석 · 치명석 · 생존석 · 중력석</b> · 유니크 강화석</td><td>정광 · 광물</td></tr>
+  <tr><td><b>조각</b></td><td>강화석의 <b>겉모습</b> — 작은 운석</td><td>—</td></tr>
+  <tr><td><b>색 운석</b></td><td>색이 있는 넷(공격·치명·생존·<b>중력</b>)</td><td><b>속성 운석</b><span style="color:#66667A">(무기 속성 5종과 다른 말)</span></td></tr>
+  <tr><td><b>암흑물질</b></td><td>몹이 죽으며 흘리는 <b>상점 재화</b> · 떨어진 것을 <b>주워야</b> 한다</td><td>가루</td></tr>
+  <tr><td><b>빛의 결정</b></td><td><b>엘리트·보스</b>만 떨구는 프리미엄 재화</td><td>결정<span style="color:#66667A">(홑말은 「결정적」·「빙결정」과 섞인다)</span></td></tr>
+  <tr><td><b>경험치</b></td><td>판 안 레벨업 · 처치 <b>즉시 자동</b>으로 오른다</td><td>암흑물질<span style="color:#66667A">(옛 이름)</span></td></tr>
+</table>
+
+<h2 class="sec">1 · 무엇이 있나</h2>
+
+<p class="note">1-1 <b>운석 셋</b></p>
+<div class="board"><canvas id="r-grade"></canvas></div>
+<table class="t">
+  <tr><th>이름</th><th>겉</th><th>무엇이 나오나</th></tr>
+  <tr><td><b>일반 운석</b></td><td><b>색이 없다</b>(무채 <code>#9A9AA8</code>)</td><td>일반 강화석 — 능력치 <b>Lv1~20</b></td></tr>
+  <tr><td><b>색 운석</b> <span style="color:#66667A">(넷)</span></td><td><b>색이 있다</b></td><td>같은 색의 강화석 — 능력치 <b>Lv21~99</b></td></tr>
+  <tr><td><b>얼음 운석</b></td><td>맑은 창 너머로 <b>속이 비친다</b></td><td><b>판 안에서 쓰는 아이템</b> — 자석 · 신발 · 망원경 · 확성기</td></tr>
+</table>
+<table class="t">
+  <tr><th>색 운석</th><th>나오는 강화석</th><th>색</th><th>올리는 능력치</th></tr>
+  <tr><td><b>공격</b></td><td><b>공격석</b></td><td><span style="color:#FF6A1E">■</span> 주황 <code>ember</code></td><td>공격력 · 마법력 · 공격속도</td></tr>
+  <tr><td><b>치명</b></td><td><b>치명석</b></td><td><span style="color:#E14CFF">■</span> 보라 <code>blast</code></td><td>치명타 확률 · 치명타 피해</td></tr>
+  <tr><td><b>생존</b></td><td><b>생존석</b></td><td><span style="color:#6E8AE8">■</span> 강철빛 <code>magnet</code></td><td>방어력 · 체력</td></tr>
+  <tr><td><b>중력</b></td><td><b>중력석</b></td><td><span style="color:#A8C43C">■</span> 황록 <code>murk</code></td><td>이동속도 · 흡수 반경</td></tr>
+  <tr><td><b>유니크</b></td><td><b>유니크 강화석</b></td><td><span style="color:#E8C879">■</span> 황금</td><td>—</td></tr>
+  <tr><td colspan="4" style="color:#66667A;font-size:10.5px;">등급: 무채=일반 · 색=희귀 · 황금=유니크. 일반↔색은 광맥 굵기·개수로 가른다</td></tr>
+</table>
+
+<p class="note" id="s-size">1-2 <b>크기 다섯</b></p>
+<div class="board"><canvas id="r-size"></canvas></div>
+<table class="t">
+  <tr><th>크기</th><th>뜻</th></tr>
+  <tr><td><b>소형</b></td><td>지나가다 캔다</td></tr>
+  <tr><td><b>중형</b></td><td>—</td></tr>
+  <tr><td><b>대형</b></td><td>오래 캔다</td></tr>
+  <tr><td><b>거대형</b>(기암)</td><td>판의 랜드마크</td></tr>
+  <tr><td><b>특거대형</b></td><td>이벤트에만 뜬다</td></tr>
+  <tr><td colspan="2" style="color:#66667A;font-size:10.5px;">크기=HP · 색=스탯 · 드롭 2~3개</td></tr>
+  <tr><td colspan="2" style="color:#66667A;font-size:10.5px;">반지름 0.80r 기준 · 등급 폭 80~107/53~72/33~45 안 겹침(<code>ice_solid_test.dart</code>)</td></tr>
+</table>
+
+<p class="note" id="s-ice">1-3 <b>얼음 운석</b> — 깨기 전 ↔ 깨고 나서</p>
+<div class="board short"><canvas id="r-icepair"></canvas></div>
+<table class="t">
+  <tr><th></th><th>얼음 운석</th><th>일반 · 색 운석</th></tr>
+  <tr><td>재질</td><td><b>쪼개진 것</b> — 결정면을 따라 평면으로 깨진다</td><td><b>닳은 것</b> — 부딪혀 둥글어진다</td></tr>
+  <tr><td>계조</td><td>여섯 단</td><td><b>세 단</b></td></tr>
+  <tr><td>속</td><td>정면을 향한 면이 <b>창</b>이 되어 비친다</td><td>안 보인다 — 불투명</td></tr>
+  <tr><td>실루엣</td><td>광원 쪽 <b>흰 앞날</b></td><td>그늘 쪽 <b>림라이트</b></td></tr>
+  <tr><td>표면</td><td>파단면 · 서리 조각</td><td><b>구멍</b> — 큰 것과 잔 것이 섞인다</td></tr>
+  <tr><td>자전</td><td colspan="2"><b>3차원 · 축이 씨앗마다 기울어 있다.</b> 면이 가장자리에서 단축돼 사라진다</td></tr>
+</table>
+
+<p class="note">1-3-1 <b>얼음 운석 꼴 여덟</b> — 손잡이: 축 눌림 · 자른 면 · 뿔</p>
+<div class="board short"><canvas id="r-iceform"></canvas></div>
+
+<p class="note">1-3-2 <b>속의 아이템 넷</b> — 깨기 전에 보인다 · 깨면 그것이 나온다</p>
+<div class="board"><canvas id="r-ice"></canvas></div>
+<table class="t">
+  <tr><th>무엇</th><th>방향</th></tr>
+  <tr><td>속</td><td><b>스폰 때 정해지고 깨기 전에 창으로 보인다</b>(판정 2026-08-21) —
+    「무엇을 하러 가나」를 플레이어가 지도에서 <b>미리 고른다</b>. 깰 때 굴리면 그 고름이 사라진다</td></tr>
+  <tr><td>출처</td><td>순간 버프 넷은 <b>얼음운석에서만</b> — 몹은 재화(경험치·암흑물질·빛의 결정)만 흘린다</td></tr>
+  <tr><td>실루엣</td><td>자석 = 말굽·<b>입이 아래</b> · 신발 = <b>가로로 길고 바닥 평평</b> ·
+    망원경 = <b>↗</b> 균일 굵기·마디 둘 · 확성기 = <b>↘</b> 한쪽만 벌어짐 — 넷 다 강철빛 한 색, 축 둘로 가른다</td></tr>
+  <tr><td>채굴 중</td><td><b>아무것도 안 나온다</b> — 나오는 것은 깨지는 순간 하나뿐(운석의 「때릴 때마다 확률로」와 다르다)</td></tr>
+</table>
+
+<p class="note" id="s-icelit">1-3-3 <b>밝기 판정</b> — 운석과 빙 이펙트를 <b>한 화면에</b></p>
+<p class="sub">
+  사용자가 <b>두 번</b> 「좀 더 밝게」라고 했다. 첫 시도는 <b>꼭대기 셋</b>을 밝혔다가
+  빙 마법 FX 와 색차(ΔE2000)가 <b>3.8</b> 까지 붙어 되돌렸다 — 그런데 <b>그 되돌림이
+  지킨 것이 거의 없었다.</b> 화면을 재 보니 덩이의 <b>88%가 아래 두 단</b>이고
+  꼭대기 셋은 통틀어 <b>5.2%</b> 다:
+</p>
+<table class="t">
+  <tr><th>단</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+  <tr><td>화면 점유(실측)</td><td><b>63.8%</b></td><td><b>24.6%</b></td><td>4.1%</td>
+    <td>0.6%</td><td>1.3%</td><td>3.3%</td></tr>
+  <tr><td>빙 FX 까지 최단 ΔE</td><td>49.7</td><td>42.3</td><td>27.8</td>
+    <td>17.0</td><td>12.9</td><td><b>6.2</b></td></tr>
+</table>
+<p class="sub">
+  ⇒ <b>밝기는 「위」가 아니라 「아래」의 일이다.</b> 아래 칸의 같은 운석을 캔버스에서
+  되읽어 재면, 위만 밝힌 판은 몸 광도가 71.1 → 71.6(<b>+0.7%</b>)인데 FX 거리는
+  6.2 → 3.8 로 내준다 — <b>비용 전부, 이득 없음.</b>
+  아래를 들면 광도 71.1 → <b>89.6(+26%)</b> 이면서 이웃 단 최소 거리가
+  8.7 → <b>11.3 으로 오히려 벌어진다.</b>
+  <br>⭐ <b>덤으로 두 획이 되살아난다.</b> 옛 0단(#08202F)은 면 사이 골
+  (<code>kIceSeam</code> #071A24)과 ΔE <b>3.1</b> — 「같은 색」선이라 <b>골이 안 보였다.</b>
+  새 0단은 10.9 이고, 바탕(#0A0910)과의 거리도 10.8 → 18.4 로 실루엣이 더 잘 닫힌다.
+  꼭대기(5단)를 안 밝힌 이유도 같다 — 밝히면 흰 앞날(<code>kIceEdge</code>)·창테와
+  ΔE 2.2·2.3 로 <b>제 획을 제가 지운다.</b>
+  <br>⚠️ <b>판정은 정지 색표로 하지 않는다.</b> 운석은 <b>박혀서 안 움직이고 크고 오래</b>
+  가는데 빙 이펙트는 <b>날아가고 작고 한순간</b>이다 — 그 셋이 갈리는지는
+  <b>여러 프레임</b>에 걸쳐야 보인다. 아래 칸이 셋을 한 장면에 놓는다.
+</p>
+<div class="board"><canvas id="r-icelit"></canvas></div>
+
+<h2 class="sec" id="s-anim">2 · 어떻게 움직이나</h2>
+<table class="t">
+  <tr><th>시안</th><th>상태</th></tr>
+  <tr><td>운석별 · 크기별 <b>도는 형태</b></td><td><b>있다</b> — 1-2</td></tr>
+  <tr><td><b>때릴 때</b></td><td><b>있다</b> — 3-1</td></tr>
+  <tr><td><b>부서질 때</b> · <b>재화 드롭</b> · <b>머무름</b></td><td><b>있다</b> — 2-2 한 바퀴</td></tr>
+  <tr><td>부술수록 <b>크기가 변함</b></td><td>없다</td></tr>
+</table>
+
+<p class="note">2-1 <b>때릴 때</b> — 각도가 돌면 맞는 부위가 따라 돈다</p>
+<div class="board"><canvas id="r-hit"></canvas></div>
+<p class="sub">맞는 자리는 <b>다면체의 지지점</b>으로 찾는다.</p>
+
+<p class="note">2-2 <b>채굴 한 바퀴</b> — 때리고 · 터지고 · 줍는다</p>
+<div class="board"><canvas id="r-break"></canvas></div>
+<table class="t">
+  <tr><th>위상</th><th>무엇</th></tr>
+  <tr><td>0.00~0.06</td><td>운석이 나타난다</td></tr>
+  <tr><td>0.06~0.52</td><td><b>채굴</b> — 빔이 닿고, 맞을 때마다 몸이 <b>밀렸다 돌아온다</b></td></tr>
+  <tr><td>0.14 · 0.26 · 0.36 · 0.45</td><td><b>조각</b>이 <b>빔이 맞는 자리에서</b> 튄다 — 확률로 하나씩</td></tr>
+  <tr><td>0.42~0.52</td><td><b>임박</b> — 떨림이 급히 커지고 금이 밝아진다</td></tr>
+  <tr><td><b>0.52</b></td><td><b>몸 끝 · 파편 · 조각 · 빛이 동시에 출발</b></td></tr>
+  <tr><td>~0.62 / ~0.74 / ~0.82</td><td>빛이 진다 → 파편이 식는다 → 조각이 착지해 <b>툭</b> 튄다</td></tr>
+  <tr><td>0.80~0.99</td><td>조각이 <b>하나씩 차례로</b> 끌려간다</td></tr>
+  <tr><td>0.988</td><td>마지막 조각 사라짐 — <b>루프 이음매</b></td></tr>
+</table>
+  <p class="sub"><b>깨지기까지가 운석, 떨어진 뒤는 재화</b> 그룹 몫이다.</p>
+<table class="t">
+  <tr><th>손잡이</th><th>뜻</th></tr>
+  <tr><td><b>누적</b></td><td>금이 늘고 밝아진다</td></tr>
+  <tr><td><b>반동</b></td><td>맞을 때마다 몸이 밀렸다 돌아온다</td></tr>
+  <tr><td><b>임박</b></td><td>떨림이 급히 커진다</td></tr>
+  <tr><td><b>되돌아오는 맛</b></td><td>조각이 머물다 하나씩 끌려온다</td></tr>
+</table>
+<table class="t">
+  <tr><th>합성 층</th><th>비고</th></tr>
+  <tr><td>코어</td><td>—</td></tr>
+  <tr><td>빛살</td><td>적고 · 길이 차 크다</td></tr>
+  <tr><td>스파크</td><td>—</td></tr>
+  <tr><td>잔광</td><td>—</td></tr>
+</table>
+
+<h2 class="sec" id="s-rule">3 · 그림 규약</h2>
+<table class="t">
+  <tr><th>무엇</th><th>규약</th></tr>
+  <tr><td><b>광원</b></td><td>전역 상수 하나 — 왼쪽 위</td></tr>
+  <tr><td><b>계조</b></td><td>돌 <b>세 단</b> · 얼음 <b>여섯 단</b>. 사이 값을 안 쓴다</td></tr>
+  <tr><td><b>윤곽</b></td><td>톤이 바뀌는 자리와 실루엣에만</td></tr>
+  <tr><td><b>실루엣</b></td><td>돌은 그늘 쪽 <b>림라이트</b> · 얼음은 광원 쪽 <b>흰 앞날</b></td></tr>
+  <tr><td><b>구멍</b></td><td>광원 쪽 벽이 그늘 · <b>반대쪽 안벽이 밝다</b></td></tr>
+  <tr><td><b>광맥</b></td><td><b>줄기에서 가지가 뻗는 금 하나.</b> 둘레에 열이 번진다</td></tr>
+  <tr><td><b>표면에 얹는 것</b></td><td>몸보다 작은 구면(<b>0.72r</b>)에 놓고 몸에 클립</td></tr>
+  <tr><td><b>깊이</b></td><td>크기가 아니라 <b>밝기</b>로</td></tr>
+  <tr><td><b>그림자</b></td><td>어두운 속 + <b>밝은 테</b></td></tr>
+  <tr><td><b>배경</b></td><td>4층 시차. 크기·밝기·속도가 <b>함께</b> 변하고 <b>근층은 어둡다</b></td></tr>
+  <tr><td><b>색 문자열</b></td><td><code>A()</code> 는 <code>#RRGGBB</code> 만</td></tr>
+</table>
+
+<h2 class="sec" id="s-todo">4 · 채굴 무기 셋 · 순간 버프 넷</h2>
+<p class="sub">
+  옛 채굴 페이지(mockup-mine)의 그림은 폐기됐고 <b>여기가 새 정본</b>이다 —
+  목적·방향 표와 시안을 같이 둔다.
+</p>
+
+<p class="note">4-1 <b>채굴 무기 셋</b> — 빔 · 포 · 탄. 가르는 축은 <b>어떻게 닿나</b>다</p>
+<div class="board"><canvas id="r-mine"></canvas></div>
+<table class="t">
+  <tr><th>무엇</th><th>방향</th></tr>
+  <tr><td>목적</td><td>셋 다 <b>적을 안 때린다</b> — 강제 슬롯 하나가 전투력을 안 준다</td></tr>
+  <tr><td>가르는 축</td><td><b>어떻게 닿나</b> — 빔은 <b>이어진다</b> · 포는 <b>한 발씩</b> · 탄은 <b>터진다</b>(뭉친 광맥을 한 번에)</td></tr>
+  <tr><td>움직임</td><td>원거리 자동 조준이라 <b>겉돌면서</b> 캔다 — 이 게임은 멈추면 죽는다</td></tr>
+  <tr><td>색</td><td><b>찬 색</b>(<code>#5FD9FF</code>) · <b>안 터진다</b> · 타격감은 맞는 쪽에</td></tr>
+</table>
+
+<p class="note">4-2 <b>순간 버프 넷</b> — 자석 · 이속 · 사거리 · 범위. 합격선은 <b>34px</b>다</p>
+<div class="board"><canvas id="r-buff"></canvas></div>
+<table class="t">
+  <tr><th>무엇</th><th>방향</th></tr>
+  <tr><td>목적</td><td><b>재화가 아니다</b> — 재화는 벌러 가고 이건 <b>지금 살려고</b> 줍는다</td></tr>
+  <tr><td>그릇</td><td>넷 다 <b>같은 그릇</b>에 <b>테두리 색과 속 문양</b>으로만 갈린다 — 안을 칠하면 색 덩어리가 넷 는다</td></tr>
+  <tr><td>문양</td><td><b>축을 둘</b> 쓴다(면↔선 · 가로↔사선). <b>화살표는 안 쓴다</b> — 34px 에서 방향이 안 읽힌다</td></tr>
+  <tr><td>합격선</td><td><b>34px 에서 넷이 서로 갈리는가</b>. UI 아이콘(햄버거 · 빨리감기 · 톱니)으로 읽히면 실패</td></tr>
+</table>
+
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script src="vfx.js"></script>
+<script>document.write(unescape("%3Cscript src=\"rock.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"))</script>
+</div>
+</body>
+</html>

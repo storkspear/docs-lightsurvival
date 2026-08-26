@@ -1,0 +1,127 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 고르기</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-flame">화염방사</a><a href="#s-flamenat">자연스러움 다섯</a><a href="#s-numb">폭마</a><a href="#s-dead">떨어진 것</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 고르기</p>
+  <h1>판정을 기다리는 시안</h1>
+  <p class="def">고르고 나면 채택안만 남기고 이 페이지는 지운다.
+  <b>대조군을 안 끼웠다</b> — 말한 개수만 세운다.</p>
+  <p class="def"><b>끝난 것 둘</b> — 낙광과 뇌광은 합격해 각자 제 함수
+  (<code>FX.lightfall</code> · <code>FX.arc</code>)로 옮겨 갔다. 마법·보조 장과 뇌
+  캐릭터 장에 이미 그 그림이 서 있다.<br>
+  ⚠️ <b>뇌광 색을 고쳤다</b> — 표(<code>WTONE.arc</code> · 엔진 <code>cel_tones.dart</code>)는
+  처음부터 보라 260° 인데 그림이 <code>"volt"</code>(42°)를 직접 적어 넣어 낙광(45°)과
+  <b>3° 차이</b>였다. 지금은 표대로 그려 <b>215° 떨어져 있다</b>.</p>
+  <p class="def"><b>전부 L5 다.</b> 개수·반경·굵기·주기·판정은 <b>원본을 한 글자도
+  안 건드렸다</b> — 바뀐 것은 칠하기뿐이다.</p>
+</header>
+
+<!-- ⭐ 광주 光柱 — **확정돼 제 자리로 갔다**(2026-08-23). `FX.pillar` 안으로
+     옮겨져 마법·보조 장과 뇌 캐릭터 장이 그 그림을 쓴다. 그 페이지의 규약이
+     「고르고 나면 채택안만 남기고 이 페이지에서 뺀다」라 여기서 걷었다.
+     ⚠️ 옛 채택본은 `FX.PKpillarKnot` 으로 이름만 바꿔 남아 있고, 고르기용
+     `PKq*` 블록도 `vfx.js` 에 그대로 있다 — 되돌아갈 수 있다. -->
+
+<h2 id="s-flame">화염방사 火炎放射 — 색 배합 셋</h2>
+<p class="def"><b>모양은 확정</b>이다 — 제트 <b>.15</b> · <b>S자</b> · 진폭 <b>.33</b> ·
+G4 재료(채움 · 너덜너덜한 가장자리 · 크기 편차 · 안쪽 결 · 불씨 · 가산 빛번짐 ·
+잔상). 갈리는 것은 <b>색뿐</b>이고, 사용자가 말한 <b>정확히 셋</b>만 세운다.</p>
+<p class="def">⚠️⚠️ <b>팔레트 충돌</b> — 자염·녹염은 <b>속성색 밖</b>이다.
+자염 307° ↔ 뇌(259~267°) <b>40°</b> · 녹염 115° ↔ 독(129~137°) <b>14~22° — 제일 위험</b>.
+화면에서 다른 속성 스킬로 읽힐 수 있다.<br>
+⭐ <b>제안(세우지는 않았다)</b>: 지배색을 염(주황~적)으로 두고 <b>심과 불씨에만</b>
+그 색을 쓰면 정체가 안 흔들린다. 그 판은 <code>vfx.js</code> 의
+<code>PKCOL.violC</code> · <code>PKCOL.verdC</code> 에 함수로 남아 있다 —
+보고 싶으시면 세워 드린다.<br>
+⚠️ 색이 속성 밖으로 나가면 엔진에서 <code>cel_tones.dart</code> 의
+<code>'flamer'</code> 를 바꾸는 일이 된다 — <b>염 속성 전체의 정체</b>를 건드리는
+판정이라 이식 때 다시 볼 자리다.</p>
+<p class="def">⚠️ <b>정지 화면에서 S 가 안 보일 수 있다</b> — 흐르는 것이라 한 장에는
+한 순간만 담긴다. 총구는 거의 안 흔들리고 <b>끝이</b> 논다.<br>
+⚠️ <b>판정 부채를 옅은 점선으로 겹쳐 그렸다.</b> 봉투는 그 안에 들고(u=1 에서
+36.4 대 42.4), <b>덩어리는 12.7px 넘친다</b> — S 가 만든 것이 아니라 크기 편차가
+원래 갖고 있던 것이다. 채택하면 <b>엔진 반각을 올릴지</b>가 판정이 된다.</p>
+<div class="grid" id="pkflame"></div>
+
+<h2 id="s-flamenat">화염방사 — <b>자연스러움 다섯</b>을 한 번에 <span style="font-size:14px;color:#FF9B22;letter-spacing:.1em;vertical-align:middle">복제본 · 판정 대기</span></h2>
+<p class="def">사용자: 「오 훨씬 자연스러워졌네? 근데 <b>좀 더 자연스럽게 하려면 어떻게 해야 하려나?</b> 디테일의 영역인 거 같은데 이제」 → 축 넷을 제안했고 <b>「넷 다 한 번에 얹어서 보여줘」</b>. 그 위에 하나가 더 붙었다 — 「화염방사는 <b>분출할 때 사그라들 때 애니메이션 추가</b>해줘」. ⇒ 칸은 <b>정확히 둘</b>이다 — 왼쪽이 <b>확정본</b>, 오른쪽이 <b>다섯을 다 얹은 복제본</b>. 축마다 칸을 쪼개지 않았다.</p>
+<p class="def">⚠️ <b>확정본은 한 글자도 안 고쳤다</b> — 왼쪽 칸은 <code>vfx.js</code> 의 <code>FX.PKflameC4</code>(<code>PKflameEnv(…,"ess",.15,"cold")</code>)를 <b>그대로</b> 부른다. 새 코드는 전부 <code>vfx-flamenat.js</code> 에만 있고 <code>PKENV.ess</code>·<code>PKflameEnv</code>·<code>PKflameLane</code>·<code>PKfBlobs</code>·<code>PKfillCool</code>·<code>PKCOL.cold</code> 는 <b>읽기만</b> 했다.<br>
+⚠️ <b>불씨가 난수라 확정본은 자기 자신과도 픽셀이 다르다</b> — 「안 바뀌었다」의 판정은 <b>자기대조값을 기준선</b>으로 한다.</p>
+<p class="def">⭐ <b>다섯이 각각 어느 양의 함수인가</b>(엔진 이식용) —<br>
+<b>① 부력</b> <code>dir(u) ∝ 조준 + (0,−1)·0.75·u<sup>2.40</sup></code> → 단위로 되돌려 적분 (<b>화면 좌표</b>. 갈래 좌표계가 아니다)<br>
+<b>② 난류</b> <code>lat += sin(u·π·3.30 − t·3.45)·HL·0.085·u<sup>2.20</sup></code> (1차 파동 위에 <b>더한다</b>)<br>
+<b>③ 갈라짐</b> 밑판 알파 <code>×= 1 − smoothstep((u−0.74)/0.26)</code> (<code>u&lt;0.74</code> 는 <b>정확히 1</b>)<br>
+<b>④ 요동</b> <code>LEN ×= 1 ± 1.4%</code> · <code>세기 ×= 0.974~1.000</code> (전부 <b>1.15 rad/s 의 정수배 사인</b>)<br>
+<b>⑤ 분출·사그라듦</b> 압력 <code>P=(lenK−.15)/.85</code> 하나가 <b>사거리 · 흔들림 · 갈라짐 자리 · 색 · 세기 · 꺼짐</b>을 전부 낸다. 주기 <code>2π/1.15 = 5.46364초</code> — <b>새 주기를 안 만들었다</b>(확정본 1차 파동의 주기 그대로)</p>
+<p class="def">⭐⭐ <b>⑤ 는 「빨려 들어오면」 안 된다.</b> 앞 판이 <b>줄기 길이</b>를 줄여 이미 나간 불까지 딸려 들어왔고 사용자가 「<b>그냥 쑥 빨려 들어오듯이 들어오네?</b>」로 반려했다. 고친 자리는 <b>좌표계</b>다 —<br>
+<code>나이 a(u) = ((u−u0)/(1−u0))<sup>1/0.86</sup> / 0.85</code> · <code>사거리 L(u) = LEN₀ · lenK(t − a(u))</code> · <code>세기 = on(t − a(u))</code><br>
+⇒ 길이 스케줄이 <b>「새로 나가는 것이 닿는 거리」</b>이고, 그 자리의 불은 <b>제가 태어날 때 받은 것</b>을 죽을 때까지 갖는다. 근원이 그쳐도 <b>이미 나간 불은 제자리에서 타다 꺼진다.</b> 실측: 잦아듦+무음 내내 <b>덩어리가 뒤로 간 걸음 0/3789</b>(120fps 추적).<br>
+⭐ <b>③도 여기서 저절로 산다</b> — 근원이 약해지면 끝쪽에 새 불이 안 가서 이미 있던 것만 낱낱이 남는다. ③·⑤가 <b>한 구조</b>다.<br>
+⭐ <b>남는 것</b> — <b>불씨 · 불꽃 · 잔해</b>는 그 좌표계가 낸다. <b>연기</b>만 층을 하나 더했다(뭉치 여섯 · 알파 .26 · <b>새 색 0개</b>). ⚠️⚠️ <b>분사 중에는 한 톨도 없다</b>(램프업+한창 3,694점(1ms) 중 그리기 <b>0건</b>) — <code>PKflameLane</code> 이 「어두움 층으로 그리면 갈색 구름이 앉는다」로 못 박아 둔 그 자리다.<br>
+⚠️⚠️ <b>화염방사는 원래 「완전 연속」이었다</b> — <code>FCsim</code> 이 길이·반각을 <b>상수</b>로 돌려주고 켜짐/꺼짐이 없다. 엔진도 <code>kFlamerPeriod 0.34초</code>(피해 틱)에 FX 수명 <code>0.42초</code>로 <b>알파만</b> 죽지 길이는 안 준다. ⇒ 「점점 짧아지다 팅팅」은 0.34초 안에 못 담는다. <b>이 주기는 그림의 주기지 밸런스가 아니다</b> — 이식할 때 초 단위는 다시 정해야 한다.</p>
+<p class="def">⚠️⚠️ <b>부력은 「화면의 위」지 「총구 기준 위」가 아니다.</b> 갈래 좌표계(<code>nx</code>·<code>ny</code>)에 얹으면 <b>아래로 쏠 때 아래로 뜨는</b> 물건이 된다 — 시안은 <code>FCDIR</code>가 위 하나지만 <b>엔진은 사방으로 쏜다</b>.<br>
+⭐⭐ <b>「자리를 더하기」가 아니라 「힘을 더하기」다.</b> 처음엔 자리에 바로 더했는데(<code>y −= 0.18·LEN·u<sup>2.40</sup></code>) <b>이 칸은 똑바로 위로 쏘므로</b> 그게 「말려 오름」이 아니라 <b>길이 +18%</b> 가 됐고, 확정본이 이미 칸 위 끝에 닿아 있어(잘린 화소 평균 5.8 · 최대 23) <b>평균 31.4 · 최대 65 화소가 잘려 나갔다</b>. ⇒ 속도에 더해 <b>호 길이를 `LEN` 으로 고정</b>했다 — 옆으로 쏘면 말려 오르고, <b>위로 쏘면 아무 일도 안 일어난다</b>(칸이 확정본만큼만 잘린다). 덤으로 <b>조준이 바뀌어도 사거리가 안 변하고</b>, 각을 돌리는 방식이 정확히 아래에서 좌우로 뒤집히는 문제도 없다.<br>
+⚠️⚠️ <b>그 대가로 이 칸에서는 ①이 안 보인다.</b> 옆·아래로 돌려 구운 그림을 보고에 붙였다(옆으로 쏘면 끝이 조준선보다 <b>18.8px</b> 위로 뜬다).<br>
+⚠️ <code>0.75</code>는 <b>1 미만이라야 한다</b> — 1 을 넘으면 정확히 아래로 쏠 때 흐름이 되돌아 오르면서 좌우가 뒤집힌다. 지금은 정확히 아래로 쏘면 <b>안 휜다</b>(부력이 추진을 못 이긴다). 엔진에서 사거리를 크게 늘리면 그때 다시 볼 자리다.</p>
+<div class="grid" id="pkflamenat"></div>
+
+
+<h2 id="s-numb">폭마 (특수 · 뇌+독) — 자염이 갈 곳 <span style="font-size:14px;color:#E040A0;letter-spacing:.1em;vertical-align:middle">보관 · 판정 대기</span></h2>
+<p class="def">사용자: 「<b>'자염'을 활용한</b> 새로운 아이디어를 만들라니까 아예 새로운 걸 만들면 우째」 · 원래 지시: 「자염과 녹염은 <b>형태를 조금 바꿔서</b> '마' 캐릭터의 스킬과 '독' 캐릭터 스킬로」.</p>
+<p class="def">⭐ <b>바탕은 자염 그대로다</b> — <code>PKCOL.viol</code>(자주 <b>307° L54</b> · 심 <b>308° L81</b> → 암적 → 숯) · 재료 여덟 · 모양(제트 <code>.15</code> · S자 · 진폭 <code>.33</code>). <code>PKflameLane</code> 을 그대로 부른다.<br>
+⭐ <b>제3은 「그 불이 무엇을 하느냐」에 있다</b> — 번개도 독도 <b>퍼지는</b> 것인데 마는 <b>퍼지던 것이 멎는</b> 것이다(<code>FVWHY.numb</code>: 「번지던 신호가 죽은 마디 앞에서 멈춘다」).<br>
+⇒ <b>불은 계속 흐르는데 닿은 적만 그 순간의 자세로 굳는다.</b> 몸의 흔들림을 <b>굳은 시각에 못 박고</b>(<code>drawFoes</code> 의 <code>sin(t*2+i)</code> 를 그 마리에게만 멈춘다) 넉백도 눈빛도 죽인다. 둘레에 <b>자주 테두리</b>가 남아 「저기까지 닿았다」가 보인다. <b>그 대비</b>가 마비다.</p>
+<p class="def">⚠️ <b>앞의 넷은 목록에서 뺐다</b> — (A) 저림 · (B) 끊긴 그물은 <b>「번개+독」을 더한 것</b>이라, (1) 글리치 · (2) 탈색은 <b>자염을 통째로 버린 것</b>이라 반려됐다. 함수 <code>FX.PZnumbA</code>·<code>PZnumbB</code>·<code>PZglitch</code>·<code>PZbleach</code>·<code>PZnumbShift</code> 는 <b>다 살아 있다</b>.<br>
+⚠️ <b>엔진에 안 녹인다</b> — 특수 열둘은 출시 범위 밖 · 상점 해금 대상이다. 이 칸이 하는 일은 <b>보관</b>이다.<br>
+⚠️⚠️ <b>화염방사 확정본과 실루엣이 같다.</b> 갈리는 것은 <b>색(307° ↔ 염 20°)</b>과 <b>닿은 뒤</b>(굳음)뿐이다 — 나란히 놓으면 <b>모양으로는 구분이 안 된다</b>. 그 사실을 판정에 넣어 달라.</p>
+<div class="grid" id="pkznumb"></div>
+
+<h2 id="s-dead">⚠️ 낙광에서 실패한 것 — 여덟이 같은 이유로 떨어졌다</h2>
+<p class="def">B1(두꺼운 마디) · B3(되침) · B2a(층) · B2b(층+색둘) · B2c(다 올림) ·
+S1(외줄기) · S2(부챗살) · S3(나무) — <b>여덟이 전부</b> 같은 말로 떨어졌다.<br>
+사용자 원문: 「그냥 <b>솜사탕 실이 엉키듯이 거미줄처럼 뽑아져 나가는 형태</b>라
+별로 안 멋있다」</p>
+<p class="def"><b>실패 조건 넷</b> — ① 획이 가늘다 ② 갈래가 많다 ③ 굵기가 균일하다
+④ 서로 엉킨다. 넷이 같이 오면 거미줄이 된다.<br>
+⭐ <b>사용자는 처음부터 「두껍게」라고 했다.</b> 그런데 여덟을 만드는 동안 <b>줄기가
+실제로 두꺼워진 적이 없다</b> — 갈래 수·경로·리듬만 갈았다. 그게 세 번 반려당한
+진짜 이유다.<br>
+⇒ <b>다음에 다시 만들 사람에게</b>: 주 채널 하나를 압도적으로 굵게 · 곁가지는 적고
+가늘게 · 굵기는 마디마다 튀게 · <b>갈래를 늘리지 마라</b>. 그리고 화려함은 줄기가
+아니라 <b>「친 자리」와 「예고」</b>에서 낸다.</p>
+<p class="def">⚠️ <b>함수는 안 지웠다</b> — 「그건 좋았는데」가 나올 수 있고, 지웠다
+다시 만들면 값이 달라진다. 목록에서만 뺐다. 화염방사도 같다(F0~F4 · F5 · F6 ·
+G1~G3 는 <code>vfx.js</code> 에 그대로 있다).</p>
+
+</div>
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️⚠️ **독 신설 셋 · 폭마 둘은 별도 파일이다** — `vfx.js` 가 50,000줄이고 이
+     사이클에 여러 손이 같이 쓰고 있어(같은 날 그 파일에서 31,000줄이 날아갔다)
+     새 그림은 `vfx-poison.js` 에만 만들었다.
+     ⚠️ `vfx.js` **뒤**라야 한다 — `FX`·`TONE`·`tile`·`PK*` 를 그쪽에서 읽어 쓴다.
+     ⚠️ 이 파일은 **캐릭터 장 둘**(독 毒 · 폭마)도 같이 쓴다. 호스트 id 가 달라
+        (`pkz*` ↔ `pz*`) 한 파일이 세 장에 각각 마운트한다 — 없는 쪽은 조용히 건너뛴다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx-poison.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️⚠️ **화염방사 자연스러움 복제본도 별도 파일이다** — 위와 같은 까닭이다.
+     확정본 `PKflameC4`·`PKflameEnv`·`PKflameLane`·`PKfBlobs`·`PKfillCool`·
+     `PKENV.ess`·`PKCOL.cold` 은 **읽기만** 하고 `vfx.js` 본문은 한 글자도 안 고쳤다.
+     ⚠️ `vfx.js` **뒤**라야 한다 — `FX`·`tile`·`PK*`·`FC*` 를 그쪽에서 읽는다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx-flamenat.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️⚠️ **서리결정 지점폭발도 별도 파일이다** — 위와 같은 까닭이다.
+     확정본 `SCspine` 과 그 상수 열셋(`SCN`·`SCRAD`·`SCBOOM`·`SCPER`·`SCFLY`·
+     `SCHIT`·`SCFOE`·`SCBR`·`SCGAPM`·`SCMUZ`·`SCKB`·`SCFRZ`·`SCTICK`)은
+     **읽기만** 하고 `vfx.js` 본문은 한 글자도 안 고쳤다.
+     ⚠️ `vfx.js` **뒤**라야 한다 — `FX`·`TONE`·`tile`·`IB*`·`SC*` 를 그쪽에서 읽는다. -->

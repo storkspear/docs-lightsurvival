@@ -1,0 +1,83 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다(16장 전부 빠져 있었다). -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 심우주 유니버스</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
+     2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-all">열셋 한눈에</a><a href="#s-each">안별로 보기</a><a href="#s-proof">이펙트 얹기</a><a href="#s-mini">미니맵</a><a href="#s-num">밝기 실측</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 심우주 유니버스</p>
+  <h1>배경은 그림이 아니라 위치감이다</h1>
+  
+</header>
+
+<h2 id="s-all">열셋 한눈에</h2>
+
+<div class="gridset"><div class="grid" id="m-bg"></div><div class="grid" id="u-bg"></div><div class="grid" id="nb-bg"></div></div>
+
+<h2 id="s-each">안별로 보기</h2>
+<h3>암류 暗流</h3>
+
+<div class="grid" id="u1"></div>
+<h3>잔해대 殘骸帶</h3>
+
+<div class="grid" id="u2"></div>
+<h3>자기막 磁氣幕</h3>
+
+<div class="grid" id="u3"></div>
+<h3>중력렌즈 重力렌즈</h3>
+
+<div class="grid" id="u4"></div>
+<h3>잔광 殘光</h3>
+
+<div class="grid" id="u5"></div>
+<h3>성운 회랑 星雲回廊</h3>
+
+<div class="grid" id="nb1"></div>
+<h3>은하 조우 銀河遭遇</h3>
+
+<div class="grid" id="nb2"></div>
+<h3>성운 기둥 星雲柱</h3>
+
+<div class="grid" id="nb3"></div>
+<h3>산광 散光</h3>
+
+<div class="grid" id="nb4"></div>
+<h3>충돌 은하 衝突銀河</h3>
+
+<div class="grid" id="nb5"></div>
+
+<h2 id="s-proof">이펙트 얹기</h2>
+<h3>파문 (mPulse · 바깥층 L .181)</h3>
+
+<div class="gridset"><div class="grid" id="m-bolt"></div><div class="grid" id="m-arc"></div><div class="grid" id="u-proof"></div><div class="grid" id="nb-proof"></div></div>
+
+<h2 id="s-mini">미니맵</h2>
+
+<div class="gridset"><div class="grid" id="m-mini"></div><div class="grid" id="m-mini2"></div><div class="grid" id="u-mini"></div><div class="grid" id="nb-mini"></div></div>
+
+<h2 id="s-num">밝기 실측</h2>
+
+<div id="u-num"></div>
+<div id="nb-num"></div>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

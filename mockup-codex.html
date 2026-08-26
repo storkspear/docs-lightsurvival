@@ -1,0 +1,487 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다(16장 전부 빠져 있었다). -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 도감</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
+     2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<!-- 이 장은 vfx.js 를 안 부른다 — 도감은 「그림」이 아니라 「칸」의 장이라
+     격자를 전부 HTML/CSS 로 그린다. 칸 속 낱장 그림의 정본은 각 계열
+     시안(무기·마법·수호·회복·성좌·적)이 이미 들고 있다. -->
+<style>
+/* ── 칸 하나 — 엔진 CodexCell 과 같은 뼈(문양 위 · 이름 아래 · 모서리 깎기) ── */
+.cx{width:58px;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
+  padding:5px 3px 4px;background:rgba(16,16,26,.62);border:1px solid rgba(180,180,200,.13);
+  clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,7px 100%,0 calc(100% - 7px))}
+.cx .gy{height:24px;display:flex;align-items:center;justify-content:center}
+.cx b{font-size:8.5px;font-weight:400;color:var(--ink);line-height:1.2;text-align:center;
+  min-height:21px;letter-spacing:-.02em}
+/* 문양 자리표 — 2톤(흰 앞날 + 회색 뒷몸). 계열마다 한 꼴이다. */
+i.sb,i.ss,i.sm,i.sg,i.sr,i.sf,i.sa,i.se{display:block;width:18px;height:18px;
+  background:linear-gradient(180deg,#EDEDF2 0 52%,#8A8A9A 52% 100%)}
+i.sb{clip-path:polygon(0 36%,58% 36%,58% 14%,100% 50%,58% 86%,58% 64%,0 64%)}
+i.ss{background:radial-gradient(circle 3.6px at 50% 20%,#EDEDF2 98%,rgba(0,0,0,0)),
+  radial-gradient(circle 3px at 18% 74%,#8A8A9A 98%,rgba(0,0,0,0)),
+  radial-gradient(circle 3px at 82% 74%,#8A8A9A 98%,rgba(0,0,0,0))}
+i.sm{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+i.sg{clip-path:polygon(50% 0,100% 18%,100% 56%,50% 100%,0 56%,0 18%)}
+i.sr{clip-path:polygon(36% 0,64% 0,64% 36%,100% 36%,100% 64%,64% 64%,64% 100%,36% 100%,36% 64%,0 64%,0 36%,36% 36%)}
+i.sf{clip-path:polygon(50% 0,100% 46%,68% 46%,68% 100%,32% 100%,32% 46%,0 46%)}
+i.sa{clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%)}
+i.se{border-radius:50%;background:radial-gradient(circle at 40% 36%,#F4F4F8,#8E90A2 72%)}
+i.se.seb{width:22px;height:22px;box-shadow:0 0 0 1.5px rgba(237,237,242,.30)}
+.gy .mk{font-size:14px;color:var(--ink);line-height:1}
+/* 상태 넷 — 잠김은 모양 그대로 채도 0 · 밝기 절반(엔진 _kLockedFilter 와 같은 수) */
+.cx.off .gy i{filter:saturate(0) brightness(.52)}
+.cx.off b,.cx.off .gy .mk{color:var(--faint)}
+.cx.hollow b{color:var(--faint)}
+.cx.pick{background:rgba(237,237,242,.10);border-color:rgba(237,237,242,.55)}
+.cx.none{border-style:dashed;border-color:rgba(180,180,200,.10);background:rgba(16,16,26,.30)}
+.cx.none .gy::after{content:"?";font-size:12px;color:#3A3A46}
+/* ── 페이지 격자 — 묶음 이름 + 분수 + 칸들 ── */
+.fam{margin-top:16px}
+.fam .fh{display:flex;align-items:baseline;gap:8px}
+.fam .fh b{font-size:11px;letter-spacing:.2em;color:var(--dim);font-weight:600}
+.fam .fh span{font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums}
+.cells{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+/* ── 폰 안 — 레일(62) + 격자 + 오른쪽 창(176). 여백은 엔진과 같은 수(11/10/15/12) ── */
+.scrollx{overflow-x:auto;padding-bottom:8px}
+.scrollx .phone.land{flex:0 0 auto}
+@media (max-width:640px){.scrollx .phone.land{max-width:none;width:816px}}
+.cdx{position:absolute;inset:0;z-index:2;display:flex;gap:12px;padding:10px 15px 12px 11px;
+  color:var(--ink)}
+.ric{display:block;width:18px;height:18px;color:rgba(150,150,166,.6)}
+.rail div.on .ric{color:#ECECF4}
+.ri-home{background:currentColor;clip-path:polygon(50% 0,100% 44%,82% 44%,82% 100%,18% 100%,18% 44%,0 44%)}
+.ri-shop{background:currentColor;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.ri-codex{border:1.5px solid currentColor;background:
+  linear-gradient(currentColor,currentColor) 50% 0/1.5px 100% no-repeat,
+  linear-gradient(currentColor,currentColor) 0 50%/100% 1.5px no-repeat}
+.ri-log{width:13px;height:15px;margin:1px auto 0;
+  background:repeating-linear-gradient(180deg,currentColor 0 2px,rgba(0,0,0,0) 2px 6.5px)}
+.ri-watch{border:1.5px solid currentColor;border-radius:50%;
+  background:radial-gradient(circle 2.5px at 60% 38%,currentColor 98%,rgba(0,0,0,0))}
+.cmain{flex:1;min-width:0;display:flex;flex-direction:column}
+.cdxbar{display:flex;align-items:center;gap:10px;height:18px;flex:0 0 auto;
+  font-size:10.5px;color:#8B8B99}
+.cdxbar>b{color:var(--ink);font-size:11px;font-weight:600}
+.cdxbar .cnt{margin-left:auto;font-size:10px;font-variant-numeric:tabular-nums}
+.cdxbar .cnt b{color:var(--ink);font-weight:600}
+.cbody{flex:1;min-height:0;display:flex;gap:12px;margin-top:8px}
+.cgrid{flex:1;min-width:0;position:relative;overflow:hidden}
+.shead{display:flex;gap:7px;align-items:baseline;font-size:9px;letter-spacing:.22em;
+  color:var(--faint)}
+.shead span{letter-spacing:0;color:#8B8B99;font-variant-numeric:tabular-nums}
+.cgrid .cells{gap:5px;margin:5px 0 10px}
+.gfade{position:absolute;left:0;right:0;bottom:0;height:36px;display:flex;align-items:flex-end;
+  justify-content:center;padding-bottom:2px;font-size:8px;letter-spacing:.06em;color:#4E4E5A;
+  background:linear-gradient(180deg,rgba(8,8,12,0),rgba(8,8,12,.94) 70%)}
+/* ── 오른쪽 창 — 미리보기 위 · 성장표 아래 ── */
+.dp{width:196px;flex:0 0 auto;display:flex;flex-direction:column;
+  background:rgba(16,16,23,.62);border:1px solid rgba(180,180,200,.13);padding:9px 10px 10px}
+.dp.in{width:176px;flex:0 0 176px}
+.pv{position:relative;height:86px;flex:0 0 auto;background:#08080C;border:1px solid #1C1C26;
+  overflow:hidden;margin-bottom:8px}
+.pv .pvl{position:absolute;left:6px;top:5px;font-size:7.5px;letter-spacing:.12em;color:#4E4E5A}
+.pv .src{position:absolute;left:16%;top:54%;width:6px;height:6px;margin:-3px 0 0 -3px;
+  border-radius:50%;background:#EDEDF2;box-shadow:0 0 9px rgba(237,237,242,.9)}
+.pv .beam{position:absolute;left:17%;top:54%;height:2px;width:66%;margin-top:-1px;
+  background:linear-gradient(90deg,rgba(237,237,242,.95),rgba(237,237,242,.06));
+  box-shadow:0 0 7px rgba(237,237,242,.5)}
+.pv .sil{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%)}
+.pv .sil i{width:26px;height:26px;filter:saturate(0) brightness(.52)}
+.pv .cap{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-size:8px;
+  color:#4E4E5A;letter-spacing:.1em}
+.pv .foe{position:absolute;right:16%;top:54%;width:13px;height:13px;margin-top:-6.5px;
+  border-radius:50%;background:radial-gradient(circle at 40% 36%,#F4F4F8,#8E90A2 72%)}
+.pv .shot{position:absolute;top:54%;width:5px;height:2px;margin-top:-1px;
+  background:#EDEDF2;opacity:.85}
+.dn{font-size:12px;font-weight:600;color:var(--ink)}
+.dn .dtag{font-size:8.5px;font-weight:400;letter-spacing:.2em;color:var(--faint);margin-left:6px}
+.dk{font-size:9px;margin-top:2px;color:var(--faint)}
+.dk.on{color:var(--gold)}
+.dk.met{color:#8B8B99}
+.dr{display:flex;gap:6px;margin-top:6px;font-size:9.5px;line-height:1.4;color:#9494A2}
+.dr b{flex:0 0 22px;font-size:8.5px;font-weight:400;color:var(--faint)}
+.dmk{font-size:30px;color:var(--faint);text-align:center;padding:12px 0 8px;line-height:1}
+.dps{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;align-items:flex-start}
+/* ── 상태 견본 — 크게 ── */
+.samps{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.samp{width:88px;text-align:center}
+.samp .cx{width:88px}
+.samp .cx .gy{height:32px}
+.samp .gy i{width:24px;height:24px}
+.samp .cx .gy .mk{font-size:19px}
+.samp .cx b{font-size:10px;min-height:24px}
+.samp .sc{font-size:9px;color:var(--faint);margin-top:5px;line-height:1.4}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-codex">세 답</a><a href="#s-count">몇 칸 = 83</a><a href="#s-screen">화면</a><a href="#s-cell">칸의 상태</a><a href="#s-press">오른쪽 창</a><a href="#s-scope25">캐릭터 · 채굴 확장</a><a href="#s-engine">엔진에게</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 도감</p>
+  <h1>모은 것과 만난 것</h1>
+  <p class="lede">여든셋이 한 벽에 선다 — <b>모은 것은 밝고, 안 모은 것은 어둡고,
+  안 만난 것은 비어 있다.</b> 로비 레일의 가운데 칸에서 열린다.</p>
+</header>
+
+<h2 id="s-codex">세 물음, 세 답</h2>
+<p class="sub">이 장이 정하는 것은 <b>칸 · 상태 · 수 · 눌렀을 때</b>다. 칸 속 그림
+낱장의 정본은 각 계열 시안(무기·마법·수호·회복·성좌·적 장)이 이미 든다 — 아래
+격자의 문양은 자리표다.</p>
+<table class="dec">
+<tr><th>물음</th><th>갈래</th><th>판</th></tr>
+<tr><td>몇 칸으로</td><td>스킬 49 + 성좌 12 만 (엔진 현행)</td>
+  <td>방어구와 적이 설 곳이 없다 — 「전수」라는 도감의 목적에 미달</td></tr>
+<tr class="win"><td>몇 칸으로</td><td><b>다섯 식구 전부 — 83칸</b></td>
+  <td>스킬 49 · 방어구 10 · 성좌 12 · 적 12. 묶음마다 분수가 서고, 분모가 욕심을 만든다</td></tr>
+<tr><td>안 모은 것</td><td>빈 칸</td>
+  <td>무엇이 남았는지 안 보인다 — 분모를 세운 이유와 정반대</td></tr>
+<tr><td>안 모은 것</td><td>전부 실루엣</td>
+  <td>아직 안 만난 적까지 미리 보인다 — 첫 마주침을 판다</td></tr>
+<tr class="win"><td>안 모은 것</td><td><b>얻는 것은 실루엣 · 마주치는 것은 빈 칸</b></td>
+  <td>실루엣은 「모을 이유」를 만들고, 빈 칸은 첫 만남을 지킨다 — 축이 다르면 그림도 다르다</td></tr>
+<tr><td>눌렀을 때</td><td>성장표만 (엔진 현행)</td>
+  <td>「전방 3발」이라는 글로는 서릿발과 산탄총이 같은 문장이 된다</td></tr>
+<tr><td>눌렀을 때</td><td>미리보기만</td>
+  <td>L2~L5 가 없으면 어느 것을 키울지 못 정한다</td></tr>
+<tr class="win"><td>눌렀을 때</td><td><b>미리보기 위 · 성장표 아래</b></td>
+  <td>스킬의 정체는 글이 아니라 움직임(상점 팝업이 이미 내린 판정). 움직임이 먼저
+  서고 숫자가 밑을 받친다 — FX 를 그대로 돌리므로 새 그림은 없다</td></tr>
+</table>
+
+<h2 id="s-count">무엇이 몇 칸인가 — 83</h2>
+<p class="def">묶음 차례는 엔진 <code>SkillTag</code> 선언 순서 그대로다 — 새 계열이
+서면 제 자리에 끼어들고, 빈 계열(오라·마법진)은 줄을 안 만든다. <b>모음(71)과
+만남(12)은 다른 동사라 안 더한다.</b></p>
+<table class="st tiers">
+<tr><th>묶음</th><th>칸</th><th>물음</th><th>무엇인가</th></tr>
+<tr><td><b>스킬 — 일반</b></td><td>10</td><td>모았나</td><td>총구에서 곧장 나가는 것</td></tr>
+<tr><td><b>스킬 — 보조</b></td><td>11</td><td>모았나</td><td>몸에서 떨어져 스스로 치는 것</td></tr>
+<tr><td><b>스킬 — 마법</b></td><td>13</td><td>모았나</td><td>장판 · 소환 · 전역기</td></tr>
+<tr><td><b>스킬 — 방어</b></td><td>7</td><td>모았나</td><td>막는 것</td></tr>
+<tr><td><b>스킬 — 회복</b></td><td>5</td><td>모았나</td><td>깎인 것을 되돌리는 것</td></tr>
+<tr><td><b>스킬 — 버프</b></td><td>3</td><td>모았나</td><td>걸린 것을 푸는 것</td></tr>
+<tr><td><b>방어구</b></td><td>10</td><td>모았나</td><td>입는 것 — L2~L5 성장이 스킬과 같은 결</td></tr>
+<tr><td><b>성좌</b></td><td>12</td><td>모았나</td><td>★에서 파생 — 저장이 아니라 별이 정본</td></tr>
+<tr><td><b>적</b></td><td>12</td><td>만났나</td><td>만난 것만 밝는다 — 도감의 유일한 「만남」 축</td></tr>
+<tr><td><b>합</b></td><td><b>83</b></td><td colspan="2">분모 둘 — 모음 71 · 만남 12</td></tr>
+</table>
+
+<p class="sub">아래는 83칸 전부다 — 중반 저장 하나를 가정했다(모음 31 / 71 ·
+만남 10 / 12). 폰 화면 시안과 같은 저장이다.</p>
+
+<div class="fam"><div class="fh"><b>일반</b><span>4 / 7</span></div>
+<div class="cells">
+<div class="cx"><span class="gy"><i class="sb"></i></span><b>빛파동</b></div>
+<div class="cx"><span class="gy"><i class="sb"></i></span><b>빛따발총</b></div>
+<div class="cx"><span class="gy"><i class="sb"></i></span><b>바람산탄총</b></div>
+<div class="cx pick"><span class="gy"><i class="sb"></i></span><b>화염방사</b></div>
+<div class="cx off"><span class="gy"><i class="sb"></i></span><b>서릿발</b></div>
+<div class="cx off"><span class="gy"><i class="sb"></i></span><b>서리결정</b></div>
+<div class="cx off"><span class="gy"><i class="sb"></i></span><b>순포</b></div>
+</div></div>
+
+<div class="fam"><div class="fh"><b>보조</b><span>4 / 10</span></div>
+<div class="cells">
+<div class="cx"><span class="gy"><i class="ss"></i></span><b>공전</b></div>
+<div class="cx"><span class="gy"><i class="ss"></i></span><b>유도탄</b></div>
+<div class="cx"><span class="gy"><i class="ss"></i></span><b>빛폭탄</b></div>
+<div class="cx off"><span class="gy"><i class="ss"></i></span><b>바람원반</b></div>
+<div class="cx off"><span class="gy"><i class="ss"></i></span><b>기생</b></div>
+<div class="cx off"><span class="gy"><i class="ss"></i></span><b>기폭</b></div>
+<div class="cx off"><span class="gy"><i class="ss"></i></span><b>분열</b></div>
+<div class="cx off"><span class="gy"><i class="ss"></i></span><b>단전</b></div>
+<div class="cx off"><span class="gy"><i class="ss"></i></span><b>부양</b></div>
+<div class="cx"><span class="gy"><i class="ss"></i></span><b>뇌광</b></div>
+</div></div>
+
+<div class="fam"><div class="fh"><b>마법</b><span>4 / 13</span></div>
+<div class="cells">
+<div class="cx"><span class="gy"><i class="sm"></i></span><b>암전</b></div>
+<div class="cx off"><span class="gy"><i class="sm"></i></span><b>결빙</b></div>
+<div class="cx off"><span class="gy"><i class="sm"></i></span><b>불자취</b></div>
+<div class="cx"><span class="gy"><i class="sm"></i></span><b>회염</b></div>
+<div class="cx off"><span class="gy"><i class="sm"></i></span><b>화염회오리</b></div>
+<div class="cx off"><span class="gy"><i class="sm"></i></span><b>성역</b></div>
+<div class="cx off"><span class="gy"><i class="sm"></i></span><b>파문</b></div>
+<div class="cx"><span class="gy"><i class="sm"></i></span><b>낙광</b></div>
+<div class="cx off"><span class="gy"><i class="sm"></i></span><b>광주</b></div>
+<div class="cx"><span class="gy"><i class="sm"></i></span><b>개안</b></div>
+<div class="cx off"><span class="gy"><i class="sm"></i></span><b>극독</b></div>
+<div class="cx off"><span class="gy"><i class="sm"></i></span><b>감염</b></div>
+<div class="cx off"><span class="gy"><i class="sm"></i></span><b>공명</b></div>
+</div></div>
+
+<div class="fam"><div class="fh"><b>방어</b><span>3 / 7</span></div>
+<div class="cells">
+<div class="cx"><span class="gy"><i class="sg"></i></span><b>풍벽</b></div>
+<div class="cx off"><span class="gy"><i class="sg"></i></span><b>역풍</b></div>
+<div class="cx"><span class="gy"><i class="sg"></i></span><b>빙벽</b></div>
+<div class="cx off"><span class="gy"><i class="sg"></i></span><b>파동정지</b></div>
+<div class="cx off"><span class="gy"><i class="sg"></i></span><b>빙벽 · 바늘 숲</b></div>
+<div class="cx off"><span class="gy"><i class="sg"></i></span><b>빙벽 · 모자이크 석벽</b></div>
+<div class="cx"><span class="gy"><i class="sg"></i></span><b>결계</b></div>
+</div></div>
+
+<div class="fam"><div class="fh"><b>회복</b><span>2 / 5</span></div>
+<div class="cells">
+<div class="cx"><span class="gy"><i class="sr"></i></span><b>맥박</b></div>
+<div class="cx off"><span class="gy"><i class="sr"></i></span><b>저금</b></div>
+<div class="cx"><span class="gy"><i class="sr"></i></span><b>수확</b></div>
+<div class="cx off"><span class="gy"><i class="sr"></i></span><b>공물</b></div>
+<div class="cx off"><span class="gy"><i class="sr"></i></span><b>잔향 되감기</b></div>
+</div></div>
+
+<div class="fam"><div class="fh"><b>버프</b><span>1 / 3</span></div>
+<div class="cells">
+<div class="cx"><span class="gy"><i class="sf"></i></span><b>축복</b></div>
+<div class="cx off"><span class="gy"><i class="sf"></i></span><b>성전</b></div>
+<div class="cx off"><span class="gy"><i class="sf"></i></span><b>은총</b></div>
+</div></div>
+
+<div class="fam"><div class="fh"><b>방어구</b><span>4 / 10</span></div>
+<div class="cells">
+<div class="cx"><span class="gy"><i class="sa"></i></span><b>체인갑옷</b></div>
+<div class="cx"><span class="gy"><i class="sa"></i></span><b>경면</b></div>
+<div class="cx"><span class="gy"><i class="sa"></i></span><b>마법갑옷</b></div>
+<div class="cx off"><span class="gy"><i class="sa"></i></span><b>신기루</b></div>
+<div class="cx off"><span class="gy"><i class="sa"></i></span><b>여명</b></div>
+<div class="cx"><span class="gy"><i class="sa"></i></span><b>질풍</b></div>
+<div class="cx off"><span class="gy"><i class="sa"></i></span><b>응보</b></div>
+<div class="cx off"><span class="gy"><i class="sa"></i></span><b>거암</b></div>
+<div class="cx off"><span class="gy"><i class="sa"></i></span><b>정화</b></div>
+<div class="cx off"><span class="gy"><i class="sa"></i></span><b>섬광</b></div>
+</div></div>
+
+<div class="fam"><div class="fh"><b>성좌</b><span>6 / 12</span></div>
+<div class="cells">
+<div class="cx"><span class="gy"><span class="mk">獅子</span></span><b>사자</b></div>
+<div class="cx"><span class="gy"><span class="mk">雙子</span></span><b>쌍둥이</b></div>
+<div class="cx"><span class="gy"><span class="mk">金牛</span></span><b>황소</b></div>
+<div class="cx off"><span class="gy"><span class="mk">弓手</span></span><b>궁수</b></div>
+<div class="cx off"><span class="gy"><span class="mk">天蠍</span></span><b>전갈</b></div>
+<div class="cx off"><span class="gy"><span class="mk">天秤</span></span><b>천칭</b></div>
+<div class="cx"><span class="gy"><span class="mk">寶瓶</span></span><b>물병</b></div>
+<div class="cx"><span class="gy"><span class="mk">處女</span></span><b>처녀</b></div>
+<div class="cx off"><span class="gy"><span class="mk">巨蟹</span></span><b>게</b></div>
+<div class="cx hollow"><span class="gy"><span class="mk">雙魚</span></span><b>물고기</b></div>
+<div class="cx off"><span class="gy"><span class="mk">白羊</span></span><b>양</b></div>
+<div class="cx off"><span class="gy"><span class="mk">磨羯</span></span><b>염소</b></div>
+</div></div>
+
+<div class="fam"><div class="fh"><b>적</b><span>10 / 12 · 만남</span></div>
+<div class="cells">
+<div class="cx"><span class="gy"><i class="se"></i></span><b>표류</b></div>
+<div class="cx"><span class="gy"><i class="se"></i></span><b>질주</b></div>
+<div class="cx"><span class="gy"><i class="se"></i></span><b>거구</b></div>
+<div class="cx"><span class="gy"><i class="se"></i></span><b>분열</b></div>
+<div class="cx"><span class="gy"><i class="se"></i></span><b>돌진</b></div>
+<div class="cx"><span class="gy"><i class="se"></i></span><b>점사</b></div>
+<div class="cx none"><span class="gy"></span><b>&nbsp;</b></div>
+<div class="cx"><span class="gy"><i class="se"></i></span><b>무리</b></div>
+<div class="cx"><span class="gy"><i class="se"></i></span><b>조각</b></div>
+<div class="cx"><span class="gy"><i class="se seb"></i></span><b>보스</b></div>
+<div class="cx none"><span class="gy"></span><b>&nbsp;</b></div>
+<div class="cx"><span class="gy"><i class="se"></i></span><b>추적</b></div>
+</div></div>
+
+<h2 id="s-screen">화면 — 한 장</h2>
+<p class="sub">골격은 홈·상점·관측소와 같다 — <b>왼쪽 레일 · 위 창틀 · 가운데
+격자 · 오른쪽 창.</b> 격자가 넘치는 만큼은 제 안에서 아래로 흐르고, 창틀과
+레일은 안 밀린다. 창틀의 분수 둘이 이 화면의 문장이다.</p>
+<div class="scrollx">
+<div class="phone land"><div class="screen">
+  <div class="cdx">
+    <div class="rail">
+      <div><i class="ric ri-home"></i><span class="nm">홈</span></div>
+      <div><i class="ric ri-shop"></i><span class="nm">상점</span></div>
+      <div class="on"><i class="ric ri-codex"></i><span class="nm">도감</span></div>
+      <div><i class="ric ri-log"></i><span class="nm">일지</span></div>
+      <div><i class="ric ri-watch"></i><span class="nm">관측소</span></div>
+    </div>
+    <div class="cmain">
+      <div class="cdxbar"><span>← 로비</span><b>도감</b>
+        <span class="cnt">모음 <b>31</b> / 71 · 만남 <b>10</b> / 12</span></div>
+      <div class="cbody">
+        <div class="cgrid">
+          <div class="shead">일반 <span>4 / 7</span></div>
+          <div class="cells">
+            <div class="cx"><span class="gy"><i class="sb"></i></span><b>빛파동</b></div>
+            <div class="cx"><span class="gy"><i class="sb"></i></span><b>빛따발총</b></div>
+            <div class="cx"><span class="gy"><i class="sb"></i></span><b>바람산탄총</b></div>
+            <div class="cx pick"><span class="gy"><i class="sb"></i></span><b>화염방사</b></div>
+            <div class="cx off"><span class="gy"><i class="sb"></i></span><b>서릿발</b></div>
+            <div class="cx off"><span class="gy"><i class="sb"></i></span><b>서리결정</b></div>
+            <div class="cx off"><span class="gy"><i class="sb"></i></span><b>순포</b></div>
+          </div>
+          <div class="shead">보조 <span>4 / 10</span></div>
+          <div class="cells">
+            <div class="cx"><span class="gy"><i class="ss"></i></span><b>공전</b></div>
+            <div class="cx"><span class="gy"><i class="ss"></i></span><b>유도탄</b></div>
+            <div class="cx"><span class="gy"><i class="ss"></i></span><b>빛폭탄</b></div>
+            <div class="cx off"><span class="gy"><i class="ss"></i></span><b>바람원반</b></div>
+            <div class="cx off"><span class="gy"><i class="ss"></i></span><b>기생</b></div>
+            <div class="cx off"><span class="gy"><i class="ss"></i></span><b>기폭</b></div>
+            <div class="cx off"><span class="gy"><i class="ss"></i></span><b>분열</b></div>
+            <div class="cx off"><span class="gy"><i class="ss"></i></span><b>단전</b></div>
+            <div class="cx off"><span class="gy"><i class="ss"></i></span><b>부양</b></div>
+            <div class="cx"><span class="gy"><i class="ss"></i></span><b>뇌광</b></div>
+          </div>
+          <div class="shead">마법 <span>4 / 13</span></div>
+          <div class="gfade">아래로 — 마법 13 · 방어 7 · 회복 5 · 버프 3 · 방어구 10 · 성좌 12 · 적 12</div>
+        </div>
+        <div class="dp in cut">
+          <div class="pv"><span class="pvl">미리보기 — FX 그대로</span>
+            <i class="src"></i><i class="beam"></i></div>
+          <div class="dn">화염방사<span class="dtag">일반</span></div>
+          <div class="dk on">해금</div>
+          <div class="dr"><b>L2</b><span>줄기가 굵고 길어진다 — 뿜는 시간도 늘어 쉬는 틈이 준다</span></div>
+          <div class="dr"><b>L3</b><span>더 굵고 더 멀리 — 쉬는 틈이 또 준다</span></div>
+          <div class="dr"><b>L4</b><span>불이 검붉게 내려앉는다 — 거의 쉬지 않는다</span></div>
+          <div class="dr"><b>L5</b><span>각성 — 연소되지 않고 계속 뿜는다. 제일 굵고 제일 멀리(사거리 1.4배), 핏빛으로 탄다</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div>
+</div>
+<p class="sub">레일은 로비 시안의 다섯 칸 그대로 — 도감이 켜져 있고(윗줄 + 밝은
+이름), 자리 순서는 안 바꾼다. 오른쪽 창은 <b>비어 있어도 자리를 남긴다</b> —
+고를 때마다 격자 폭이 흔들리면 방금 보던 칸이 흘러간다.</p>
+
+<h2 id="s-cell">칸의 문법 — 상태 다섯</h2>
+<table class="st">
+<tr><th>상태</th><th>그림</th><th>이름</th><th>왜</th></tr>
+<tr><td><b>모음</b></td><td>2톤 · 흰 앞날 그대로</td><td>흰</td>
+  <td>도감의 「있다」 — 기본값이라 장식이 없다</td></tr>
+<tr><td><b>안 모음</b> (얻는 것)</td><td>같은 모양 · 채도 0 · 밝기 절반</td><td>회 — 이름은 보인다</td>
+  <td>무엇인지 알아야 모을 이유가 생긴다. 자물쇠·물음표로 갈면 마흔아홉 칸이 전부 같은 물건이 된다</td></tr>
+<tr><td><b>안 만남</b> (적)</td><td>빈 칸 + 물음표</td><td>없음</td>
+  <td>첫 마주침은 게임 안의 것이다 — 도감이 미리 팔지 않는다</td></tr>
+<tr><td><b>고름</b></td><td>그대로</td><td>그대로 — 흰 테 + 밝은 바탕</td>
+  <td>금이 아니다. 금은 「다 모은 분수」 하나에만 남긴다</td></tr>
+<tr><td><b>헛</b> (성좌 <code>wired: false</code>)</td><td>문양은 밝다</td><td>이름만 회</td>
+  <td>열려 있는데 아무 일도 안 한다 — 죽은 칸을 조용히 두지 않는다</td></tr>
+</table>
+<div class="samps">
+  <div class="samp"><div class="cx"><span class="gy"><i class="sb"></i></span><b>빛파동</b></div>
+    <div class="sc">모음</div></div>
+  <div class="samp"><div class="cx off"><span class="gy"><i class="sb"></i></span><b>서리결정</b></div>
+    <div class="sc">안 모음 — 실루엣</div></div>
+  <div class="samp"><div class="cx pick"><span class="gy"><i class="sb"></i></span><b>화염방사</b></div>
+    <div class="sc">고름 — 흰 테</div></div>
+  <div class="samp"><div class="cx hollow"><span class="gy"><span class="mk">雙魚</span></span><b>물고기</b></div>
+    <div class="sc">헛 — 효과가 아직 없다</div></div>
+  <div class="samp"><div class="cx none"><span class="gy"></span><b>&nbsp;</b></div>
+    <div class="sc">안 만남 — 빈 칸</div></div>
+</div>
+
+<h2 id="s-press">눌렀을 때 — 오른쪽 창</h2>
+<p class="sub">한 창이 네 벌을 입는다. <b>위는 미리보기, 아래는 줄들</b> — 스킬·
+방어구는 L2~L5 성장표, 성좌는 효과·해금, 적은 움직임·첫 만남. 잠긴 것도 줄은
+다 적는다 — 가리는 것은 상태 한 줄뿐이다.</p>
+<div class="dps">
+  <div class="dp cut">
+    <div class="pv"><span class="pvl">미리보기</span>
+      <span class="sil"><i class="sb"></i></span>
+      <span class="cap">모으면 움직인다</span></div>
+    <div class="dn">서리결정<span class="dtag">일반 · 잠김</span></div>
+    <div class="dk">아직</div>
+    <div class="dr"><b>L2</b><span>7연타 — 마디 둘이 붙는다. 사슬이 굵어진다</span></div>
+    <div class="dr"><b>L3</b><span>9연타 — 마디 둘이 더. 사슬이 또 굵어진다</span></div>
+    <div class="dr"><b>L4</b><span>연타는 9 그대로 — 얼음 폭발이 붙는다</span></div>
+    <div class="dr"><b>L5</b><span>각성 — 11연타 + 얼음 폭발. 사슬이 제일 굵다</span></div>
+  </div>
+  <div class="dp cut">
+    <div class="dmk">天蠍</div>
+    <div class="dn">전갈<span class="dtag">성좌 · 잠김</span></div>
+    <div class="dk">아직</div>
+    <div class="dr"><b>효과</b><span>상태이상 지속 +30%</span></div>
+    <div class="dr"><b>해금</b><span>2장을 ★3 으로 깨면 열린다</span></div>
+  </div>
+  <div class="dp cut">
+    <div class="pv"><span class="pvl">움직임</span>
+      <i class="foe"></i>
+      <i class="shot" style="left:30%"></i><i class="shot" style="left:43%"></i><i class="shot" style="left:56%"></i></div>
+    <div class="dn">점사<span class="dtag">적 · 만남</span></div>
+    <div class="dk met">1장에서 처음 만났다</div>
+    <div class="dr"><b>버릇</b><span>멈춰 서서 곧게 쏜다 — 옆으로 걸으면 피한다</span></div>
+  </div>
+</div>
+<p class="sub">성좌만 미리보기 창이 없다 — 아이콘도 FX 도 아직 없어 <b>한자 문양이
+곧 그림</b>이다(로비 요약과 같은 규약). 안 만난 적을 누르면 「아직 만나지
+않았다」 한 줄뿐이다.</p>
+
+<h2 id="s-scope25">도감 범위 확장 — 캐릭터 · 채굴도구(2026-08-25 사용자 결정)</h2>
+<p class="sub">
+  ⭐⭐ <b>도감이 다루는 것 넷 — 캐릭터 · 일반 및 마법 스킬 · 채굴도구 · 성좌.</b>
+  넷 중 둘(일반 · 마법 스킬, 성좌)은 이미 위 <a href="#s-count">83칸</a> 안에
+  있다. 이 결정이 실제로 <b>더하는</b> 것은 <b>캐릭터</b>와 <b>채굴도구</b>
+  둘이다.
+</p>
+<table class="st tiers">
+<tr><th>새 식구</th><th>칸</th><th>무엇인가</th><th>출처</th></tr>
+<tr><td><b>캐릭터</b></td><td>18</td><td>기본 6(무 · 빙 · 염 · 뇌 · 독 · 풍) + 특수 12(두 속성 10 · 암 影 · 백광 白光)</td>
+  <td><code>lib/data/characters.dart</code> 의 <code>kCharacterDefs</code></td></tr>
+<tr><td><b>채굴도구</b></td><td>3 <span style="color:#4A4A58">(기본)</span></td><td>채굴빔 · 채굴포 · 채굴탄 — 전부 무료 전종 개방</td>
+  <td><code>lib/ui/loadout_card.dart</code> 의 <code>kMiningChoices</code></td></tr>
+</table>
+<p class="sub">
+  ⚠️ <b>유료 추가 채굴도구는 아직 0종이다</b>(2026-08-25 결정: 상점 「기타」 탭이
+  자리만 만들어 둔다 — <code>mockup-shop.html</code>의
+  <a href="mockup-shop.html#s-retab">상점 재편 확정</a> 절).
+  생기는 날 이 표에 칸이 는다 — 지금은 <b>기본 셋</b>만 적는다.
+</p>
+<p class="sub">
+  ⚠️ <b>83 + 18 + 3 을 이 문서가 합산하지 않는다</b> — 묶음 차례 · 격자 폭 ·
+  분수 계산은 실제로 화면을 그리는 담당의 일이다. 여기서 정하는 것은 <b>두 식구가
+  들어간다는 사실</b> 하나다.<br>
+  ⭐⭐ <b>캐릭터는 「모은 것」 축이다</b>(2026-08-25 결정) — 만남 · 조우 기록이 아니라
+  <b>보유 · 수집</b> 축이다. 합산하면 <a href="#s-count">모음 71</a> 쪽에 18이
+  더해지는 것이지 <b>만남 12 쪽에는 안 간다</b> — 실제 분모 갱신(71 → 89)은 위
+  「합산 안 함」과 같은 이유로 화면을 그리는 담당의 몫이다.
+</p>
+<p class="sub">
+  이번 재편이 낳는 엔진 격차 전부는 <code>mockup-shop.html</code> 의
+  <a href="mockup-shop.html#s-gap">엔진과 어긋난 자리</a> 표 하나에 모아 뒀다 —
+  상점 · 편성 슬롯 · 도감이 한 결정이라 표도 하나다.
+</p>
+
+<h2 id="s-engine">엔진에게 — 시안이 새로 정한 것</h2>
+<p class="sub">이 화면은 엔진(<code>codex_screen.dart</code> ·
+<code>codex_cell.dart</code> · <code>codex_data.dart</code>)이 시안보다 먼저
+섰다. 아래 표가 그 차례를 되돌린다 — <b>같으면 추인이고, 다르면 시안이 정본이다.</b></p>
+<table class="st">
+<tr><th>자리</th><th>엔진 현행</th><th>시안의 판</th></tr>
+<tr><td><b>묶음</b></td><td>스킬 6묶음 + 성좌 = 61칸</td>
+  <td>방어구 10 · 적 12 를 더해 <b>아홉 묶음 83칸</b></td></tr>
+<tr><td><b>창틀 분수</b></td><td>해금 n / n 한 줄</td>
+  <td><b>모음 n / 71 · 만남 n / 12</b> — 두 동사는 안 더한다</td></tr>
+<tr><td><b>오른쪽 창</b></td><td>줄글만</td>
+  <td>맨 위에 <b>미리보기 창</b> — 새 그림 없이 FX 를 그대로 돌린다</td></tr>
+<tr><td><b>고른 칸</b></td><td>금빛 바탕</td>
+  <td><b>흰 테 + 밝은 바탕</b> — 금은 「다 모은 분수」에만 남긴다</td></tr>
+<tr><td><b>잠긴 칸</b></td><td>채도 0 · 밝기 절반 실루엣</td>
+  <td>그대로 — 추인. 단 <b>적만 예외</b>(빈 칸 + 물음표)</td></tr>
+<tr><td><b>빈 창</b></td><td>자리를 그대로 남긴다</td>
+  <td>그대로 — 추인. 격자 폭이 안 흔들린다</td></tr>
+</table>
+<p class="note">수는 전부 <code>lib/data</code> 에서 실측했다 — 무기 14 · 마법 35
+(= 스킬 49) · 방어구 10 · 성좌 12 · 적 12.</p>
+
+</div>
+<!-- 목차는 스물네 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라 따로 부른다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

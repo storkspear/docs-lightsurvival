@@ -1,0 +1,903 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Light Survival 시안 공용 스타일 — 전 페이지가 이 한 장을 쓴다.
+
+   ⚠️ **왜 한 장인가.** 전에는 페이지마다 CSS 를 복제했고, 그래서 페이지를
+   합칠 때 **로비 전용 93규칙을 통째로 날린 사고**가 났다(2026-08-12). 같은
+   선택자의 정의가 페이지마다 조금씩 갈라져 있던 것도 13건이었다. 한 장이면
+   갈라질 수가 없다. 페이지 고유 규칙도 여기에 둔다 — 이름이 안 겹치므로.
+
+   ── 레이아웃의 뼈대: **N칸이 한 덩어리** ─────────────────────────────────
+   무기는 5칸(L1~L5), 발현 계열은 3칸(기본·발현·발현전용). 화면이 바뀌어도
+   **덩어리는 안 쪼개진다** — 바뀌는 것은 한 줄에 덩어리가 몇 개 오느냐뿐이다.
+   모바일에서는 덩어리 하나만 두고 **마지막 칸(완성형)을 맨 위 전폭**으로
+   올린다. 무기는 L5, 발현은 전용기 — 둘 다 마지막이 완성형이라 규칙 하나로
+   맞는다.
+
+   ⚠️ **`display:grid` 를 쓴다 — 과거에 버렸던 것을 되살린 것이다.**
+   옛 주석: 「grid-template-columns 가 **아티팩트 호스트**에서 안 먹어 한 열로
+   떨어졌다. 그래서 그리드를 안 쓴다」. 그 제약은 **아티팩트로 퍼블리시할
+   때**의 것이고, 이 시안의 타깃은 `file://` 와 GitHub Pages 다. 되살리지
+   않으면 「화면 폭에 맞춰 개수가 변한다」를 만들 수가 없다(flex + 고정폭은
+   정의상 폭을 안 따른다). 아티팩트로 올릴 일이 생기면 `.grid` 를
+   `display:flex;flex-wrap:wrap` + 고정폭으로 되돌리면 된다.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 16장에서 모은 기본 규칙(다수결로 정본을 골랐다) ─────────────────── */
+:root{--ground:#0A0A0E;--panel:#13131A;--edge:#26262F;--ink:#EDEDF2;--dim:#9494A2;--faint:#5A5A68;
+    --gold:#FFD27A;--amber:#FF8A3D}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:"Helvetica Neue",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.6}
+/* ⚠️ 위 여백은 **0 이다.** 목차가 `position:sticky; top:0` 이라 44px 을 두면
+   페이지를 열자마자 그만큼이 빈 띠로 남고, 스크롤하면 목차가 그 자리로
+   올라가 버려 여백이 있다 없다 한다 — 붙박이 머리 위의 여백은 여백이 아니라
+   **어긋남**이다(2026-08-20 사용자). 좌우·아래는 그대로 둔다. */
+.wrap{max-width:1600px;margin:0 auto;padding:0 20px 90px}
+/* ── 목차: 1단(다른 시안)과 2단(이 페이지 안)을 형태로 가른다 ──────────── 둘 다 같은 알약이면 훑을 때 계층이 안 읽힌다. 색·크기·바탕·모양을 함께 바꾼다. */ nav.toc{position:sticky;top:0;z-index:20;background:rgba(10,10,14,.97);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--edge);margin:0 0 30px;padding:0}
+/* 그룹은 늘 보이고 항목은 열어야 보인다 — 여덟 개짜리 한 줄이 남는다. */
+.nav1{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:11px 0 9px}
+/* ── 목차의 둘째 단: 화제 그룹 (2026-08-20) ────────────────────────────────
+   ⚠️⚠️ 처음엔 그룹과 항목을 **다 펼쳐** 놨는데, 그러면 그룹은 분류표일 뿐
+   목차가 짧아지지 않는다(사용자 반려: 「그냥 1depth 처럼 열거해뒀네」).
+   스무 개를 여전히 다 훑어야 한다면 계층을 만든 값을 못 받은 것이다.
+   ⇒ 접는다. `.gi` 는 `position:absolute` 라 **띠의 높이를 안 먹는다** —
+     이것이 sticky 머리를 두 줄에서 한 줄로 되돌리는 자리다. */
+.nav1 .g{position:relative;display:inline-flex;align-items:center;flex:0 0 auto}
+/* 그룹 이름은 **여는 물건**이다 — 눌리는 것처럼 보여야 한다. 앞선 판에서는
+   `--faint` 로 죽여 뒀는데, 그때는 라벨일 뿐이었고 지금은 손잡이다. */
+.nav1 .gb{font:inherit;font-size:12px;font-weight:600;letter-spacing:.02em;
+    color:var(--dim);background:none;border:1px solid transparent;border-radius:99px;
+    padding:5px 11px;cursor:pointer;white-space:nowrap;display:inline-flex;
+    align-items:center;gap:6px}
+/* 열린다는 것을 ▾ 하나로 말한다. 글자를 더 쓰면 일곱 개가 다 길어진다. */
+.nav1 .gb::after{content:"▾";font-size:8px;opacity:.5;transform:translateY(1px)}
+.nav1 .gb:hover{color:var(--ink);border-color:var(--edge);background:#17171F}
+/* 지금 있는 그룹은 이름 옆에 **현재 장**을 적는다 — 접힌 목차가 못 보여 주는
+   유일한 것이 「내가 어디 있나」라, 그 한 줄만 되돌려 준다. */
+.nav1 .g.here .gb{color:var(--gold);border-color:rgba(232,200,121,.35);
+    background:rgba(232,200,121,.07)}
+.nav1 .gb i{font-style:normal;font-weight:700;color:var(--ink);font-size:11.5px}
+.nav1 .g.here .gb i{color:var(--gold)}
+/* ⚠️ 뜨는 판은 **띠보다 위**에 서야 한다 — `nav.toc` 가 `z-index:20` 이라
+   그 안에서 더 큰 값을 준다. 폭 상한이 없으면 「성좌·아이템」 하나 때문에
+   판이 화면 끝까지 늘어난다. */
+/* ⚠️⚠️ **버튼과 판 사이의 틈이 hover 를 끊는다.** 6px 을 내려 띄워 놨더니
+   마우스가 그 빈 줄을 지나는 순간 판이 닫혀, 항목을 고르려면 대각선으로
+   재빨리 그어야 했다(2026-08-20 사용자). 틈은 보기에 필요하고 hover 에는
+   해로우므로 — **보이지 않는 다리로 덮는다.** 그룹이 열려 있는 동안에만
+   깔아, 닫힌 그룹의 다리가 남의 판을 가로채지 않게 한다. */
+.nav1 .g:hover::after,.nav1 .g:focus-within::after,.nav1 .g.open::after{
+    content:"";position:absolute;top:100%;left:0;right:0;height:8px;z-index:29}
+.nav1 .gi{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:30;
+    flex-direction:column;gap:2px;min-width:132px;padding:6px;
+    background:#101018;border:1px solid #26262F;border-radius:9px;
+    box-shadow:0 14px 34px rgba(0,0,0,.5)}
+/* 세 갈래로 연다: 마우스 · 키보드(`focus-within`) · 터치(JS 가 `.open`).
+   ⚠️ 셋을 다 두지 않으면 어느 한 입력에서 목차가 통째로 사라진다. */
+.nav1 .g:hover .gi,.nav1 .g:focus-within .gi,.nav1 .g.open .gi{display:flex}
+/* 뜬 판 안에서는 알약이 아니라 **줄**이다 — 세로로 쌓이므로 둥근 테가 오히려
+   목록을 흩는다. */
+.nav1 a{font-size:12px;font-weight:500;letter-spacing:-.01em;color:var(--dim);
+    text-decoration:none;padding:6px 10px;border:1px solid transparent;border-radius:6px;
+    white-space:nowrap}
+.nav1 a:hover{color:var(--ink);border-color:var(--edge);background:#17171F}
+.nav1 a.cur{background:var(--gold);border-color:var(--gold);color:#0A0A0E}
+.nav1 a.cur:hover{background:var(--gold);color:#0A0A0E}
+.nav2 a{font-size:11px;font-weight:400;color:var(--faint);text-decoration:none;
+    padding:3px 9px;border-radius:4px;white-space:nowrap}
+.nav2 a:hover{color:var(--ink);background:#1C1C25}
+.nav2 a.bare{margin-left:auto;color:var(--amber)}
+h2{scroll-margin-top:64px}
+header{border-bottom:1px solid var(--edge);padding-bottom:34px;margin-bottom:56px}
+.kicker{font-size:11px;letter-spacing:.36em;text-transform:uppercase;color:var(--amber);margin:0 0 14px}
+h1{font-size:clamp(31px,5vw,50px);line-height:1.05;margin:0 0 16px;font-weight:600;letter-spacing:-.025em;text-wrap:balance}
+.lede{color:var(--dim);max-width:66ch;margin:0;font-size:15px}
+.lede b{color:var(--ink);font-weight:600}
+.sub{color:var(--dim);font-size:13px;margin:0 0 14px;max-width:70ch}
+body.bare .sub,body.bare .note,body.bare .cmp,body.bare .warn,body.bare header .lede{display:none}
+.tile{background:var(--panel);border:1px solid var(--edge);border-radius:4px;overflow:hidden;display:flex;flex-direction:column}
+.tile canvas{width:100%;height:auto;display:block;background:#0C0C12}
+.cap{padding:7px 9px 8px;border-top:1px solid var(--edge)}
+.cap .nm{font-size:12.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cap .nm span{display:none}
+.cap .ds{font-size:10px;color:var(--dim);margin-top:2px;line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.bare .cap .ds{display:none}
+.voc{margin-top:6px}
+.voc .v{background:var(--panel);border:1px solid var(--edge);border-radius:4px;overflow:hidden}
+.voc canvas{width:100%;height:auto;display:block;background:#0C0C12}
+.voc .vl{padding:7px 9px 8px;font-size:10px;color:var(--dim);line-height:1.4;
+    border-top:1px solid var(--edge);display:-webkit-box;-webkit-line-clamp:2;
+    -webkit-box-orient:vertical;overflow:hidden}
+.voc .vl b{font-size:12.5px}
+body.bare .voc .vl{-webkit-line-clamp:1}
+.note{border-left:2px solid var(--amber);padding:2px 0 2px 16px;color:var(--dim);font-size:13.5px;margin:26px 0 0;max-width:70ch}
+.note b{color:var(--ink);font-weight:600}
+.stage{background:#0C0C12;border:1px solid var(--edge);border-radius:4px;padding:40px 22px;
+         display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;overflow:hidden}
+.lvup{text-align:center}
+.lvup .big{font-size:25px;font-weight:600;letter-spacing:.2em;color:var(--gold)}
+.lvup .cnt{font-size:11px;letter-spacing:.26em;color:var(--faint);margin-top:6px}
+.cards{display:flex;flex-wrap:wrap;gap:14px;width:100%;max-width:700px;justify-content:center}
+.card{background:linear-gradient(180deg,#1A1A24,#101018);border:1px solid var(--edge);border-radius:4px;
+        padding:17px 14px 15px;display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center;position:relative}
+.card.pick{border-color:var(--amber);box-shadow:0 0 0 1px rgba(255,138,61,.3),0 0 44px -12px rgba(255,138,61,.8)}
+.card .slot{position:absolute;top:9px;right:10px;font-size:9px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
+.card canvas{border-radius:50%;background:#0C0C12;border:1px solid #262630}
+.card .t{font-size:15.5px;font-weight:600}
+.card .lv{font-size:10.5px;letter-spacing:.2em;color:var(--amber)}
+.card .d{font-size:11.5px;color:var(--dim);line-height:1.5;min-height:3em}
+.card .tag{font-size:10px;letter-spacing:.1em;color:var(--faint);border-top:1px solid var(--edge);padding-top:8px;width:100%}
+.hud{background:#0C0C12;border:1px solid var(--edge);border-radius:4px;padding:20px}
+.hudbar{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.rack .rl{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+.slots{display:flex;gap:6px}
+.sl{width:46px;height:46px;border-radius:4px;background:#0C0C12;border:1px solid #262630;position:relative}
+.sl.empty{border-style:dashed;border-color:#1E1E26}
+.sl .l{position:absolute;bottom:-1px;right:2px;font-size:9px;color:var(--gold);font-weight:600;text-shadow:0 0 4px #000}
+.hudtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--edge)}
+.hudtop .lv{font-size:19px;font-weight:600;color:var(--gold)}
+.hudtop .tm{font-size:19px;font-weight:600;letter-spacing:.1em;font-variant-numeric:tabular-nums}
+/* 속성 이력 — 무기 랙보다 한 단 작다. 「무엇을 끼고 있나」가 먼저 읽히고
+   속성은 그 아래 이력이라, 칸 크기로 층을 만든다. */
+.etrack{margin-top:16px;padding-top:14px;border-top:1px solid var(--edge)}
+.etrack .rl{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:7px}
+.xpbar{height:3px;background:#1E1E26;border-radius:2px;overflow:hidden;margin-top:14px}
+.xpbar i{display:block;height:100%;width:46%;background:linear-gradient(90deg,var(--amber),var(--gold))}
+.warn{background:#17111A;border:1px solid #3A2233;border-radius:4px;padding:18px 20px;margin-top:8px}
+.warn h3{margin:0 0 8px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+.warn p{margin:0 0 8px;font-size:13px;color:var(--dim);line-height:1.6}
+.warn p:last-child{margin:0}
+.warn b{color:var(--ink);font-weight:600}
+.big1{grid-column:1/-1}
+h3{font-size:14px;margin:26px 0 4px;font-weight:600}
+.sub b{color:var(--ink);font-weight:600}
+body.bare .sub,body.bare .note,body.bare .warn,body.bare h3,body.bare header .lede{display:none}
+table{border-collapse:collapse;margin:12px 0 0;font-size:12px;width:100%;max-width:1000px}
+th,td{border:1px solid var(--edge);padding:6px 10px;text-align:left;vertical-align:top}
+th{color:var(--amber);font-weight:600;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+td b{color:var(--ink)}
+td{color:var(--dim)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--gold)}
+body.bare .sub,body.bare .note,body.bare .refs,body.bare .ia,body.bare .spec, body.bare header .lede{display:none}
+/* ── 레퍼런스 표 — 「예쁘게」를 취향이 아니라 판단으로 만드는 자리 ────── */ .refs{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}
+.ref{width:302px;flex:0 0 302px;background:var(--panel);border:1px solid var(--edge);
+    border-radius:4px;padding:13px 14px 14px}
+.ref .src{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+.ref .q{font-size:12.5px;color:var(--ink);margin:6px 0 7px;line-height:1.55}
+.ref .q i{color:var(--dim);font-style:normal}
+.ref .so{font-size:11px;color:var(--dim);line-height:1.5}
+.ref .so b{color:#7CFFB0;font-weight:600}
+/* ── 정보 구조 ─────────────────────────────────────────────────────── */ .ia{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}
+.ia .lv{width:302px;flex:0 0 302px;background:var(--panel);border:1px solid var(--edge);
+    border-radius:4px;padding:13px 14px 14px}
+.ia .lv h4{margin:0 0 3px;font-size:12.5px;font-weight:600;color:var(--ink)}
+.ia .lv .n{font-size:10px;letter-spacing:.18em;color:var(--amber);margin-bottom:6px}
+.ia .lv p{margin:0 0 7px;font-size:11.5px;color:var(--dim);line-height:1.55}
+.ia .lv p:last-child{margin:0}
+.ia .lv b{color:var(--ink);font-weight:600}
+/* ── 조작대 ────────────────────────────────────────────────────────── */ .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 20px}
+.ctl .cl{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-right:2px}
+.ctl button{font:inherit;font-size:11.5px;color:var(--dim);background:#13131A;
+    border:1px solid var(--edge);border-radius:99px;padding:6px 13px;cursor:pointer}
+.ctl button:hover{color:var(--ink);border-color:#3A3A46}
+.ctl button.on{color:#0A0A0E;background:var(--gold);border-color:var(--gold);font-weight:700}
+/* ── 폰 프레임 3개 가로 ─────────────────────────────────────────────── */ .rack{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+.col{width:392px;flex:0 0 392px}
+.phone{width:392px;padding:14px;background:#0E0E13;border:1px solid #23232C;
+    border-radius:44px;box-shadow:0 30px 80px -40px #000}
+.screen{position:relative;width:364px;height:788px;border-radius:31px;overflow:hidden;
+    background:#08080C;isolation:isolate}
+.screen canvas.bg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+/* ⭐⭐ 가로 틀 — **이 게임은 가로 고정이다**(2026-08-15 사용자 판정). 위의
+   364×788 은 세로 폰이고, UI 시안이 전부 그 위에 그려져 있었다. 눕힌 틀을
+   따로 내는 이유는 세로 시안을 **지우지 않고 나란히 두어야** 「무엇이 어떻게
+   달라졌나」가 한 화면에서 읽히기 때문이다.
+   ⚠️ 게임 화면(VFX 칸)은 `aspect-ratio:1` 정사각이라 방향 중립 — 안 건드린다. */
+/* 가로 안은 **세로로 쌓는다** — 816px 짜리 셋을 옆으로 늘어놓으면 화면 밖으로
+   나가 한 번에 못 본다. 세로 안이 옆으로 서는 것과 방향이 반대인데, 이유는
+   같다: **한 화면에 다 보이게.** */
+.rack.land{flex-direction:column;gap:26px;align-items:flex-start}
+.rack.land .col{width:auto}
+.phone.land{width:816px;border-radius:38px}
+.phone.land .screen{width:788px;height:364px;border-radius:26px}
+/* scrim 을 **좌우로 눕힌다.** 세로는 글이 위아래에 앉아 위아래를 덮었는데,
+   가로는 글이 **양옆**에 앉는다 — 같은 그라디언트를 90° 돌린 것이 아니라
+   「글이 앉는 곳을 덮는다」는 규칙이 방향을 따라간 것이다. */
+.phone.land .screen .scrim{
+    background:
+      linear-gradient(90deg,rgba(8,8,12,.90) 0%,rgba(8,8,12,.10) 30%,rgba(8,8,12,.10) 62%,rgba(8,8,12,.94) 92%),
+      radial-gradient(110% 80% at 50% 46%,rgba(8,8,12,0) 38%,rgba(8,8,12,.66) 100%)}
+/* ⚠️ 위를 **30px** 비운다 — 상단 띠(`.topbar`)가 절대 배치라, 안 비우면
+   무대의 첫 줄(「무속성 · 발현」)과 겹친다. 실측으로 겹쳤다. */
+/* ⚠️ 위 여백 24 → 36 (2026-08-18 사용자: 「살짝 겹치는 것 같아」 — 실측
+   **3.6px 겹쳤다**. 창틀 줄이 10px 에서 시작해 27.6 에서 끝나는데 내용이
+   24 에서 시작했다). 36 = 창틀 끝 27.6 + 숨통 8. ⚠️ 창틀 글씨를 키우면
+   다시 겹치므로, 이 값은 `.topbar` 의 `top`·글씨 크기와 **한 벌**이다. */
+.phone.land .ui{flex-direction:row;padding:36px 15px 11px;gap:12px}
+/* ⭐ 엄지 존이 가로에서 **둘로 갈린다.** 세로는 「아래 38%」 한 덩어리인데
+   가로 폰은 두 손으로 쥐므로 닿는 곳이 **좌우 아래 두 모서리**다. 세 안을
+   가르는 진짜 축이 이것이다 — 주 버튼이 어느 엄지에 있나. */
+.phone.land .screen .thumb{height:100%;background:none;border-top:0}
+.phone.land .screen .thumb::before,
+.phone.land .screen .thumb::after{content:"";position:absolute;bottom:0;width:31%;height:74%;
+    background:linear-gradient(315deg,rgba(124,255,176,.13),rgba(124,255,176,0) 62%)}
+.phone.land .screen .thumb::before{left:0;border-right:1px dashed rgba(124,255,176,.34);
+    border-top-right-radius:100% 100%}
+.phone.land .screen .thumb::after{right:0;border-left:1px dashed rgba(124,255,176,.34);
+    border-top-left-radius:100% 100%;top:auto;font-size:0;padding:0;background-color:transparent;
+    border-radius:0 0 0 0;border-top-left-radius:100% 100%}
+/* ── 가로 전용 부품 ───────────────────────────────────────────────────────
+   ⚠️⚠️ **첫 판(세 기둥)을 걷어냈다**(2026-08-18 사용자 반려: 「그냥 세로를
+     어거지로 가로처럼 만듦」). 그 판은 세로 스택을 90° 돌려 `.lcol` 기둥
+     셋으로 세운 것이었고, 실제 가로 게임은 그렇게 안 한다.
+   ⭐ 레퍼런스 실조사(브롤스타즈·원신)에서 나온 가로의 문법 셋:
+     ① **가운데는 무대, UI 는 테두리** — 기둥으로 쪼개지 않는다
+     ② **넓어진 폭은 「더 많이」가 아니라 「더 크게」**(원신 도감이 5열이다)
+     ③ **깊이는 화면 전환** — 한 화면에 다 넣지 않는다 */
+
+/* ⭐ **왼쪽 레일** — 시안의 허브 탭 5칸(`mockup-flow.html` 「허브 골격」)을
+   가로로 옮긴 것이다. 세로는 하단 가로 탭바가 맞지만(엄지가 아래), 가로에서
+   하단에 두면 **364px 중 56px(15%)** 를 먹고 게다가 두 엄지는 **좌우 아래**에
+   있지 하단 가운데에 있지 않다. 세로로 세우면 60×5 = 300px 로 들어가고 왼
+   엄지가 정확히 닿는다.
+   ⚠️ **순서를 안 바꾼다** — 「홈이 가운데(3번째)」가 유지돼야 그 절이 약속한
+     「자리는 한 번만 배운다」가 안 깨진다. */
+.rail{width:62px;flex:0 0 62px;display:flex;flex-direction:column;gap:4px;
+    justify-content:center;margin-left:-4px}
+/* ⚠️ 한 칸 **≤ 58px** 이라야 다섯이 선다 — 329px(무대 높이)에 5칸 + 틈 넷이
+   들어가야 한다. 68px 로 잡았다가 넘쳤다(실측). */
+.rail div{display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:4px 0 3px;position:relative}
+.rail canvas{width:22px;height:22px;display:block}
+.rail .nm{font-size:9px;letter-spacing:.08em;color:rgba(150,150,166,.72);line-height:1.2}
+/* 현재 칸 — **금빛이 아니다.** 「색은 주 버튼 하나뿐」이라는 시안 규약이라
+   밝기와 **윗줄**로만 말한다(그 절의 「현재」 문법 그대로). */
+.rail div.on .nm{color:#ECECF4;font-weight:600}
+.rail div.on::before{content:"";position:absolute;top:0;left:14px;right:14px;
+    height:1.5px;background:#ECECF4}
+.rail div.soon .nm{color:rgba(150,150,175,.30)}
+.rail div.soon::after{content:"곧";position:absolute;top:4px;right:9px;
+    font-size:7.5px;letter-spacing:.06em;color:rgba(150,150,175,.5)}
+
+/* 무대 — 가운데. **아무것도 안 얹는다**(패널을 올리면 다시 기둥이 된다). */
+.stage{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;position:relative}
+.stage .nm{font-size:25px;font-weight:600;letter-spacing:.30em;color:#E8E8F0;margin-top:-6px}
+.stage .sb{font-size:10.5px;color:#7E7E8C;letter-spacing:.14em;margin-top:4px}
+.stage .tg{position:absolute;top:0;font-size:9px;letter-spacing:.26em;color:#6E6E7C}
+
+/* 오른쪽 아래 = 나아가는 것. **금빛은 여기 하나뿐이다.** */
+.golane{width:246px;flex:0 0 246px;display:flex;flex-direction:column;
+    justify-content:flex-end;gap:7px}
+/* 편성 요약 — 고르는 자리가 아니라 **확인하는 자리**다(누르면 편성 화면). */
+.rig{display:flex;align-items:center;gap:7px;padding:7px 9px;
+    background:rgba(16,16,23,.62);border:1px solid rgba(180,180,200,.13)}
+.rig .go{margin-left:auto;font-size:10.5px;color:#A6A6B4}
+.lslots{display:flex;gap:4px}
+.lslot{width:26px;height:26px;border:1px solid rgba(180,180,200,.18);
+    background:rgba(16,16,23,.6);display:grid;place-items:center;
+    font-size:11px;color:#A6A6B4;flex:0 0 auto}
+.lslot.empty{border-style:dashed;color:#4A4A56}
+/* 궁극기 칸만 금빛 — 성좌와 **격이 다르다**(판당 한 번 · 눌러서 쓴다). */
+.lslot.ult{border-color:rgba(255,210,122,.5);color:var(--gold);
+    box-shadow:0 0 14px -6px rgba(255,210,122,.8)}
+.lsep{width:1px;height:18px;background:rgba(180,180,200,.16);flex:0 0 auto}
+/* 덱 스무 장 — **5열 × 4행.** 첫 판은 10열 71px 잔카드였다. 원신 도감이
+   5열인 이유가 있다: 폭이 넓어졌다고 칸을 늘리면 **한 덩어리로 안 읽힌다.**
+   가로 무대(약 420px)에서 5열이면 카드가 76px 로 세로(60px)보다 오히려 크다. */
+#lb-d-grid{display:grid;grid-template-columns:repeat(5,76px);gap:6px}
+#lb-d-grid .dcard{width:auto;padding:4px 3px 3px}
+#lb-d-grid .dcard .dcn{font-size:8.5px;margin-top:2px}
+
+/* 상점 — 궁극기를 **큰 카드**로 고른다. 판당 한 번 쓰는 물건이라 잔카드로
+   늘어놓으면 격이 안 산다(성좌 3칸과 다른 이유가 여기 있다). */
+#lb-shop-row{display:flex;gap:9px}
+.shopcard{width:96px;flex:0 0 96px;background:rgba(16,16,23,.62);
+    border:1px solid rgba(180,180,200,.13);padding:9px 7px 8px;text-align:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.shopcard canvas{width:52px;height:52px;display:block;margin:0 auto 5px}
+.shopcard .sn{font-size:11.5px;font-weight:600;color:#EDEDF2}
+.shopcard .sp{font-size:10px;color:#8B8B99;margin-top:3px;letter-spacing:.04em}
+/* 살 수 있는 것만 금빛 값 — 이미 가진 것·잠긴 것은 회백이다. */
+.shopcard.buy{border-color:rgba(255,210,122,.26)}
+.shopcard.buy .sp{color:var(--gold)}
+.shopcard.lock{opacity:.5}
+.shopcard.lock .sp{color:#5E5E6C}
+
+/* 상단 띠 — 두 엄지 다 안 닿는 자리라 **정보만** 둔다. */
+.topbar{position:absolute;left:15px;right:15px;top:10px;display:flex;
+    align-items:center;justify-content:space-between;z-index:3;
+    font-size:10.5px;color:#8B8B99;letter-spacing:.04em}
+.topbar b{color:#EDEDF2;font-weight:600}
+.coin{color:var(--gold)}
+/* scrim — 배경이 무엇으로 바뀌든 **글자 대비를 여기서 보장한다.** 이게 없으면 밝은 맵이 들어온 날 로비 전체를 다시 손봐야 한다. */ .screen .scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:
+      linear-gradient(180deg,rgba(8,8,12,.86) 0%,rgba(8,8,12,.10) 26%,rgba(8,8,12,.10) 52%,rgba(8,8,12,.92) 88%),
+      radial-gradient(120% 68% at 50% 46%,rgba(8,8,12,0) 40%,rgba(8,8,12,.72) 100%)}
+.ui{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;
+    padding:14px 15px 12px;color:#EDEDF2}
+/* 엄지 존 — 아래 38%. 켜면 세 안 전부에 같은 띠가 깔려 **주 버튼이 그 안에 있는지**를 눈으로 판정할 수 있다(근거는 레퍼런스 ①). */ .screen .thumb{position:absolute;left:0;right:0;bottom:0;height:38%;z-index:3;display:none;
+    pointer-events:none;background:linear-gradient(180deg,rgba(124,255,176,0),rgba(124,255,176,.10));
+    border-top:1px dashed rgba(124,255,176,.45)}
+/* 진단용 라벨은 **왼쪽**에 둔다 — 오른쪽 62% 지점은 C안의 「무한」 별 라벨 자리라, 검증 오버레이가 검증 대상을 가려 버렸다(2026-08-11). */ .screen .thumb::after{content:"엄지 존 · 아래 38%";position:absolute;top:6px;left:9px;
+    font-size:9px;letter-spacing:.12em;color:rgba(124,255,176,.9);
+    background:rgba(6,10,8,.86);padding:2px 6px;border-radius:99px}
+body.thumbs .screen .thumb{display:block}
+.notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:104px;height:24px;
+    border-radius:99px;background:#08080C;z-index:4}
+.home{width:118px;height:4px;border-radius:99px;background:rgba(237,237,242,.32);
+    margin:6px auto 0;flex:0 0 auto}
+/* 화면 공통 부품 */ .sysrow{display:flex;justify-content:space-between;align-items:center;
+    font-size:10.5px;color:#7E7E8C;letter-spacing:.02em;height:26px;flex:0 0 auto}
+.toprow{display:flex;justify-content:space-between;align-items:center;height:34px;flex:0 0 auto}
+.tbtn{font-size:11.5px;color:#B9B9C6;letter-spacing:.06em;padding:6px 10px;border-radius:99px;
+    border:1px solid rgba(180,180,200,.16);background:rgba(18,18,26,.5);backdrop-filter:blur(6px)}
+.tbtn.icon{padding:6px 9px}
+/* 뾰족한 윤곽 — 셀 문법을 UI 로 옮긴 것. 모서리 하나를 깎는다. */ .cut{clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,11px 100%,0 calc(100% - 11px))}
+.panel{background:rgba(16,16,23,.62);border:1px solid rgba(180,180,200,.13);
+    backdrop-filter:blur(9px);padding:11px 13px}
+.lbl{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:#6E6E7C}
+.val{font-size:13px;color:#EDEDF2;font-weight:600;letter-spacing:-.01em}
+.tnum{font-variant-numeric:tabular-nums}
+.dimtx{color:#8B8B99}
+/* 주 버튼 — **화면에서 색이 있는 유일한 것.** 무속성이 회백이라는 색 규약 덕에, 금빛 하나만 두면 눈이 갈 곳이 하나로 확정된다. */ .cta{position:relative;height:60px;display:flex;align-items:center;justify-content:center;
+    gap:10px;flex:0 0 auto;cursor:default;
+    background:linear-gradient(180deg,rgba(255,210,122,.20),rgba(255,210,122,.05));
+    border:1px solid rgba(255,210,122,.55);
+    box-shadow:0 0 34px -12px rgba(255,210,122,.85),inset 0 1px 0 rgba(255,255,255,.34)}
+.cta .b{font-size:17px;font-weight:700;color:#FFE9C6;letter-spacing:.04em}
+.cta .s{font-size:11px;color:rgba(255,233,198,.62);letter-spacing:.02em}
+.cta.ghost{background:rgba(18,18,26,.5);border-color:rgba(180,180,200,.20);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.10);height:52px}
+.cta.ghost .b{color:#D2D2DE;font-size:15px;font-weight:600}
+.sub2{text-align:center;font-size:11.5px;color:#7E7E8C;padding:9px 0 2px;flex:0 0 auto}
+.sub2 u{text-decoration:none;color:#A6A6B4;border-bottom:1px solid rgba(166,166,180,.3)}
+.seg{display:flex;gap:0;border:1px solid rgba(180,180,200,.16);background:rgba(16,16,23,.55);
+    flex:0 0 auto;overflow:hidden}
+.seg div{flex:1 1 0;text-align:center;font-size:12px;padding:9px 0;color:#8B8B99;letter-spacing:.04em}
+.seg div.on{background:rgba(237,237,242,.10);color:#EDEDF2;font-weight:600;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16)}
+.seg div.lock{color:#5E5E6C}
+.grow{flex:1 1 auto;min-height:0}
+.row{display:flex;align-items:center;gap:9px}
+.deckstrip{width:100%;height:24px;display:block}
+.barmini{height:4px;background:rgba(237,237,242,.09);overflow:hidden;margin-top:7px}
+.barmini i{display:block;height:100%;background:linear-gradient(90deg,#8E8E9E,#DADAE6)}
+/* A안 */ .heroWrap{position:relative;display:flex;flex-direction:column;align-items:center;flex:0 0 auto}
+.heroWrap canvas{width:292px;height:292px;display:block}
+.heroName{font-size:26px;font-weight:600;letter-spacing:.30em;color:#E8E8F0;margin-top:-8px}
+.heroSub{font-size:11px;color:#7E7E8C;letter-spacing:.14em;margin-top:5px}
+.heroTag{position:absolute;top:8px;left:50%;transform:translateX(-50%);
+    font-size:9.5px;letter-spacing:.26em;color:#6E6E7C}
+/* B안 — 카드가 주인공 */ .decktabs{display:flex;gap:7px;flex:0 0 auto}
+.decktabs div{font-size:11.5px;padding:7px 12px;color:#8B8B99;
+    border:1px solid rgba(180,180,200,.14);background:rgba(16,16,23,.5)}
+.decktabs div.on{color:#0A0A0E;background:#D9D9E4;border-color:#D9D9E4;font-weight:700}
+#lb-b-grid{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+.dcard{width:60px;flex:0 0 60px;background:rgba(16,16,23,.62);
+    border:1px solid rgba(180,180,200,.13);padding:5px 3px 5px;text-align:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.dcard canvas{width:100%;aspect-ratio:1;display:block}
+.dcard .dcn{font-size:8.5px;color:#8B8B99;margin-top:2px;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;letter-spacing:-.02em}
+.dcard.arm{border-color:rgba(255,210,122,.22)}
+.mix{display:flex;height:5px;overflow:hidden;margin-top:8px}
+.mix i{display:block;height:100%}
+.resume{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto;
+    background:rgba(16,16,23,.66);border:1px solid rgba(180,180,200,.16);padding:9px 12px;
+    font-size:12px;color:#C6C6D2}
+.resume b{color:#EDEDF2;font-weight:600}
+.resume .go{font-size:11px;color:var(--gold)}
+/* C안 — 성도가 주인공. 지도는 **상자가 아니라 층**이다. 상자에 넣으면 「로비 안에 지도 위젯이 있다」가 되고, 층으로 깔아야 「지도가 곧 로비다」가 된다. */ .screen canvas.map{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1}
+.drawer{flex:0 0 auto;background:rgba(12,12,18,.80);border:1px solid rgba(180,180,200,.14);
+    backdrop-filter:blur(10px);padding:10px 13px 12px;margin:0 -3px}
+.handle{width:44px;height:3px;border-radius:99px;background:rgba(237,237,242,.26);margin:0 auto 10px}
+.starcard{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.starcard .nm{font-size:15px;font-weight:600;color:#EDEDF2}
+.starcard .st{font-size:11px;color:var(--gold);letter-spacing:.06em}
+/* 안 설명 */ .spec{margin-top:16px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;
+    padding:15px 16px 16px}
+.spec .h{display:flex;align-items:baseline;gap:9px;margin-bottom:9px}
+.spec .h b{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.spec .h span{font-size:10px;letter-spacing:.2em;color:var(--amber)}
+.spec dl{margin:0;font-size:11.5px;line-height:1.6}
+.spec dt{color:var(--amber);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;margin-top:9px}
+.spec dt:first-child{margin-top:0}
+.spec dd{margin:2px 0 0;color:var(--dim)}
+.spec dd b{color:var(--ink);font-weight:600}
+.spec dd.bad{color:#E0879A}
+.rack{justify-content:center}
+/* ── 합친 페이지에서 가져온 규칙 ── */ h3{font-size:14px;margin:26px 0 4px;font-weight:600}
+/* 판단표 — 「셋으로 정한 이유」가 글이 아니라 표로 보여야 다음 사람이 뒤집을 때 무엇을 뒤집는지 안다. */ table.dec{border-collapse:collapse;margin-top:12px;font-size:12.5px;width:100%;max-width:860px}
+table.dec th,table.dec td{border:1px solid var(--edge);padding:8px 11px;text-align:left;vertical-align:top}
+table.dec th{color:var(--faint);font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:600}
+table.dec td{color:var(--dim);line-height:1.55}
+table.dec td b{color:var(--ink);font-weight:600}
+table.dec tr.win td{background:#131019}
+table.dec tr.win td:first-child{color:var(--amber);font-weight:600}
+/* ⭐ **표는 안 접는다**(2026-08-20 사용자). 접기가 지우려는 것은 장황한
+   산문이지 정리된 것이 아니다 — 표는 이미 요약이라, 그것까지 접으면 판만
+   남고 「무엇을 보는 그림인지」가 사라진다. */
+body.bare .sub,body.bare .note,body.bare .warn,body.bare header .lede{display:none}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+/* ── 합친 페이지에서 가져온 규칙 ── */ nav.toc{position:sticky;top:0;z-index:20;background:rgba(10,10,14,.94);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--edge);
+    margin:0 0 28px;padding:10px 0;display:flex;gap:6px;flex-wrap:wrap}
+
+/* ── 순서 띠 — 「셋이 어떻게 이어지는가」 ───────────────────────────────
+   나란한 나열이 아니라 **한 줄기**임을 보여야 하므로 칸 사이에 화살표를 둔다.
+   넓으면 가로 한 줄, 좁으면 세로 한 줄(화살표도 방향이 바뀐다). */
+.steps{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;
+  list-style:none;margin:16px 0 0;padding:0}
+.steps li{flex:1 1 190px;min-width:0;position:relative;background:var(--panel);
+  border:1px solid var(--edge);border-radius:5px;padding:11px 13px}
+.steps li b{display:block;font-size:12.5px;color:var(--ink);font-weight:600}
+.steps li span{display:block;font-size:10.5px;color:var(--dim);line-height:1.45;margin-top:3px}
+.steps li+li::before{content:"▸";position:absolute;left:-11px;top:50%;
+  transform:translateY(-50%);color:var(--amber);font-size:11px}
+@media (max-width:640px){
+  .steps{flex-direction:column;gap:14px}
+  .steps li+li::before{content:"▾";left:50%;top:-13px;transform:translateX(-50%)}
+}
+
+/* 규칙을 적는 짧은 글. 걷어낸 산문과 달리 **정의**라 남긴다 — 「기본은 무속성이다」
+   처럼 이게 없으면 표가 무엇에 대한 표인지 모른다. */
+.def{color:var(--dim);font-size:13px;line-height:1.7;margin:12px 0 0;max-width:88ch}
+.def b{color:var(--ink);font-weight:600}
+body.bare .def{display:none}
+
+/* 표는 **자료**다 — 산문을 다 걷어낸 뒤 남는 유일한 글이라 읽기 좋아야 한다. */
+table.st{border-collapse:collapse;margin:14px 0 0;font-size:12.5px;width:100%;max-width:820px}
+table.st th,table.st td{border:1px solid var(--edge);padding:7px 11px;text-align:left}
+table.st th{color:var(--amber);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+table.st td{color:var(--dim)}
+table.st td b{color:var(--ink)}
+table.st code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--gold)}
+/* 앞 두 칸은 **이름과 분류**라 줄바꿈이 되면 못 읽는다 — 폭을 넉넉히 주고
+   본문 칸이 남는 폭을 다 가져가게 한다. */
+table.st.tiers td:nth-child(1),table.st.tiers th:nth-child(1){width:13em;white-space:nowrap}
+table.st.tiers td:nth-child(2),table.st.tiers th:nth-child(2){width:6em;white-space:nowrap}
+table.st.tiers td:nth-child(3){width:auto}
+@media (max-width:640px){table.st{font-size:11.5px}table.st th,table.st td{padding:6px 8px}}
+@media (max-width:640px){
+  table.st.tiers td:nth-child(1),table.st.tiers th:nth-child(1){width:8em}
+  table.st.tiers td:nth-child(2),table.st.tiers th:nth-child(2){width:4.5em}
+}
+
+/* ══ 레이아웃 · 반응형 — **반드시 맨 뒤** ═══════════════════════════════
+   미디어 질의는 우선순위를 안 올린다. 이 블록이 앞에 있으면 뒤의 기본
+   규칙이 그대로 이겨서 `max-width` 해제 같은 것이 안 먹는다(2026-08-12
+   에 실제로 밟았다 — PC 폭에서 설명이 좌측 한 단에 그대로 몰려 있었다). */
+/* ── 칸 격자 (레벨이 없는 것: 유니버스·아이콘·문법) ──────────────────────
+   「화면에서 보여지는 최대 개수대로」. `--cell` 은 vfx.js 가 그리는 크기에서
+   넘겨준다(`asRow`). `min(...,100%)` 이 없으면 좁은 폭에서 칸이 화면을 넘는다. */
+/* ⚠️ **칸이 무한정 늘지 않게 상한을 준다** (2026-08-12 「썸네일 맥스 사이즈가
+   너무 크다」). `1fr` 만 두면 칸 수가 적은 격자에서 한 칸이 화면 절반까지
+   커져, 같은 페이지 안에서도 칸 크기가 제각각으로 보인다. 최대 1.25배까지만
+   늘리고 남는 폭은 칸 사이로 흘린다. */
+/* ⭐ **폰에서는 무조건 두 칸이 들어간다** (2026-08-14 사용자 판정: 「2줄로 나오는
+   걸 기대했는데 다 1줄로 나온다. 썸네일도 줄어야 하는데 엄청 커서 세로 1자」).
+
+   ⚠️ **열 수를 정하는 것은 하한이 아니라 상한이다.** `repeat(auto-fill,…)` 은
+   상한이 정해진 값이면 그걸로 센다 — `--cell 186` 이면 상한이 232.5 라
+   `floor((366+9)/(232.5+9)) = 1` 열이 되고, 남는 폭을 그 한 칸이 다 먹어 232.5px
+   가 된다. 하한(`min(…,100%)`)을 아무리 낮춰도 **아무 일도 안 일어난다**
+   (실측으로 확인했다). 아이콘 격자가 `--cell 59` 인데 5열이 아니라 **4열**인 것이
+   같은 증거다 — 상한 73.75 로 센 값이다.
+
+   그래서 **상한**을 「폭의 절반」으로 누른다. `4.5px` 는 간격 9px 의 절반이라
+   `2 × (50% − 4.5px) + 9px = 100%` — 정확히 두 칸이 맞는다. 하한도 같이 눌러야
+   한다(안 그러면 하한 > 상한이 되어 `minmax` 가 뒤집힌다).
+
+   ⚠️ **미디어 질의가 아니라 폭 자체에 반응한다.** 넓으면 `min()` 이 `--cell` 을
+   고르므로 데스크톱은 한 픽셀도 안 바뀐다(1000·1400px 실측). 태블릿·분할 화면·
+   창을 줄인 데스크톱까지 한 규칙으로 덮인다. */
+.grid,.voc{display:grid;gap:9px;align-items:start;margin-top:6px;
+  justify-content:space-between;
+  grid-template-columns:repeat(auto-fill,
+    minmax(min(var(--cell,150px),calc(50% - 4.5px)),
+           min(calc(var(--cell,150px)*1.25),calc(50% - 4.5px))))}
+.grid>.tile,.voc>.v{width:auto;min-width:0}
+.grid>.tile.wide,.grid.wide>.tile{grid-column:1/-1}
+/* ⚠️ **`flex:1 1 100%` 는 격자 안에서 아무 일도 안 한다.** `.grid` 는 CSS grid 라
+   자식이 전폭을 먹으려면 `grid-column:1/-1` 이어야 하는데, 손들이 「flex 호스트에서
+   전폭」이라 믿고 flex 속성만 걸어 **덩어리가 격자 한 칸(≈186px)에 구겨졌다**
+   (2026-08-13 마법 페이지가 그렇게 깨졌다).
+
+   ⭐ 그래서 **칸(`.tile`)이 아닌 것은 무조건 한 줄**로 못박는다 — 덩어리(`lvset`),
+   줄(`lvblock`), 이름 없는 묶음 `div` 까지 전부. 손이 어떤 껍데기를 만들어 넣든
+   격자가 안 깨진다. 같은 사고를 이번 회차에만 **세 번** 냈다. */
+.grid>*:not(.tile):not(.v){grid-column:1/-1;width:100%}
+.grid.wide{grid-template-columns:1fr}
+
+/* ── 고정폭을 담는 줄 (`.row`) ─────────────────────────────────────────
+   폰 목업처럼 **자식이 자기 폭을 갖는** 것들은 격자에 넣으면 안 된다. 트랙이
+   썸네일 크기(186)로 잡히는데 자식은 392px 라 넘쳐서 서로 겹친다 — 로비의
+   격납·항해일지·관측소와 흐름 페이지가 실제로 이렇게 깨졌다(2026-08-12).
+   ⚠️ 이런 호스트는 `.grid` 를 쓰면 안 된다. 폭을 자식이 정하므로 flex 다. */
+.row{display:flex;flex-wrap:wrap;gap:9px;align-items:flex-start;width:100%}
+
+/* ── 열 수가 **뜻을 지는** 격자 ──────────────────────────────────────────
+   전용기 속성 표는 「줄이 전용기, 칸이 속성」이라 **한 줄에 정확히 넷**이어야
+   한다 — 감기게 두면 줄이 전용기를 안 나타낸다(2026-08-11 렌더 판정). 이런
+   격자는 폭을 따르지 않고 **열 수를 고정**하고, 모바일에서만 2열로 접는다. */
+/* 열 수가 뜻을 지는 격자 — 다만 칸이 커지는 것은 막아야 한다(속성 표가
+   1500px 에서 한 칸 370px 까지 커졌다). */
+.gridn{display:grid;gap:9px;align-items:start;margin-top:6px;
+  max-width:calc(var(--n,4) * 250px);
+  grid-template-columns:repeat(var(--n,4),minmax(0,1fr))}
+.gridn>.tile{width:auto;min-width:0}
+
+/* 여러 그리드를 한 흐름으로 잇는다(배치가 여럿인 유니버스 페이지).
+   안쪽 상자를 지워야 칸들이 이어진다 — 안 그러면 배치마다 줄을 새로 시작해
+   오른쪽이 뭉텅 빈다. */
+/* 트랙 산수는 `.grid` 와 **한 글자도 다르면 안 된다** — 칸이 이어져 보이는 것이
+   이 상자의 존재 이유라, 둘이 갈라지면 배치가 바뀔 때 줄이 어긋난다. */
+.gridset{display:grid;gap:9px;align-items:start;margin-top:6px;
+  justify-content:space-between;
+  grid-template-columns:repeat(auto-fill,
+    minmax(min(var(--cell,150px),calc(50% - 4.5px)),
+           min(calc(var(--cell,150px)*1.25),calc(50% - 4.5px))))}
+.gridset>.grid{display:contents}
+
+/* ── 덩어리 격자 (레벨이 있는 것: 무기 5칸 · 발현 3칸) ─────────────────── */
+.lvset{display:grid;gap:12px;align-items:start;margin-top:8px;
+  grid-template-columns:repeat(auto-fill,minmax(min(var(--block,600px),100%),1fr))}
+.lvblock{max-width:var(--blockmax,780px);background:var(--panel);
+  border:1px solid var(--edge);border-radius:4px;overflow:hidden;min-width:0}
+.lvblock>.hd{display:flex;align-items:baseline;gap:8px;padding:7px 10px;
+  border-bottom:1px solid var(--edge)}
+.lvblock>.hd b{font-size:13px;color:var(--ink)}
+.lvblock>.hd span{font-size:10px;color:var(--faint)}
+.lvblock>.cells{display:grid;gap:1px;background:var(--edge);
+  grid-template-columns:repeat(var(--n,5),minmax(0,1fr))}
+.lvblock>.cells>.cell{background:var(--panel);min-width:0}
+.lvblock>.cells>.cell canvas{width:100%;height:auto;display:block;
+  aspect-ratio:1;background:#0C0C12}
+.lvblock>.cells>.cell .lb{padding:5px 8px 7px;border-top:1px solid var(--edge)}
+
+/* ── 모바일 — 세로로 기니 2열이 최대다 ───────────────────────────────────
+   덩어리는 하나만 두고, **마지막 칸(완성형)을 맨 위 전폭**으로. 그러면 한
+   화면에 4~6칸이 들어온다. */
+@media (max-width:640px){
+  .lvset{grid-template-columns:1fr}
+  .lvblock{max-width:none}
+  .lvblock>.cells{grid-template-columns:repeat(2,minmax(0,1fr))}
+  /* 완성형 칸은 맨 위 전폭 — 다만 **정사각으로 두면 화면을 다 먹는다**.
+     480px 폭이면 캔버스만 480 높이라 아래 넷이 화면 밖으로 밀린다(「한 화면에
+     4~6칸」이 요구인데 2칸만 보였다). 그림은 정사각을 지키되 **눕혀서**
+     캔버스 옆에 설명을 둔다 — 높이가 절반 이하로 준다. */
+  .lvblock>.cells>.cell:last-child{order:-1;grid-column:1/-1;
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);align-items:center}
+  .lvblock>.cells>.cell:last-child .lb{border-top:none;border-left:1px solid var(--edge);
+    align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+  .gridn{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wrap{padding:0 12px 60px}
+  h1{font-size:clamp(25px,7vw,34px)}
+
+  /* ── 목차는 **한 줄로 눕혀 가로로 민다** (2026-08-14) ────────────────────
+     `nav.toc` 는 `position:sticky` 인데 알약이 20개에 그룹 라벨 7개(`NAVGROUPS`)
+     라 줄 총 폭이 넉넉히 1,400px 를 넘는다. 366px 폭에서 여러 줄로 감기면
+     **붙박이 머리가 300px 안팎** — 844px 폰의 3분의 1이 늘 가려진다(2026-08-14
+     실측 303px/36%). 눕히면 한 줄로 돌아온다.
+     ⭐ **목차를 접고 나서는 `.nav1` 에 그 처방이 필요 없다**(2026-08-20).
+       늘 보이는 것이 「시안」 라벨 + 그룹 일곱뿐이라 좁은 폭에서도 두 줄이면
+       끝난다.
+     ⚠️⚠️ 오히려 **걷어야 한다.** `overflow-x:auto` 는 세로도 같이 자른다
+       (`overflow-y` 가 `auto` 로 계산된다) — 뜨는 판(`.gi`)이 띠 안에 갇혀
+       폰에서 목차가 통째로 안 열린다. `.nav2`(이 페이지 안 목차)는 여전히
+       평평한 한 줄이라 그대로 눕힌다.
+     ⚠️ 스크롤 막대는 숨긴다 — 있으면 줄이 또 두꺼워진다. */
+  .nav2{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .nav2::-webkit-scrollbar{display:none}
+  /* 좁은 폭에서는 뜬 판이 화면을 넘기 쉽다 — 오른쪽 끝 그룹은 왼쪽으로 편다. */
+  .nav1 .g:nth-last-child(-n+3) .gi{left:auto;right:0}
+
+  /* ── 폰 목업은 자기 폭(392px)을 고집해 화면을 넘긴다 ─────────────────────
+     366px 를 28px 넘겨 페이지 전체가 가로로 흔들렸다. 쓰는 곳은 로비·흐름·
+     인터페이스 3장이다. 폭은 화면을 따르되 **원래 크기를 넘지는 않게** 상한만
+     남긴다 — 넓은 화면에서는 지금 그대로다. */
+  .col,.phone{width:100%;flex:1 1 100%;max-width:392px}
+  .screen{width:100%;max-width:364px;height:auto;aspect-ratio:364/788}
+}
+
+/* ── 넓은 화면 — 「공간의 낭비」를 줄인다 ────────────────────────────────
+   산문에 걸린 `max-width:66~82ch` 가 넓은 화면에서 그대로 남아 오른쪽 절반이
+   통째로 비었다(2026-08-12 사용자 판정). 두 단으로 흘려 폭을 쓴다. */
+@media (min-width:1200px){
+  /* 한 줄을 제한하는 데는 이유가 있다 — **줄이 길면 눈이 다음 줄 시작을 못
+     찾는다.** 그래서 넓은 화면이라고 한 줄을 200자로 늘리지는 않는다.
+     대신 **긴 문단만** 두 단으로 흘려 남는 폭을 쓴다(`.two` 는 vfx.js 가
+     글자 수 240 이상인 것에만 붙인다). 전부 2단으로 했다가 짧은 문단이 두
+     토막으로 갈려 되돌린 적이 있다 — 길이로 가르는 것이 답이었다. */
+  .sub,.note{max-width:92ch}
+  .lede{max-width:84ch}
+  .warn{max-width:96ch}
+  .two{max-width:none;column-width:48ch;column-gap:40px}
+  .warn p.two{column-width:46ch}
+}
+
+
+/* ══ 2026-08-18 재구성 — 홈 · 관측소 · 상점 2층 ═══════════════════════════
+   사용자 손그림 기준. 레일 5칸(홈·상점·도감·일지·관측소)은 기존 .rail 을
+   그대로 쓰고, 아래는 **오른쪽 큰 판**의 새 부품들이다.                     */
+
+/* ── 홈 — 캐릭터에서 선이 뻗어 수치를 가리킨다 ────────────────────────── */
+/* ⚠️ 수치를 표로 세우지 않는 이유: 표는 **읽는** 물건이고 이 화면은 **보는**
+   물건이다. 선으로 끌어내면 「이 몸의 어디가 그 숫자인가」가 붙는다.       */
+.hstage{position:relative;flex:1;display:flex;align-items:center;justify-content:center}
+.hcal{position:absolute;display:flex;flex-direction:column;gap:1px;white-space:nowrap}
+.hcal .k{font-size:8px;letter-spacing:.16em;color:var(--locked)}
+.hcal .v{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+.hcal.r{align-items:flex-start}
+.hcal.l{align-items:flex-end}
+/* 지시선 — 캐릭터 쪽으로 뻗는 얇은 선 + 끝점. canvas 가 아니라 CSS 다
+   (각도가 고정이라 그림이 아니라 배치의 문제다).                          */
+/* ⚠️ 옛 1자 직선(.hlead/.hdot)은 걷었다 — 아래 .hlead2 가 꺾인 선을 그린다. */
+/* ⚠️ **캐릭터 레벨 줄을 걷었다**(2026-08-18 사용자 정정) — 레벨은 캐릭터가
+   아니라 **스탯마다** 붙는다. 그래서 아래 .lv 가 이름 옆에 작게 산다.      */
+.hcal .k .lv{color:var(--gold);opacity:.72;font-weight:400;letter-spacing:.04em}
+
+/* ── 관측소 — 행성들. 하나를 누르면 착륙 예정 지점이 옮겨진다 ─────────── */
+.wmap{position:relative;flex:1;overflow:hidden}
+.wmap canvas{position:absolute;inset:0;width:100%;height:100%}
+/* 관측 중 — 왼쪽 위 상태등. 세로 시안의 그 줄을 그대로 옮겼다. */
+
+/* ── 재화 두 개 — 암흑물질 · 빛의 결정 ─────────────────────────────────────────── */
+/* ⚠️ 숫자에 tabular-nums. 상점 격자에서 가격이 세로로 줄 맞아야 비교가 된다. */
+.cur{display:flex;align-items:center;gap:10px}
+/* 창틀 오른쪽 끝의 설정 톱니. 글자 「설정」을 대신하므로 **글자 높이만큼만**
+   잡는다 — 더 크면 창틀이 아니라 단추가 되어 눌러야 할 것처럼 보인다. */
+.setico{display:flex;align-items:center;opacity:.82}
+.setico canvas{display:block}
+.cur .one{display:flex;align-items:center;gap:4px;font-size:11px;
+  color:var(--ink);font-variant-numeric:tabular-nums}
+.cur canvas{display:block}
+
+/* ── 상점 1층 — 갈래 셋 ───────────────────────────────────────────────── */
+.stier{display:flex;gap:12px;flex:1;align-items:stretch}
+.stier .t{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:8px;background:var(--panel);
+  border:1px solid rgba(180,180,200,.13);position:relative}
+.stier .t .tn{font-size:14px;color:var(--ink);letter-spacing:.14em}
+.stier .t .td{font-size:9px;color:var(--locked);text-align:center;
+  line-height:1.5;padding:0 10px}
+/* ⚠️ **아직 안 정한 갈래는 「곧」으로 세운다** — 자리를 비워 두면 나중에
+   갈래가 늘 때 배치가 통째로 밀린다. 자리는 지금 잡고 내용만 채운다.     */
+.stier .t.soon{opacity:.42}
+.stier .t.soon .tn{color:var(--locked)}
+.stier .t.on{border-color:rgba(200,162,74,.42)}
+
+/* ── 상점 2층 — 하위탭 + 상품 격자 ────────────────────────────────────── */
+.ssub{display:flex;gap:2px;margin-bottom:8px}
+.ssub b{font-size:10px;letter-spacing:.14em;color:var(--locked);
+  padding:4px 10px;font-weight:400}
+.ssub b.on{color:var(--ink);box-shadow:inset 0 -1px 0 rgba(236,236,244,.62)}
+.sgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;
+  align-content:start;flex:1}
+.sitem{background:var(--panel);border:1px solid rgba(180,180,200,.11);
+  padding:7px 4px 5px;display:flex;flex-direction:column;align-items:center;
+  gap:3px}
+.sitem canvas{display:block}
+.sitem .n{font-size:8px;color:var(--dim);letter-spacing:.02em}
+.sitem .p{display:flex;align-items:center;gap:3px;font-size:9px;
+  color:var(--ink);font-variant-numeric:tabular-nums}
+/* 가진 것 — 가격 대신 「보유」. 살 수 없는 것과 **다른 회색**이어야 한다:
+   보유는 끝난 것이고 부족은 아직 할 일이다.                              */
+.sitem.own{opacity:.5}
+.sitem.own .p{color:var(--locked)}
+.sitem.poor .p{color:rgba(200,100,90,.72)}
+
+/* ── 상점 2층 · 일반(스탯) — **강화석으로 산다** ──────────────────────────
+   ⭐⭐ 값이 **종**으로 갈리는 것이 곧 게이트다(설계 2-1). 그래서 이 갈래에는
+   암흑물질 문양이 아예 안 서고, 대신 **조각**이 선다.                     */
+
+/* 조각 — **여섯 면 쌍뿔**(허리가 좁고 위아래로 뾰족하다). 암흑물질의 **고른
+   육각**과 실루엣으로 갈린다: 색은 이미 **등급**을 말하고 있어(무채=일반 ·
+   색 넷 · 황금=유니크) 색으로는 재화 종류를 못 가른다.                    */
+.stn{display:block;width:9px;height:11px;flex:0 0 auto;
+  clip-path:polygon(50% 0,92% 38%,50% 100%,8% 38%)}
+.stn.k0{background:linear-gradient(120deg,#9A9AA8 0 34%,rgba(154,154,168,.62) 34% 67%,rgba(154,154,168,.34) 67% 100%)}
+.stn.k1{background:linear-gradient(120deg,#FF6A1E 0 34%,rgba(255,106,30,.62) 34% 67%,rgba(255,106,30,.34) 67% 100%)}
+.stn.k2{background:linear-gradient(120deg,#E14CFF 0 34%,rgba(225,76,255,.62) 34% 67%,rgba(225,76,255,.34) 67% 100%)}
+.stn.k3{background:linear-gradient(120deg,#6E8AE8 0 34%,rgba(110,138,232,.62) 34% 67%,rgba(110,138,232,.34) 67% 100%)}
+.stn.k4{background:linear-gradient(120deg,#A8C43C 0 34%,rgba(168,196,60,.62) 34% 67%,rgba(168,196,60,.34) 67% 100%)}
+.stn.k5{background:linear-gradient(120deg,#FFC64A 0 34%,rgba(255,198,74,.62) 34% 67%,rgba(255,198,74,.34) 67% 100%)}
+
+/* 지갑 띠 — 격자 **위**에 선다. 창틀이 아닌 이유는 강화석을 쓰는 곳이 이
+   갈래 하나뿐이라서다(창틀에 여덟 칸을 밀어 넣으면 숫자가 화면을 따라다니는
+   장식이 된다 — 홈에서 재화를 걷어낸 그 판정). 여기 두면 격자의 값과 **같은
+   눈높이**에서 대조된다.                                                 */
+.swal{display:flex;align-items:center;gap:13px;margin-bottom:9px;flex:0 0 auto}
+.swal .one{display:flex;align-items:center;gap:4px;font-size:10px;
+  color:var(--ink);font-variant-numeric:tabular-nums}
+/* ⚠️ **0 인 종도 자리를 지킨다** — 「아직 한 번도 안 캤다」가 보여야 격자의
+   막힌 칸과 이어진다. 지우면 여섯 칸의 폭이 판마다 달라져 눈이 자리를 못 배운다. */
+.swal .one.zero{color:var(--locked);opacity:.6}
+.sgrid.stat{grid-template-columns:repeat(4,1fr)}
+.sitem.stat{padding:8px 4px 6px}
+.sitem .sub{font-size:8px;color:var(--locked);font-variant-numeric:tabular-nums}
+.sitem .p em{font-style:normal;color:var(--locked);font-size:8px;margin:0 1px}
+/* 「없으면 어디서 캐나」 — 모자란 값과 **같은 적색**이라야 「여기가 막혔고,
+   답은 이것」이 한 덩어리로 읽힌다.                                       */
+.sitem .miss{font-size:7.5px;color:rgba(200,100,90,.72);letter-spacing:.01em}
+/* 덱 칸 — 다섯 스탯과 **단위가 다르다**(수치가 아니라 칸 수). 상점 1층
+   설명에서도 그 하나만 색을 준다. */
+.stier .td .tdeck{color:var(--gold);opacity:.72;font-weight:400}
+
+/* ── 관측소 — 창이 곧 배경 ────────────────────────────────────────────────
+   ⚠️⚠️ **scrim 을 안 쓴다. 창틀이 scrim 이다.** 유리에 검은 천을 씌우면
+   「실시간으로 보인다」가 통째로 죽는다(원본 관측소가 세 안 중 유일하게
+   scrim 없이 선 이유). 대비의 책임을 옮긴다 — **글자는 유리 위에 안 놓고
+   창틀 위에만** 놓는다. 유리에 남는 글자는 은하 이름표뿐이고 그것은 제
+   어두운 테를 스스로 두른다.
+   ⚠️ 2026-08-18 에 이걸 잊고 **작은 캔버스에 아이콘을 늘어놓아** 반려됐다
+   (「퀄리티가 낮아졌네」). 창은 화면만 하다.                                */
+.phone.land .screen > canvas.glass{position:absolute;inset:0;width:100%;
+  height:100%;display:block;z-index:0}
+/* 창틀 — 모서리 괄호. 유리와 창틀의 경계를 **선이 아니라 괄호**로 긋는다
+   (선을 두르면 액자가 되고, 괄호는 「내다보는 중」이 된다).               */
+
+/* 왼쪽 레일 — 창틀이라 **불투명**하다. 여기 글자는 배경과 무관하게 읽힌다. */
+/* 아래 창틀 — 엄지 존. 덱은 **확인만**, 그리고 주 버튼 하나. */
+/* 유리 위의 유일한 글자 — **제 어두운 테를 스스로 두른다.** 창틀이 없는
+   자리라 배경이 무엇이든(우주든 지면이든) 읽혀야 한다.                     */
+/* ── 홈 지시선 — 꺾인다 ───────────────────────────────────────────────────
+   ⚠️ 1자 직선은 **표의 괘선**이라 「몸에서 뻗은 것」이 아니라 「글자를 가로로
+   붙인 것」으로 읽힌다. 몸 쪽은 45° 사선, 글자 쪽은 수평 — 글자 밑줄이 서로
+   평행해야 다섯 줄이 한 표로 읽힌다.                                       */
+.hlines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;
+  pointer-events:none}
+.hlead2{fill:none;stroke:rgba(150,150,175,.42);stroke-width:.35;
+  vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+/* 점은 **DOM**이다 — SVG 원은 비대칭 스케일에서 타원으로 퍼진다. */
+.hdot2{position:absolute;width:3px;height:3px;border-radius:50%;
+  background:rgba(200,200,220,.78);transform:translate(-50%,-50%);
+  pointer-events:none}
+/* 발현 단계 토글 — 시안 검증용 조작대(엄지 존 버튼과 같은 결). */
+.bctl{display:inline-flex;gap:5px;margin-left:10px;vertical-align:middle}
+.bbtn{font:inherit;font-size:10px;padding:3px 9px;border-radius:99px;cursor:pointer;
+  background:#13131A;border:1px solid #26262F;color:#9494A2}
+.bbtn.on{background:var(--gold);border-color:var(--gold);color:#0A0A0E;font-weight:700}
+.bval{margin-left:8px;font-size:10px;color:#5A5A68}
+.bval b{color:#9494A2;font-variant-numeric:tabular-nums}
+
+/* ══ 상점 — 캐주얼하게 ════════════════════════════════════════════════════
+   ⚠️ 사용자: 「상점 페이지는 좀 더 캐주얼한 느낌으로 바꿔도 될 것 같아」.
+   ⭐ **캐주얼은 색을 늘리는 게 아니다.** 이 저장소는 「색은 주 버튼 하나뿐」
+   이라 색을 뿌리면 규약이 깨지고 화면이 촌스러워진다. 캐주얼을 만드는 것은
+   넷이다 — **둥근 모서리 · 큰 여백 · 두꺼운 글자 · 눌리는 느낌**.
+   판(관측소·홈)은 각지고 차갑게, 상점만 이 넷으로 말랑하게 둔다. 그 대비가
+   「여기는 사는 곳」을 말한다.                                              */
+.stier .t{border-radius:14px;gap:11px;
+  background:linear-gradient(180deg,#191922,#101017);
+  border:1px solid rgba(180,180,200,.16);transition:transform .12s,border-color .12s}
+.stier .t.on{border-color:rgba(200,162,74,.5);
+  box-shadow:0 0 0 3px rgba(200,162,74,.07)}
+.stier .t.on:hover{transform:translateY(-2px)}
+.stier .t .tn{font-size:16px;font-weight:700;letter-spacing:.06em}
+.stier .t .td{font-size:9.5px;line-height:1.65}
+/* 갈래 배지 — 「곧」을 글자로만 두면 회색 문장에 묻힌다. 알약으로 세운다. */
+.stier .t .soonpill{font-size:8.5px;letter-spacing:.18em;color:var(--gold);
+  border:1px solid rgba(200,162,74,.34);border-radius:99px;padding:2px 9px;opacity:.72}
+
+/* 하위탭 — 밑줄 대신 **알약**. 밑줄은 문서의 문법이고 알약이 앱의 문법이다. */
+.ssub{gap:6px}
+.ssub b{border-radius:99px;padding:5px 13px;font-size:10.5px;font-weight:600;
+  background:rgba(180,180,200,.06);box-shadow:none}
+.ssub b.on{background:var(--gold);color:#0A0A0E;box-shadow:none}
+
+/* 상품 칸 — 둥글고 크게. 격자도 5열에서 **4열**로 줄여 칸을 키운다
+   (「넓어진 폭은 더 많이가 아니라 더 크게」 — 가로의 문법 ②).             */
+.sgrid{grid-template-columns:repeat(4,1fr);gap:9px}
+.sitem{border-radius:12px;padding:10px 6px 8px;gap:5px;
+  background:linear-gradient(180deg,#191922,#101017);
+  border:1px solid rgba(180,180,200,.14);cursor:pointer;
+  transition:transform .12s,border-color .12s}
+.sitem:hover{transform:translateY(-2px);border-color:rgba(200,162,74,.34)}
+.sitem .n{font-size:9.5px;font-weight:600;color:var(--ink)}
+.sitem .p{font-size:10.5px;font-weight:600;
+  background:rgba(180,180,200,.08);border-radius:99px;padding:2px 8px}
+.sitem.own{opacity:.44}
+.sitem.own:hover{transform:none;border-color:rgba(180,180,200,.14)}
+
+/* ── 등급 띠 — **가격과 순서만 정한다** (2026-08-21) ───────────────────────
+   ⭐⭐ **등급은 색으로 말하지 않는다.** 계열 색이 이미 여덟이고
+   (`mockup-chapter.html` 색 표: 일반·보조·마법·방어·회복·버프 + 궁극기 + 채굴)
+   그 여덟이 화면 곳곳에서 「무엇의 스킬인가」를 말한다. 등급에 아홉째 색을
+   주면 한 칸 안에서 두 축이 색으로 싸우고, 눈이 먼저 배운 쪽(계열)이 진다.
+   ⇒ 등급은 **자리 · 한 글자 문양(基·變·連) · 무채 글씨** 셋으로만 말한다.
+   ⚠️ 머리줄은 격자 폭을 통째로 가로지른다 — `grid-column:1/-1` 이다.
+      `flex:1 1 100%` 로 전폭을 만들려 하면 격자에서 flex 가 무효라 덩어리가
+      칸 하나에 구겨진다(`tools/mockup_lint.js` 가 적어 둔 사고 B).          */
+.srank{grid-column:1/-1;display:flex;align-items:center;gap:7px;
+  margin:6px 0 -2px;font-size:9px;color:var(--locked)}
+.srank .mk{font-size:11px;font-weight:700;color:var(--dim)}
+.srank .nm{font-size:10.5px;font-weight:600;color:var(--ink);letter-spacing:.06em}
+.srank .ct{font-variant-numeric:tabular-nums}
+/* 잠긴 칸 — **「모자람」과 다른 말이다.** 모자란 것은 모으면 되고, 잠긴 것은
+   다른 것을 먼저 사야 열린다 ⇒ 값을 **아예 안 적는다**(값을 적으면 「모으면
+   살 수 있다」로 읽힌다). 대신 「무엇을 사면 열리나」를 늘 한 줄 단다.       */
+.sitem.lock{opacity:.44;cursor:default}
+.sitem.lock:hover{transform:none;border-color:rgba(180,180,200,.14)}
+.sitem.lock .p{color:var(--locked)}
+.sitem .why{font-size:7.5px;color:var(--locked);letter-spacing:.01em}
+/* 미리보기의 등급 줄 — 이름 옆 무채 한 줄. 등급을 **글로 설명하는 유일한
+   자리**다(격자 머리줄은 문양과 이름뿐이라 뜻을 못 말한다).                */
+.sprank{font-size:9.5px;font-weight:400;color:var(--locked);margin-left:8px}
+
+/* ── 미리보기 팝업 — 「어떻게 나가나」를 보고 산다 ─────────────────────────
+   ⚠️ 사용자: 「저걸 누르면 스킬이 어떤 식으로 나가는지 미리보기가 팝업으로
+   보여지고 구매할지 말지 결정할 수 있으면 좋겠어」.
+   ⭐ **이 게임에서 스킬의 정체는 글이 아니라 움직임이다.** 「전방 부채꼴
+   3발」이라고 써 봐야 빙격검과 산탄총이 같은 문장이 된다 ⇒ 미리보기는
+   **설명이 아니라 실제 그 그림이 도는 창**이다(시안의 FX 를 그대로 돌린다).  */
+.spop{position:absolute;inset:0;z-index:9;display:flex;align-items:center;
+  justify-content:center;background:rgba(8,8,12,.72)}
+.spbox{width:78%;max-width:420px;border-radius:16px;overflow:hidden;
+  background:linear-gradient(180deg,#1B1B24,#101017);
+  border:1px solid rgba(180,180,200,.18);display:flex;flex-direction:column}
+.spview{position:relative;height:118px;background:#0A0A0E}
+.spview canvas{position:absolute;inset:0;width:100%;height:100%}
+.spbody{padding:11px 14px 13px}
+.spname{font-size:15px;font-weight:700;color:var(--ink)}
+.spdesc{font-size:10px;color:var(--dim);line-height:1.6;margin-top:4px}
+.sprow{display:flex;align-items:center;gap:9px;margin-top:12px}
+.spprice{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;
+  color:var(--ink);font-variant-numeric:tabular-nums}
+.spbtn{flex:1;text-align:center;border-radius:99px;padding:10px 0;font-size:12.5px;
+  font-weight:700;letter-spacing:.08em;background:var(--gold);color:#0A0A0E;
+  cursor:pointer}
+.spbtn.no{background:rgba(180,180,200,.10);color:var(--locked);cursor:default}
+.spx{font-size:11px;color:var(--locked);padding:10px 4px;cursor:pointer}
+
+/* ── 캐릭터 장 — 열여덟 장이 같은 틀을 쓴다 (그리는 손은 `char-page.js`) ──
+   ⚠️ **뼈대를 새로 안 짠다.** 덩어리·칸(`.lvset`·`.lvblock`·`.cells`·`.cell`
+   ·`.lb`)은 스킬 장들이 쓰는 그것 그대로이고, 그림도 `FX` 의 같은 함수다 —
+   이 장이 답하는 것은 「이 캐릭터가 열두 칸에 무엇을 들고 있나」 하나다.
+   여기 있는 것은 그 장들에 **없는 두 가지**뿐이다: 해금 띠와 잠긴 칸. */
+
+/* 해금 띠 — 격자 한 줄을 통째로 먹어 「여기서 갈린다」를 말한다. */
+.char-band{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    margin:14px 0 -4px;padding:0 0 7px;border-bottom:1px solid var(--edge)}
+.char-band:first-child{margin-top:2px}
+.char-band b{font-size:11px;letter-spacing:.16em;color:var(--gold);font-weight:600}
+.char-band span{font-size:10px;color:var(--faint)}
+
+/* 등급은 **색이 아니라 글자다**(`lib/data/skill_rank.dart`) — 계열 색이 이미
+   여덟이라 아홉째 축에 색을 주면 화면에서 두 축이 색으로 싸운다. */
+.char-lv .lvblock>.hd .rk{color:var(--dim);font-weight:600}
+
+/* 잠긴 칸 — 그림 자리는 성장표 칸과 **같은 폭**(다섯 중 하나)이고 설명이
+   남은 넷을 먹는다. 그래야 채워진 아홉과 한 격자로 읽힌다. */
+.char-lock .cells>.char-lockt{grid-column:span 4}
+.char-lock .cells>.cell .lb .lk{font-size:10px;font-weight:700;letter-spacing:.06em;
+    color:var(--faint)}
+.char-lock .cells>.char-lockt .lb{border-top:none;padding:11px 13px;font-size:9.5px;
+    color:var(--faint);line-height:1.65}
+.char-lock .cells>.char-lockt .lb b{color:var(--dim);font-weight:600}
+
+/* 그림이 **없는** 줄 — 엔진에는 서 있는데 시안이 아직 안 그린 스킬(지금은
+   역풍 하나, `tools/mockup_sheet.js` 의 `NOMOCK`). 잠긴 칸과 **다른 물건**이라
+   자물쇠를 안 쓴다: 잠긴 칸은 「아직 안 정했다」이고 이것은 「정해졌는데 그림이
+   없다」다. 그래서 칸 수·문구는 성장표 그대로 두고 **그림 자리만 비운다** —
+   지어낸 그림으로 메우면 「시안에 있다」가 화면에서 거짓이 된다. */
+.char-noart .cells>.cell>.na{aspect-ratio:1;background:#0C0C12;display:flex;
+    align-items:center;justify-content:center;text-align:center;
+    font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--faint);
+    box-shadow:inset 0 0 0 1px var(--edge)}
+.char-noart>.na-why{padding:8px 10px;border-top:1px solid var(--edge);
+    font-size:9.5px;color:var(--faint);line-height:1.65}
+.char-noart>.na-why b{color:var(--dim);font-weight:600}
+
+/* ⚠️ 공용 모바일 규칙은 **마지막 칸을 맨 위 전폭**으로 올린다 — 성장표에서
+   「완성형을 먼저」라는 규약인데, 잠긴 칸의 마지막은 완성형이 아니라 **설명**
+   이라 그 규칙이 붙으면 캔버스 없는 칸이 두 단으로 쪼개진다. 되돌린다. */
+@media (max-width:640px){
+  .char-lock .cells>.char-lockt{order:0;grid-column:1/-1;display:block}
+  .char-lock .cells>.char-lockt .lb{border-left:none;display:block;align-self:auto}
+}

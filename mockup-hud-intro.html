@@ -1,0 +1,232 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — SF HUD 인트로</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-kit">키트 카탈로그</a><a href="#s-boot">부팅 시퀀스</a><a href="#s-boot-logo">타이틀 로고</a><a href="#s-seam">이음매 검증</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · SF HUD 인트로</p>
+  <h1>게임을 켜면 처음 보는 것 — 그리고 공용 키트</h1>
+  <p class="lede">여섯 화면(인트로·홈·강화·상점·도감·출격일지)을 SF HUD 로
+  다시 그리는 작업 중 <b>인트로·홈 둘과 공용 키트</b>를 맡았다. 이 장은 그
+  키트(<code>docs/vfx/hud.js</code>)의 부품을 눈으로 확인하는 카탈로그이자,
+  그 키트로 그린 첫 화면 — <b>부팅 시퀀스</b> — 이다.</p>
+  <p class="def">⚠️ 나머지 넷(강화·상점·도감·출격일지)은 다른 손이 이 키트
+  위에 얹는다. 그래서 이 페이지의 진짜 산출물은 화면 자체보다
+  <a href="#s-kit"><b>키트 카탈로그</b></a> 쪽이다 — 저 넷을 그릴 손이 여기를 보고
+  부품을 그대로 가져다 쓸 수 있어야 한다.</p>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="s-kit">키트 카탈로그 — <code>hud.js</code> 부품 전부</h2>
+<p class="def">참조(짙은 남색 + 시안 얇은 선 + 동심원 레이더 + 각진 프레임 +
+눈금 고리 + 점선 궤도 + 막대 그래프 + 스캔라인)를 뜯어 일곱 갈래로 나눴다.
+접두는 전부 <code>hud</code>/<code>HUD</code> — <code>vfx.js</code>(5만 줄+)의
+어느 이름과도 안 겹치게 확인했다.</p>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:26px 0 8px">① 프레임 · 패널 — <code>.hudpanel</code></h3>
+<p class="def">모서리 하나를 크게 자른 각진 틀 + 이중 테 + 나머지 세 모서리의
+브래킷. <code>class="hudpanel"</code> 만 달면 <code>hudPanels()</code> 가 브래킷을
+자동으로 붙인다 — 손으로 마크업을 안 늘려도 된다. <code>.on</code> 을 더하면
+「지금 선택된 패널」(사이트 전역 금빛 하나 규약).</p>
+<div class="row" style="gap:12px">
+  <div class="hudpanel" style="width:220px">
+    <div class="hd"><b>SECTOR 07</b></div>
+    <div class="bd" style="display:flex;align-items:center;gap:10px">
+      <canvas id="hi-cat-panel-cv" style="width:40px;height:40px;flex:0 0 40px"></canvas>
+      <div style="font-size:11px;color:#9494A2;line-height:1.6">기본 패널 —
+      <span class="hudchip">READY</span></div>
+    </div>
+  </div>
+  <div class="hudpanel on" style="width:220px">
+    <div class="hd"><b>SECTOR 07</b></div>
+    <div class="bd" style="font-size:11px;color:#9494A2;line-height:1.6">
+      선택된 패널(<code>.on</code>) — 테두리·그림자가 사이트의 그 금빛
+      하나로 바뀐다. 냉광은 「늘 켜진 것」, 금빛은 「지금 누른 것」.</div>
+  </div>
+</div>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:26px 0 8px">② 원형 요소 — <code>hudRadar</code> · <code>hudDial</code> · <code>hudOrbit</code> · <code>hudTicks</code></h3>
+<p class="def">동심원 레이더/리액터, 부채꼴 게이지(참조의 60%/30% 다이얼),
+점선 궤도 + 도는 점. 게이지는 기존 <code>celGauge</code> 를 그대로 감싼 것 —
+새 그리기가 아니라 새 둘레다.</p>
+<div class="row" style="gap:12px">
+  <div class="tile" style="width:180px"><canvas id="hi-cat-radar" style="width:100%;aspect-ratio:1"></canvas>
+    <div class="cap"><div class="nm">hudRadar(c,x,y,r,t,opt)</div><div class="ds">눈금 고리 + 크로스헤어 + 연속 회전 스윕 + 중심 발광</div></div></div>
+  <div class="tile" style="width:110px"><canvas id="hi-cat-dial-a" style="width:100%;aspect-ratio:1"></canvas>
+    <div class="cap"><div class="nm">hudDial · 60%</div></div></div>
+  <div class="tile" style="width:110px"><canvas id="hi-cat-dial-b" style="width:100%;aspect-ratio:1"></canvas>
+    <div class="cap"><div class="nm">hudDial · 30%</div></div></div>
+  <div class="tile" style="width:180px"><canvas id="hi-cat-orbit" style="width:100%;aspect-ratio:5/3"></canvas>
+    <div class="cap"><div class="nm">hudOrbit(c,x,y,rx,ry,t,opt)</div><div class="ds">점선 궤도 두 겹, 반대로 돈다</div></div></div>
+</div>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:26px 0 8px">③ 막대 · 파형 — <code>hudBars</code> · <code>hudWave</code></h3>
+<div class="row" style="gap:12px">
+  <div class="tile" style="width:180px"><canvas id="hi-cat-bars" style="width:100%;aspect-ratio:15/8"></canvas>
+    <div class="cap"><div class="nm">hudBars(c,x,y,w,h,vals,opt)</div><div class="ds"><code>vals</code> 를 안 주면 <code>hash</code> 로 절차생성(난수 0건)</div></div></div>
+  <div class="tile" style="width:180px"><canvas id="hi-cat-wave" style="width:100%;aspect-ratio:15/8"></canvas>
+    <div class="cap"><div class="nm">hudWave(c,x,y,w,h,t,opt)</div><div class="ds">사인 성분 셋 — <code>t</code> 를 그대로 먹여 이음매가 없다</div></div></div>
+</div>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:26px 0 8px">④ 버튼 · 탭 — <code>.hudbtn</code> · <code>.hudtabs</code></h3>
+<p class="def">각진 버튼 넷(평상 · 호버 · 선택 · 잠김)과 탭 한 줄. 호버는 실제
+<code>:hover</code> 로도 동작한다 — <code>.hover</code> 클래스는 스크린샷으로
+그 상태를 남기기 위한 것.</p>
+<div class="row" style="gap:16px;align-items:center">
+  <div class="hudbtn">평상</div>
+  <div class="hudbtn hover">호버</div>
+  <div class="hudbtn sel">선택 · 주 버튼</div>
+  <div class="hudbtn lock">잠김</div>
+  <div class="hudtabs">
+    <div class="hudtab on">스킬</div><div class="hudtab">성좌</div><div class="hudtab">스탯</div>
+    <div class="hudtab soon">강화<span class="soon">곧</span></div>
+  </div>
+</div>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:26px 0 8px">⑤ 스캔라인 · 격자 — <code>.hudgrid</code> · <code>.hudscan</code> · <code>.hudvig</code></h3>
+<p class="def">배경 결 셋은 <b>캔버스가 아니라 CSS</b>다 — 이 저장소의 오랜
+병목이 GPU 채우기라(「화려함의 비용은 개수가 아니라 픽셀 면적」), 화면
+전체를 매 프레임 캔버스로 덮는 대신 GPU 합성 레이어에 맡긴다. <code>hud.js</code>
+가 로드되는 순간 스타일시트로 심어지므로 아래처럼 세 div 만 겹치면 된다.</p>
+<div class="hudscreen" style="width:260px;height:120px;overflow:hidden;border:1px solid #26262F">
+  <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+</div>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:26px 0 8px">⑥ 등장 애니메이션 — <code>hudOpenLoop(u,opt)</code></h3>
+<p class="def">선이 그어지고(<code>line</code>) → 면이 차고(<code>fill</code>) →
+내용이 뜬다(<code>content</code>). 실제 화면전환에는 <code>u</code> 에 단조증가값
+(<code>Math.min(1,(t-t0)/dur)</code>)을 넘겨 한 번만 재생한다 — 여기서는
+「보여주기 위해」 3초 주기로 되풀이한다. 아래 값 셋이 <b>u=0 과 u=1 에서 항상
+0</b>이라(패널이 완전히 꺼진 상태) 되풀이해도 이음매가 없다 — 검증은
+<a href="#s-seam">다음 절</a>.</p>
+<div class="tile" style="width:220px"><canvas id="hi-cat-open" style="width:100%;aspect-ratio:220/120"></canvas>
+  <div class="cap"><div class="nm">line/fill/content 진행값을 화면에 그대로 찍었다</div></div></div>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:26px 0 8px">⑦ 허브 레일 — <code>hudRail(hostId,cur,tabs?)</code></h3>
+<p class="def">여섯 화면이 같이 쓰는 좌측 탭 5칸. 정본은 <code>vfx.js</code> 의
+<code>LBRAIL</code>/<code>FLWGLYPH</code> 그대로 읽는다 — 이 함수는 <b>둘레만</b>
+냉광으로 새로 입힌다. <b>강화</b> 화면은 아직 <code>LBRAIL</code> 에 자리가 없다
+(2026-08 시점 5칸 — 강화 없음) — 그 갈래를 늘릴지는 그 화면을 맡을 손이
+<code>tabs</code> 인자로 자기 배열을 넘기면 된다.</p>
+<div id="hi-cat-rail" class="hudrail" style="width:66px"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="s-boot">부팅 시퀀스 — 켜지는 순간, 그리고 타이틀 로고</h2>
+<p class="def">참조의 「SEARCHING…」·「LOADING…」이 부팅의 힌트지만, 이 화면의
+진짜 주인공은 <b>「LIGHT SURVIVAL」로고 자체</b>다 — 폰트를 쓰지 않고
+글자 10종(L·I·G·H·T·S·U·R·V·A)을 바(bar) 폴리곤으로 직접 깎아
+([HILETTERS]) 두께·베벨·발광 다섯 겹을 쌓았고([hiDrawLetter]), 그
+가운데에 이 게임의 균열·빛의 결정 어휘로 지은 엠블럼([hiEmblem])을
+앉혔다. 문구·재질·섬광이 전부 같은 타임라인(<code>u=(t%HIT)/HIT</code>)
+위에서 순서대로 켜진다 — 자세한 부품 설명은 <a href="#s-boot-logo">아래
+로고 절</a>.</p>
+<table class="st">
+<tr><th>구간(u)</th><th>보이는 것</th><th>왜</th></tr>
+<tr><td>0.00–0.05</td><td>암전</td><td>루프의 이음매 — 앞 바퀴의 끝과 여기가 같은 값(0)</td></tr>
+<tr><td>0.05–0.26</td><td>SEARCHING</td><td>글자는 아직 어두운 암석 재질(<code>mat≈0.05</code>) — 검색은 진행률이 아니다</td></tr>
+<tr><td>0.26–0.62</td><td>LOADING · 0→100%</td><td>로딩 퍼센트가 <b>엠블럼 균열의 자람</b>과 <b>글자 재질(mat)</b>을 같이 민다 — 장식이 아니라 값에 매인 애니메이션</td></tr>
+<tr><td>0.62–0.72</td><td>SYSTEM ONLINE · 섬광</td><td>엠블럼이 완전 점화 — 균열이 다 트이고 흰 섬광이 한 번 터진다</td></tr>
+<tr><td>0.72–0.94</td><td>TOUCH TO START</td><td>대기 — 로고는 완성된 채 정지, 문구만 깜빡인다(사인 하나, 위상 파생 없음)</td></tr>
+<tr><td>0.94–1.00</td><td>암전으로 복귀</td><td>다음 바퀴의 시작(u=0)과 값이 같아지도록 미리 꺼진다</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">부팅 — 실시간 루프(6.4초)</div>
+  <div class="phone land"><div class="screen">
+    <canvas class="bg" id="hi-boot-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+  </div></div>
+ </div>
+</div>
+<h3 style="font-size:11px;letter-spacing:.24em;color:#9494A2;margin:22px 0 8px">고정 갈무리 넷 — 같은 그리기 함수를 다른 절대시각으로 불렀다</h3>
+<div class="row" style="gap:12px">
+  <div class="tile" style="width:270px"><canvas id="hi-boot-k0" style="width:100%;aspect-ratio:280/160"></canvas><div class="cap"><div class="nm">u=0.14 · SEARCHING</div></div></div>
+  <div class="tile" style="width:270px"><canvas id="hi-boot-k1" style="width:100%;aspect-ratio:280/160"></canvas><div class="cap"><div class="nm">u=0.46 · LOADING</div></div></div>
+  <div class="tile" style="width:270px"><canvas id="hi-boot-k2" style="width:100%;aspect-ratio:280/160"></canvas><div class="cap"><div class="nm">u=0.665 · ONLINE 섬광</div></div></div>
+  <div class="tile" style="width:270px"><canvas id="hi-boot-k3" style="width:100%;aspect-ratio:280/160"></canvas><div class="cap"><div class="nm">u=0.82 · TOUCH TO START</div></div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="s-boot-logo">타이틀 로고 — 재료를 직접 깎았다</h2>
+<p class="def">⚠️ <b>폰트를 안 쓴다.</b> <code>pubspec.yaml</code> 을 확인하면
+<code>uses-material-design: false</code> 에 커스텀 폰트 선언이 0개, <code>assets/</code>
+에 <code>.ttf</code>/<code>.otf</code> 도 없다 — <code>fillText</code> 로 그리면
+플랫폼 기본 폰트가 기기마다 달라 로고가 기기마다 달라진다. 그래서
+<code>LIGHT SURVIVAL</code> 의 고유 글자 10개(L I G H T S U R V A)를
+바(bar) 폴리곤 목록으로 직접 정의했다 — 좌표 배열이라 폰트 없이 어디서나
+같다(<code>Path</code> 로 그대로 옮겨지므로 오히려 폰트보다 엔진 이식이
+쉽다).</p>
+<table class="st">
+<tr><th>단계</th><th>이 파일에서</th></tr>
+<tr><td>① 글자 = 바 목록</td><td><code>HILETTERS[ch]</code> — 두 점을 잇는
+막대(<code>hiBarPoly</code>) 여럿. 세로 획 1.15유닛(굵게) · 가로 획
+0.55유닛(가늘게) · 곡선형 글자(G·S·U·R·V)는 구간 방향으로 자동 판정
+(<code>hiSegW</code>). 획 끝은 각진 스퍼로 뽑는다</td></tr>
+<tr><td>② 다섯 겹</td><td><code>hiDrawLetter</code> 가 같은 폴리곤을
+후광(가산 발광) → 압출(어긋난 6겹, 두께) → 정면 그라디언트(위 밝고 아래
+어둡다, 암석↔결정을 <code>mat</code> 로 섞는다) → 베벨(폭 52%로 줄인 같은
+폴리곤을 더 밝게) → 위쪽 하이라이트(알파가 위→아래로 죽는 가는 선) 순으로
+다섯 번 다시 칠한다</td></tr>
+<tr><td>③ 엠블럼</td><td><code>hiEmblem</code> — 육각 바로 짠 균열 결정 +
+톱니 눈금 스무 개 + 긴 스파이크 여섯. <code>LIGHT</code> 를 가로지르는
+균열 한가운데, 글자 <b>뒤</b>에 앉혀 「균열에서 캐낸 결정」으로 읽히게 했다.
+로딩 퍼센트가 균열의 자람과 결정의 밝기를 같이 민다</td></tr>
+<tr><td>④ 성좌 · 채굴 빔</td><td>엠블럼에서 화면 네 귀퉁이 판독값까지 가는
+선을 잇는다(<code>hiConstellation</code>) — 귀퉁이 HUD 가 로고와 무관한
+장식이 아니라 <b>같은 리액터의 신호</b>로 읽힌다. 위에서 내려오는 발광
+기둥(<code>hiBeam</code>)이 채굴 빔이다</td></tr>
+</table>
+<p class="def">경계 상자 검산(오프라인 <code>node</code> 계산, 눈대중 아님) —
+<code>W=788,H=364</code> 에서 <code>LIGHT</code>(y 30~169.5) ·
+<code>SURVIVAL</code>(y 176.7~248, 앞 구간과 간격 7.2px) · 문구 줄(y
+255~269, 간격 18px) · 대기 줄(y 272~285, 간격 16px) — 네 구간이 전부
+양의 간격으로 떨어져 <b>겹침 0</b>임을 확인했다. 가로 폭도 LIGHT 471px ·
+SURVIVAL 397px 로 화면 폭의 90% 안에 든다.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="s-seam">이음매 검증</h2>
+<p class="def">⚠️ 루프 애니메이션은 위상 파생값을 따로 그리면 주기 끝과
+처음이 어긋나 이음매에서 툭 끊긴다(이 저장소가 같은 원인으로 네 번 반려된
+이력이 있다). 이 화면은 그 함정을 두 가지로 막는다:</p>
+<table class="st">
+<tr><th>원칙</th><th>이 파일에서</th></tr>
+<tr><td>모든 반복 요소는 <b>단일 시계 <code>t</code> 의 순수 함수</b>다 — 누적기·
+전 프레임과의 차이로 위상을 만들지 않는다</td>
+<td><code>u=(t%HIT)/HIT</code> 를 매 프레임 <code>t</code> 에서 새로 계산한다.
+저장해 뒀다가 누적하지 않는다</td></tr>
+<tr><td>회전 · 반짝임은 <code>t*속도</code> 를 각도/사인에 그대로 먹인다
+(원래 이음매가 없다)</td><td>레이더 스윕 · 궤도 점 · 깜빡임 전부</td></tr>
+<tr><td>「열림」처럼 필연적으로 리셋되는 값은 <b>구간 밖에서 0 으로 수렴</b>하게
+지어 u=0 과 u=1 을 같은 값(0)으로 만든다</td><td><code>hudOpenLoop</code> 의
+<code>line/fill/content</code> — u&lt;0.02 와 u&gt;0.97 이 전부 0</td></tr>
+<tr><td>실시간 루프와 고정 갈무리가 <b>같은 그리기 함수</b>를 쓴다</td>
+<td><code>hiPaintBoot(c,tAbs,W,H)</code> 하나 — 위쪽 실시간 데모와 아래 네 정지
+그림이 전부 이 함수를 절대시각만 바꿔 부른다. 둘이 각자 계산했다면 여기서
+먼저 갈라졌을 것이다</td></tr>
+</table>
+<p class="def">수치 검산 — <code>hudOpenLoop</code> 를 1ms 간격으로 6,400 스텝
+(=6.4초 한 바퀴) 돌려 <code>line/fill/content</code> 세 값의 프레임 간 도약을
+전부 재고, 이음매(u≈0 · u≈1)를 포함해 최대 도약이 스텝 하나치(≈0.00016)를
+넘지 않는지 오프라인 스크립트로 확인했다(브라우저 판정에 앞선 산수 검증 —
+결과는 이 작업의 검증 절에 남긴다).</p>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"hud.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-hud-intro.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

@@ -1,0 +1,101 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다(16장 전부 빠져 있었다). -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 행성 유니버스</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
+     2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-all">열여섯 한눈에</a><a href="#s-each">안별로 보기</a><a href="#s-proof">이펙트 얹기</a><a href="#s-mini">미니맵</a><a href="#s-num">밝기 실측</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 행성 유니버스</p>
+  <h1>바닥이 있으면 게임스러워진다</h1>
+  
+</header>
+
+<h2 id="s-all">열여섯 한눈에</h2>
+
+<div class="gridset"><div class="grid" id="p-bg"></div><div class="grid" id="pl-bg"></div></div>
+
+<h2 id="s-each">안별로 보기</h2>
+<h3>A · 금 간 흑암반</h3>
+
+<div class="grid" id="map2a"></div>
+<h3>B · 재의 바다</h3>
+
+<div class="grid" id="map2b"></div>
+<h3>C · 발광 이끼 평원</h3>
+
+<div class="grid" id="map2c"></div>
+
+<h3>경호 鏡湖</h3>
+
+<div class="grid" id="p1"></div>
+<h3>사구 砂丘</h3>
+
+<div class="grid" id="p2"></div>
+<h3>동공 洞空</h3>
+
+<div class="grid" id="p3"></div>
+<h3>협곡 峽谷</h3>
+
+<div class="grid" id="pl01"></div>
+<h3>결정지 結晶地</h3>
+
+<div class="grid" id="pl02"></div>
+<h3>폐허 廢墟</h3>
+
+<div class="grid" id="pl03"></div>
+<h3>용암지 熔岩地</h3>
+
+<div class="grid" id="pl04"></div>
+<h3>극지 極地</h3>
+
+<div class="grid" id="pl05"></div>
+<h3>산호초 珊瑚礁</h3>
+
+<div class="grid" id="pl06"></div>
+<h3>염호 鹽湖</h3>
+
+<div class="grid" id="pl07"></div>
+<h3>모래폭풍 沙嵐</h3>
+
+<div class="grid" id="pl08"></div>
+<h3>부유암 浮遊巖</h3>
+
+<div class="grid" id="pl09"></div>
+<h3>유기체 有機</h3>
+
+<div class="grid" id="pl10"></div>
+
+<h2 id="s-proof">이펙트 얹기</h2>
+
+<div class="gridset"><div class="grid" id="map2ref"></div><div class="grid" id="map2bg"></div><div class="grid" id="p-proof"></div><div class="grid" id="pl-proof"></div></div>
+
+<h2 id="s-mini">미니맵</h2>
+
+<div class="gridset"><div class="grid" id="map2mini"></div><div class="grid" id="p-mini"></div><div class="grid" id="pl-mini"></div></div>
+
+<h2 id="s-num">밝기 실측</h2>
+
+<div id="p-num"></div>
+<div id="pl-num"></div>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

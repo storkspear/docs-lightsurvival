@@ -1,0 +1,343 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다(16장 전부 빠져 있었다). -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 셀 VFX 시안</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
+     2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-starredo">성좌 재편</a><a href="#s-star">성좌 12(현행)</a><a href="#s-slot">로비 슬롯</a><a href="#s-unlock">해금</a><a href="#s-aff">특수 × 기본 상성</a><a href="#s-pickup">1회성 아이템</a><a href="#s-deck">덱 구성</a><a href="#s-gap">엔진과 어긋난 자리</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 셀 VFX 시안</p>
+  <h1>성좌 · 아이템 · 덱</h1>
+
+</header>
+
+<h2 id="s-starredo">성좌 재편 확정 — 스탯 강화와 안 겹치게(2026-08-25 사용자 결정)</h2>
+<p class="def">
+⭐⭐ <b>사용자 판정:</b> 「지금 성좌가 스탯 강화랑 겹치는 부분이 많아서 성좌의 경우
+성격을 바꿔야 한다」. 근거 — 상승 6 중 넷(사자 獅子·쌍둥이 雙子·황소 金牛·천칭 天秤)이
+3택 스탯 강화 카드의 8축(공격력·치명타 확률·치명타 피해·공격속도·방어력·체력·
+이동속도·주문력·몸 크기 중 수치 5축)과 같은 「+%」 형태라 카드와 성좌가 같은 일을
+두 번 한다. 아래 12종이 그 자리를 대신한다 — <b>수치는 확정된 것만 적는다.</b>
+</p>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:26px 0 8px">성좌의 성격 재정의 — 적용 지점이 다르다</h3>
+<p class="def">
+레벨업 카드(3택)와 메타(상점에서 사는 영구 축)는 <b>같은 통에서 합연산</b>된다 —
+<code>Stats.critRateLevel = critRate + metaCritRate * kMetaUnit</code> 처럼, 판
+안의 선택과 판 밖의 구매가 같은 자리에서 더해진다(`lib/sim/player/stats.dart`
+「합 연산 지점」). <b>성좌는 이 통에 세 번째로 끼는 것이 아니라, 성격 자체가
+다르다</b> — 사용자 표현으로 <b>「기본 스탯 자체에 증가분을 추가하는 아이템」</b>이다.
+</p>
+<p class="def">
+⚠️ 이 구분은 옛 성좌(사자·쌍둥이·황소·천칭)가 실제로 걸려 있던 방식과도 다르다.
+옛 성좌는 <code>Stats.damageMul</code>·<code>Stats.atkPeriodConMul</code>처럼
+<b>합연산 지점 밖에서 따로 곱하는 별도 필드</b>였다(`stats.dart` 주석: 「성좌
+배수는 amp 밖에서 따로 곱한다」) — 갑옷 버프(<code>armorSpeedMul</code>)·픽업
+버프(<code>buffSpeedMul</code>)와 같은 층이었던 것이다. 그 방식 자체가 「카드와
+다른 문으로 들어와 같은 결과(공격력 상승·이동 증가)를 또 낸다」는 겹침의 정체다.
+<b>새 재편이 말하는 「기본 스탯 자체」는 그 세 번째 문도 아니고, 그 별도 곱셈
+문도 아니다</b> — 3택·메타가 이미 합쳐지는 <b>바로 그 자리에, 세 번째 항으로
+얹히되 상한(0~5·0~99)의 적용을 받지 않는 값</b>을 뜻한다. 이 자리가 지금 엔진에
+있는지는 <a href="#s-gap">엔진과 어긋난 자리</a>에서 축마다 실측했다.
+</p>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#5AC8FF;margin:30px 0 8px">새 12종</h3>
+<table class="st">
+<tr><th>#</th><th>효과</th><th>분류</th><th>수치</th><th>이름</th><th>대응</th></tr>
+<tr><td>1</td><td>암흑물질 흡수 반경 증가</td><td>경제/시스템</td>
+  <td>미정<br><span style="color:#7E7E8C">(참고 — 기존 물병 +30%)</span></td>
+  <td>미정</td><td>기존 물병 寶瓶 유지</td></tr>
+<tr><td>2</td><td>경험치 증가</td><td>경제/시스템</td>
+  <td>미정<br><span style="color:#7E7E8C">(참고 — 기존 처녀 +10%)</span></td>
+  <td>미정</td><td>기존 처녀 處女 유지</td></tr>
+<tr><td>3</td><td>초당 회복률 — 회복 스킬 없이도 기본 패시브 회복</td><td>경제/시스템</td>
+  <td>미정<br><span style="color:#7E7E8C">(참고 — 기존 게 +0.2/s)</span></td>
+  <td>미정</td><td>기존 게 巨蟹 유지</td></tr>
+<tr><td>4</td><td>상태이상 지속시간 <b>감소</b>(피격 시)</td><td>경제/시스템</td>
+  <td>미정</td><td>미정</td>
+  <td><b>신설</b> — 기존 12종에 없던 방향. 아래 ⚠️ 참조</td></tr>
+<tr><td>5</td><td>상태이상 지속시간 <b>증가</b>(공격 시)</td><td>경제/시스템</td>
+  <td>미정<br><span style="color:#7E7E8C">(참고 — 기존 전갈 +30%)</span></td>
+  <td>미정</td><td>기존 전갈 天蠍이 이 방향에 해당(유지)</td></tr>
+<tr><td>6</td><td>치명타 확률 +10%</td><td><b>기본 스탯</b></td>
+  <td><b>확정 — +10%p</b></td><td>미정</td><td>신설 축(3택엔 있으나 성좌엔 없었다)</td></tr>
+<tr><td>7</td><td>이동속도 +10%</td><td><b>기본 스탯</b></td>
+  <td><b>확정 — +10%</b></td><td>미정</td><td>신설 축(3택엔 있으나 성좌엔 없었다)</td></tr>
+<tr><td>8</td><td>스킬 슬롯 +1</td><td>룰 변경</td>
+  <td><b>확정 — +1칸</b></td><td>미정</td><td>신설</td></tr>
+<tr><td>9</td><td>채굴 속도 증가</td><td>룰 변경</td>
+  <td>미정</td><td>미정</td><td>신설</td></tr>
+<tr><td>10</td><td>사망 시 1회 부활권</td><td>룰 변경</td>
+  <td><b>확정 — 런당 1회</b></td><td>미정</td><td>신설 — ⚠️ 설계 충돌 있음, <a href="#s-gap">엔진과 어긋난 자리</a> 참조</td></tr>
+<tr><td>11</td><td>보스 처치 시 드랍률 +10%</td><td>룰 변경</td>
+  <td><b>확정 — +10%p</b></td><td>미정</td><td>신설</td></tr>
+<tr><td>12</td><td><b>미정</b></td><td>룰 변경(후보 기준)</td>
+  <td>—</td><td>—</td><td>후보: 스킬 재사용 대기시간 전체 −X%. 아래 절 참조</td></tr>
+</table>
+<p class="sub">
+⚠️ 「이름」 칸은 전부 미정이다 — 사용자가 <b>효과만</b> 정했고 별자리 이름(사자·
+쌍둥이…)을 새 12종 중 무엇에 배정할지는 아직 정하지 않았다. 이 문서가 임의로
+짓지 않는다.
+</p>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF6A6A;margin:30px 0 8px">폐기 목록과 판정 근거</h3>
+<table class="st">
+<tr><th>옛 성좌</th><th>옛 효과</th><th>폐기 근거</th></tr>
+<tr><td>사자 獅子</td><td>공격력 +8%</td><td><b>스탯 강화와 겹침</b> — 3택 공격력 축과 같은 「+%」</td></tr>
+<tr><td>쌍둥이 雙子</td><td>공격속도 +10%</td><td><b>스탯 강화와 겹침</b> — 3택 공격속도(쿨감) 축과 같은 「+%」</td></tr>
+<tr><td>황소 金牛</td><td>최대 HP +15%</td><td><b>스탯 강화와 겹침</b> — 3택 체력 축과 같은 「+%」</td></tr>
+<tr><td>천칭 天秤</td><td>공격력 +18% · 최대 HP −20%</td><td><b>스탯 강화와 겹침</b> — 공격력·체력 두 축 모두 3택과 겹치고, 대가(HP 감소)까지 있어 셋 중 가장 무겁게 겹친다</td></tr>
+<tr><td>물고기 雙魚</td><td>픽업 등장률 +12%</td><td><b>시스템 미구현</b> — <code>wired: false</code>, <code>PickupPool</code> 자체가 없어 죽은 카드였다(`constellations.dart` 머리)</td></tr>
+<tr><td>궁수 弓手</td><td>8타마다 확정 치명 ×2</td><td>사용자가 폐기 목록에 넣었다. <span style="color:#FFD27A">⚠️ 개별 근거는 이 대화에서 명시되지 않았다</span> — 새 6번(치명타 확률 +10%)과 「치명타」테마가 겹치는 것으로 보이나, 확정 발동(카운터)과 확률 가산은 다른 기제라 이는 추정이다</td></tr>
+<tr><td>양 白羊</td><td>첫 3번의 레벨업은 4택</td><td>사용자가 폐기 목록에 넣었다. 새 11개 어디에도 대응 축이 없어(「고를 것을 늘린다」류 효과가 새 목록에 없다) 폐기가 확인된다</td></tr>
+<tr><td>염소 磨羯</td><td>적 +12% · 경험치 +20%</td><td>사용자가 폐기 목록에 넣었다. 새 11개 어디에도 대응 축이 없어(「적 수 증가로 위험-보상을 만든다」류 효과가 새 목록에 없다) 폐기가 확인된다</td></tr>
+</table>
+<p class="sub">
+유지 4(물병·처녀·게·전갈) + 신설/재정의 8(4~12 중 미정 제외 7 + 12번 자체) = 새
+12종. 폐기 8 + 유지 4 = 옛 12종. 산수가 맞아떨어진다 — 이 재편은 <b>대체</b>가
+아니라 <b>덜어내고 새로 채우는</b> 개편이다.
+</p>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#5A5A68;margin:30px 0 8px">12번째 — 미정</h3>
+<p class="def">
+아직 정해지지 않았다. 제안된 후보는 <b>「스킬 재사용 대기시간 전체 −X%」</b> 하나뿐이고
+사용자가 아직 답하지 않았다. 근거로 제시된 것: 3택 스탯 강화 8축(공격력·치명타
+확률·치명타 피해·공격속도·방어력·체력·이동속도, +형태축인 주문력·몸 크기) 어디에도
+<b>「쿨다운」이라는 이름의 축이 없어</b>, 이 후보가 채택되면 <b>런 중에는 못 얻고
+성좌로만 접근 가능한 유일한 축</b>이 된다는 것이다.
+</p>
+<p class="sub">
+⚠️ 확인 안 했다 — 이 게임에 「무기 공격 주기」(<code>Stats.atkPeriodMul</code>,
+3택의 공격속도 축이 여기로 합류한다) 말고 <b>스킬 고유의 재사용 대기시간</b>이
+별도 개념으로 존재하는지는 코드에서 못 찾았다. 후보가 뜻하는 「쿨다운」이 무기
+공격 주기와 같은 것이라면, 그 자리는 옛 쌍둥이(공격속도 성좌)가 이미 썼던
+<code>atkPeriodConMul</code>과 정확히 같은 자리라 <b>이 재편이 없애려는 겹침이
+12번째 자리에서 되살아날 위험</b>이 있다 — 채택 전에 확인이 필요하다.
+</p>
+
+<h3 style="font-size:11px;letter-spacing:.24em;color:#7CFFB0;margin:30px 0 8px">상승 6 / 게임 6 이분법 — 유지되지 않는다(제안, 미확정)</h3>
+<p class="def">
+옛 이분법은 <code>ConstellationClass</code> 정의상 「상승 = 몸에 붙는 수치」 ·
+「게임 = 판의 규칙」이었지만 실제 배정은 그 정의를 정확히 안 지켰다 — 회복(게
+巨蟹, 몸에 붙는 수치인데도 <b>게임</b>) · 상태이상 지속(전갈 天蠍, 판의 규칙에
+가까운데도 <b>상승</b>)이 이미 그 정의를 벗어나 있었다(`constellations.dart`
+enum 주석은 「시안이 문법으로 가른다 — 상승은 선으로 이어진 골격 + 따뜻한 금빛,
+게임은 흩어진 점 + 차가운 청빛」이라 <b>시각 문법이 우선이었지 기계적 분류가
+아니었다</b>).
+</p>
+<p class="def">
+새 12종에 옛 정의(「몸에 붙는 수치」)를 엄격히 적용하면 이렇게 갈린다 —
+<b>기본 스탯(6·7)</b>과 <b>회복(3)·상태이상 지속 둘(4·5)</b>은 몸에 붙는 축이라
+「상승」에 가깝고, <b>경제(1·2)와 룰 변경 넷(8~11)</b>은 판의 규칙이라 「게임」에
+가깝다 — 12번째 후보(쿨다운)까지 상승에 넣으면 <b>정확히 6 / 6</b>이 된다. 다만
+이것은 <b>이 문서의 제안</b>이지 사용자가 재분류를 확정한 것은 아니다 — 회복(3)을
+「게임」에서 「상승」으로 옮기는 것은 옛 배정을 뒤집는 판단이고, 12번째가 미정인
+채로는 6/6이 우연히 맞아떨어진 것인지도 알 수 없다. ⇒ <b>이분법 자체는 폐기하지
+않되, 재배정은 12번째가 정해진 뒤 사용자가 확정할 일로 남긴다.</b>
+</p>
+
+<h2 id="s-star">성좌 12(현행 — 엔진 그대로, 재편 미적용)</h2>
+<p class="sub">
+⚠️ 아래 격자는 <b>바뀌지 않았다</b> — 지금 <code>lib/data/constellations.dart</code>가
+들고 있는 옛 12종 그대로다(`docs/vfx/vfx.js`의 <code>STCON</code>도 그대로다).
+위 <a href="#s-starredo">성좌 재편 확정</a> 절이 <b>다음에 반영될 것</b>이고,
+이 절은 <b>지금 실제로 도는 것</b>이다 — 둘을 섞어 읽지 마라.
+</p>
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FFD27A;margin:26px 0 0">상승 성좌 6</h3>
+<div class="grid" id="star"></div>
+<h3 style="font-size:11px;letter-spacing:.24em;color:#5AC8FF;margin:26px 0 0">게임 성좌 6</h3>
+<div class="grid" id="stcon-game"></div>
+
+<h2 id="s-slot">로비 슬롯</h2>
+
+<div id="stcon-slots" style="padding:14px 0"></div>
+<div class="hud"><div class="rl" style="font-size:9.5px;letter-spacing:.22em;color:#5A5A68;margin-bottom:7px">성좌 3 / 3 — 판에 끼고 들어간 것</div>
+<div id="stcon-equip" style="display:flex;gap:6px"></div></div>
+
+<h2 id="s-unlock">해금</h2>
+
+<div id="stcon-unlock"></div>
+
+<h2 id="s-aff">특수 속성 × 기본 속성 상성</h2>
+
+<div id="stcon-aff"></div>
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:30px 0 8px">왜</h3>
+<div id="stcon-affwhy"></div>
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:30px 0 0">FVSYN 과 겹치는가</h3>
+
+<div id="stcon-affchk"></div>
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:30px 0 8px">상성이 눈에 보이는 순간 넷</h3>
+<div class="grid" id="stcon-affshow"></div>
+<h3 style="font-size:11px;letter-spacing:.24em;color:#FF8A3D;margin:30px 0 0">역방향</h3>
+
+<h2 id="s-pickup">1회성 아이템</h2>
+
+<div class="grid" id="pickup"></div>
+
+<h2 id="s-deck">덱 구성</h2>
+
+<div class="grid" id="deck"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2 id="s-gap">엔진과 어긋난 자리 — 성좌 재편이 시키는 일</h2>
+<p class="def">⚠️ 아래는 <b>실측</b>이다(2026-08-25, 코드를 읽고 적었다) — 새
+12종을 하나씩 지금 엔진과 대조했다. <b>확인 못 한 것은 「확인 안 했다」로
+적는다.</b> 이 표가 다루는 것은 「성좌 재편」 하나뿐이다 — 이 문서의 다른 절
+(로비 슬롯·해금·상성·1회성 아이템·덱 구성)은 옛 성좌 12종을 전제로 서 있고,
+이번 조사 대상이 아니다.</p>
+<table class="st">
+<tr><th>새 성좌(#)</th><th>지금 엔진</th><th>자리</th></tr>
+<tr><td>1 흡수 반경 증가</td>
+  <td style="color:#7CFFB0"><b>있다.</b> <code>Stats.absorbMul</code>에
+  <code>kConAqrAbsorbMul</code>(1.30)을 곱한다 — 그대로 유지되는 축이라 배선을
+  안 건드려도 된다. 수치를 다시 정하면 <code>constellation_tuning.dart</code>
+  상수 하나만 바뀐다</td>
+  <td><code>lib/sim/player/stats.dart</code>의 <code>absorbMul</code> ·
+  <code>lib/sim/progression/constellation_apply.dart</code>의 <code>kConAqrId</code></td></tr>
+<tr><td>2 경험치 증가</td>
+  <td style="color:#7CFFB0"><b>있다.</b> <code>LevelState.xpMul</code>에
+  <code>kConVirXpMul</code>을 곱한다 — 단일 곱셈 지점이라 염소(폐기)와 겹쳐도
+  안전했던 그 자리 그대로다</td>
+  <td>같은 두 파일의 <code>kConVirId</code></td></tr>
+<tr><td>3 초당 회복률</td>
+  <td style="color:#7CFFB0"><b>있다.</b> <code>Stats.regenPerSec</code>에
+  <code>kConCncRegenPerSec</code>을 더한다(덧셈 — 곱할 상대가 없어서), 소비는
+  <code>world_step.dart</code>의 <code>_regenTick</code> 한 곳</td>
+  <td>같은 두 파일의 <code>kConCncId</code></td></tr>
+<tr><td>4 상태이상 지속 <b>감소</b>(피격 시)</td>
+  <td style="color:#FFD27A"><b>배선은 없지만 훅은 거의 있다.</b>
+  <code>SimWorld.playerStatus</code>가 <code>w.enemies.status</code>와 <b>같은
+  <code>StatusPool</code> 클래스</b>라 자기 <code>durationMul</code> 필드를 이미
+  갖고 있다(기본 1, 지금은 아무도 안 건드린다). 19개 <code>applyXxx</code>
+  전부가 <code>durationSec *= durationMul</code>을 첫 줄로 갖는다
+  (`pools/status_apply.dart` 머리) — 즉 <code>w.playerStatus.durationMul *= X</code>
+  (X&lt;1) 한 줄이 전갈(#5)과 대칭인 배선이 된다. <b>지금은 그 case 가
+  <code>constellation_apply.dart</code>의 switch에 없다</b> — 전갈이 이미
+  실증한 자리를 반대 인스턴스에 재사용하면 되므로, 새 12종 중 가장 싸게
+  구현될 축으로 보인다</td>
+  <td><code>lib/sim/world.dart</code>의 <code>playerStatus</code> ·
+  <code>lib/sim/pools/status_apply.dart</code> ·
+  <code>lib/sim/progression/constellation_apply.dart</code>의 <code>kConScoId</code> 분기(반대 인스턴스가 참고 모델)</td></tr>
+<tr><td>5 상태이상 지속 <b>증가</b>(공격 시)</td>
+  <td style="color:#7CFFB0"><b>있다(그대로, 전갈).</b>
+  <code>w.enemies.status.durationMul *= kConScoStatusMul</code>(1.30)</td>
+  <td><code>lib/sim/progression/constellation_apply.dart</code>의 <code>kConScoId</code></td></tr>
+<tr><td>6 치명타 확률 +10%</td>
+  <td style="color:#FF6A6A"><b>없다.</b> <code>critChance(s) = kCritChancePerLevel
+  * s.critRateLevel</code>(`combat/damage.dart`)이 유일한 계산식이고,
+  <code>critRateLevel = critRate + metaCritRate * kMetaUnit</code>(3택 + 메타의
+  합연산 지점, `player/stats.dart`)가 그 유일한 입력이다. <b>「기본 스탯 자체에
+  더한다」를 하려면</b> 이 getter에 성좌 몫을 받는 세 번째 덧셈항을 새로 얹어야
+  한다 — 지금 그 필드가 없다. (참고: 옛 성좌 중 치명타를 다룬 것은 궁수뿐인데,
+  궁수는 <code>critMul</code>이 아니라 카운터 기반 확정 발동이라 이 축과
+  구조가 다르다)</td>
+  <td><code>lib/sim/combat/damage.dart</code>의 <code>critChance</code> ·
+  <code>lib/sim/player/stats.dart</code>의 <code>critRateLevel</code> getter</td></tr>
+<tr><td>7 이동속도 +10%</td>
+  <td style="color:#FF6A6A"><b>없다.</b> <code>Stats.speed</code> getter는
+  <code>kPlayerSpeedBase * (1 + kMoveSpeedPerLevel * moveSpeedLevel) *
+  armorSpeedMul * buffSpeedMul</code>이다. <code>moveSpeedLevel</code>이 3택+메타의
+  합연산 지점이고, <code>armorSpeedMul</code>(질풍 갑옷)·<code>buffSpeedMul</code>
+  (이속 픽업)은 그 괄호 <b>밖</b>에서 곱하는 별개 층이다. <b>「기본 스탯 자체」를
+  살리려면</b> 괄호 <b>안</b> 합연산 지점에 성좌 몫을 더해야 하는데, 그 자리가
+  없다 — 기존 두 필드(<code>armorSpeedMul</code>/<code>buffSpeedMul</code>)를
+  재사용하면 옛 사자·쌍둥이가 쓰던 「밖에서 곱하는」 성격 그대로 돌아가
+  <a href="#s-starredo">재정의 취지</a>가 무너진다</td>
+  <td><code>lib/sim/player/stats.dart</code>의 <code>speed</code>·<code>moveSpeedLevel</code> getter</td></tr>
+<tr><td>8 스킬 슬롯 +1</td>
+  <td style="color:#FFD27A"><b>없지만 구조가 단순하다.</b>
+  <code>RunState.openCap</code> getter 하나가 「지금 열린 무기 칸 수」의 유일한
+  답처다 — <code>kSlotCapStart</code>(3)에서 시작해 <code>kSlotOpenAt</code>의
+  레벨을 넘길 때마다 +1, <code>kSlotCapMax</code>(6)에서 멎는다. 성좌가 시작값에
+  +1을 더하려면 이 getter 안에 성좌 보정항 하나만 더하면 되고, 레벨 성장 로직과
+  안 부딪힌다</td>
+  <td><code>lib/sim/run_state.dart</code>의 <code>openCap</code> ·
+  <code>lib/sim/config/balance_offers.dart</code>의 <code>kSlotCapStart</code>/<code>kSlotCapMax</code></td></tr>
+<tr><td>9 채굴 속도 증가</td>
+  <td style="color:#FF6A6A"><b>없다.</b> 채굴 무기 3종(빔·포·탄)의 DPS가
+  <code>config/mining.dart</code>의 상수(<code>kMineBeamDamage</code>/<code>
+  kMineBeamPeriod</code>/<code>kMineShellDamage</code>/<code>kMineBombDamage</code>
+  등)로 고정돼 있고, <code>Stats</code>에는 채굴 관련 필드가 하나도 없다 —
+  가장 새로 만들어야 할 것이 많은 축이다</td>
+  <td><code>lib/sim/config/mining.dart</code> · <code>lib/sim/combat/mining_weapon.dart</code></td></tr>
+<tr><td>10 사망 시 1회 부활권</td>
+  <td style="color:#FF6A6A"><b>없다 — 그리고 설계 충돌이다.</b>
+  <code>lib/ads/rewarded_ads.dart</code>가 「부활은 광고 1회로만」을 이미
+  명시적으로 확정해 뒀고, 그 이유로 <b>「원작의 부활 아이템(Tirajisú)을
+  일부러 안 가져왔다 — 아이템으로도 생기면 광고 부활이 무의미해지고, 아이템을
+  약하게 하면 아이템이 쓰레기가 된다」</b>고 적혀 있다. 성좌로 부활권을 주는
+  것은 <b>엔진에 훅이 없다는 수준이 아니라 이미 서 있는 설계 결정과 정면으로
+  부딪힌다</b> — 구현 전에 이 결정을 뒤집을지부터 정해야 한다</td>
+  <td><code>lib/ads/rewarded_ads.dart</code> · <code>lib/ads/ad_policy.dart</code>의
+  <code>kReviveMaxPerRun</code></td></tr>
+<tr><td>11 보스 처치 시 드랍률 +10%</td>
+  <td style="color:#FF6A6A"><b>없다.</b> 보스가 남기는 것은 전부 확률이 아니라
+  고정 개수다 — 유니크 강화석은 <code>kStoneUniquePerBoss</code>(=1)로 <b>이미
+  확정 드랍</b>이고, 빛의 결정은 <code>kLumenPerBoss</code>(=3)로 고정 개수다.
+  「+10%」가 무엇에 걸리는지(확정 드랍에 얹는 추가 확률? 일반 처치 드랍
+  <code>kMatterDropChance</code>의 보스 한정 배수?) 자체가 미정이라 대응할
+  지점이 없다</td>
+  <td><code>lib/sim/config/balance_drops.dart</code>의 <code>kStoneUniquePerBoss</code>/<code>kLumenPerBoss</code> ·
+  <code>lib/sim/world_step_kill.dart</code></td></tr>
+<tr><td>12 미정(후보: 스킬 재사용 대기 −X%)</td>
+  <td style="color:#FFD27A"><b>확인 안 했다.</b> 이 게임에 「무기 공격
+  주기」(<code>Stats.atkPeriodMul</code>, 3택 공격속도 축이 여기로 합류) 말고
+  <b>스킬 고유의 재사용 대기시간</b>이 별도 개념으로 존재하는지 코드에서 못
+  찾았다. 후보가 뜻하는 「쿨다운」이 무기 공격 주기와 같은 것이라면, 그 자리는
+  옛 쌍둥이(폐기)가 쓰던 <code>Stats.atkPeriodConMul</code>과 정확히 같은
+  자리라 <b>이 재편이 없애려는 겹침이 12번째에서 되살아날 위험</b>이 있다</td>
+  <td><code>lib/sim/player/stats.dart</code>의 <code>atkPeriodMul</code>/<code>atkPeriodConMul</code></td></tr>
+<tr><td>「기본 스탯 자체에 더한다」의 구조 — 파생 getter인가 저장 필드인가</td>
+  <td style="color:#FFD27A"><b>축마다 다르다.</b> 치명타 확률(6)·이동속도(7)가
+  올라타는 <code>critRateLevel</code>/<code>moveSpeedLevel</code>/<code>speed</code>는
+  전부 <code>bodyRadius</code>와 같은 <b>순수 파생 getter</b>다 — 저장 필드가
+  아니라 매번 계산되므로, 성좌 몫을 더하려면 getter 정의를 고치는 것으로
+  끝난다(런 중 재적용 걱정이 없다). 반면 옛 황소·천칭이 다루던 최대 HP는
+  <code>PlayerState.hpMax</code>라는 <b>누적 저장 필드</b>라 성격이 다르지만
+  (`constellation_apply.dart`의 <code>_multiplyHpMax</code> 참조), 새 12종에는
+  체력 축이 없어 이 차이가 실무에 걸리지 않는다</td>
+  <td><code>lib/sim/player/stats.dart</code> 전체 · <code>lib/sim/progression/constellation_apply.dart</code>의 <code>_multiplyHpMax</code></td></tr>
+<tr><td>도감 영향 — 성좌 12칸</td>
+  <td style="color:#FFD27A"><b>자동으로 바뀌지만 형식 의존이 있다.</b> 도감은
+  9묶음 83칸(스킬 49·방어구 10·성좌 12·적 12) 중 성좌 12칸을
+  <code>kConstellationDefs</code>에서 통째로 파생한다(`codex_data.dart`의
+  <code>CodexSection('성좌', …)</code>) — id·이름·효과 문구·해금 조건·
+  <code>wired</code>(속 빈 칸 여부)가 전부 자동으로 새 12종을 따라간다. 다만
+  이름 표시 로직이 <code>d.name.split(' ').first</code>(한글)/<code>.last</code>
+  (한자 문양)로 「사자 獅子」 꼴을 전제한다 — <b>새 12종의 이름이 미정인
+  지금은 문제가 없지만, 이름을 정할 때 이 두 토큰 포맷(한글 라벨 + 한자 문양)을
+  같이 정해야</b> 도감이 안 깨진다. 해금 조건(스테이지×★, 「별 하나 = 성좌
+  하나」)도 12개 새 항목에 다시 배정해야 하는데 이 문서는 그 배정을 안
+  건드렸다 — <a href="#s-unlock">해금</a> 절도 옛 12종 전제 그대로다</td>
+  <td><code>lib/ui/codex_data.dart</code>의 <code>CodexSection('성좌', …)</code> ·
+  <code>lib/data/constellations.dart</code>의 <code>unlockStage</code>/<code>unlockStars</code></td></tr>
+<tr><td>이 문서의 다른 절(로비 슬롯·해금·상성·1회성 아이템·덱 구성)</td>
+  <td style="color:#FFD27A"><b>확인 안 했다 — 옛 12종 전제로 남아 있다.</b>
+  이번 조사는 <a href="#s-starredo">성좌 재편</a> 하나로 좁혔다. 「성좌 3/3」
+  슬롯 구조 자체(<code>kConstellationSlots</code>)는 그대로일 것으로 보이지만
+  각 절의 세부 문구·연출은 재편 반영 전이다</td>
+  <td><code>lib/sim/config/balance_offers.dart</code>의 <code>kConstellationSlots</code></td></tr>
+</table>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 시안을 고쳐도 새로고침에
+     반영이 안 돼 「왜 똑같지?」가 났다(2026-08-10). 매 로드마다 쿼리를 갈아
+     항상 새로 읽게 한다. file:// 에서도 쿼리 문자열은 먹는다(확인함). -->
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

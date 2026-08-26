@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. 목차를 `nav.js` 로 뗀 날 실제로
+     그랬고(2026-08-20), 그중 **진행판은 `vfx.js` 조차 안 불러** 그쪽
+     안전망도 안 닿았다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Light Survival — 관측소</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
+     2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<style>
+  /* ⚠️ `html,body`·`.wrap` 은 **공용 `vfx.css` 가 정한다.** 여기서 다시
+     정의하면 이 페이지만 다른 규약이 되어(가운데 900px 정렬) 옆 페이지와
+     너비가 어긋난다 — 실제로 그렇게 어긋나 있었다. 이 파일은 **이 페이지에만
+     있는 것**(판 틀·시안 캔버스)만 적는다. */
+  h1{font-size:15px;letter-spacing:.18em;color:#9C9CAC;font-weight:400;margin:0 0 4px;}
+  .sub{font-size:11.5px;color:#66667A;margin:0 0 22px;line-height:1.7;}
+  .sub b{color:#A6A6B8;font-weight:600;}
+  .note{font-size:11px;color:#66667A;margin:9px 0 16px;letter-spacing:.02em;}
+  .note b{color:#E8C879;font-weight:600;}
+  /* ⚠️ 여기 `transform:scale(.88)` 이 있었다 — 852 캔버스를 750 으로 눌러
+     그리게 만들어 배경이 뭉갰다. 백버퍼를 dpr 로 맞춰도 CSS 가 또 누르면
+     같은 일이 난다. ⇒ 눌러 그리지 말고 **폭을 내준다.** */
+  .scale{}
+  .phone{width:852px;height:393px;position:relative;margin:0 0 8px;
+    background:#0A0710;border:1px solid rgba(180,180,200,.16);
+    clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,13px 100%,0 calc(100% - 13px));
+    overflow:hidden;}
+  canvas{display:block;position:absolute;inset:0;}
+  .cap{font-size:11px;color:#8B8B99;letter-spacing:.14em;margin:0 0 6px;}
+  .row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;}
+  .tbl{border-collapse:collapse;font-size:11.5px;color:#A6A6B8;margin:0 0 16px;}
+  .tbl th,.tbl td{padding:4px 14px 4px 0;text-align:left;border-bottom:1px solid rgba(180,180,200,.14);}
+  .tbl th{color:#66667A;font-weight:400;}
+  h2{font-size:15px;letter-spacing:.18em;color:#9C9CAC;font-weight:400;margin:44px 0 4px;}
+  /* ── 출격 전 편성(팝업) — 이 장에만 있는 것. 그림 없이 HTML 로 그린다
+     (`vfx.js`·`chapter.js` 는 다른 손이 고치는 중이라 캔버스를 안 늘렸다). ── */
+  .lo{position:absolute;inset:0;background:radial-gradient(90% 130% at 18% -10%,#161226 0%,#0A0710 60%);}
+  .lo::before{content:"";position:absolute;inset:0;background:rgba(10,10,14,.66);} /* 어둠막 — 뒤는 스테이지 화면 */
+  .lop{position:absolute;inset:13px;display:flex;flex-direction:column;
+    background:#12121B;border:1px solid rgba(180,180,200,.22);
+    clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+    padding:10px 14px 12px;}
+  .loh{display:flex;justify-content:space-between;align-items:center;}
+  .loh b{font-size:11.5px;color:#EDEDF2;font-weight:600;letter-spacing:.04em;}
+  .loh i{font-style:normal;font-size:14px;color:#9494A2;padding:0 2px;}
+  .lot{display:flex;gap:6px;margin:8px 0 9px;}
+  .ltc{font-size:10.5px;color:#9494A2;padding:5px 11px;background:rgba(16,16,26,.62);
+    border:1px solid rgba(180,180,200,.13);
+    clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));}
+  .ltc.on{color:#FFD27A;font-weight:600;background:rgba(255,210,122,.10);border-color:rgba(255,210,122,.45);}
+  .lob{flex:1;display:flex;gap:12px;min-height:0;}
+  .loc{flex:1;position:relative;overflow:hidden;}
+  .loc::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18px; /* 격자는 제 안에서 스크롤 */
+    background:linear-gradient(180deg,rgba(18,18,27,0),#12121B);}
+  .log{width:150px;flex:0 0 150px;display:flex;flex-direction:column;
+    border-left:1px solid rgba(180,180,200,.10);padding-left:12px;}
+  .lgl{font-size:9px;letter-spacing:2px;color:#5A5A68;margin:2px 0 9px;}
+  .lgr{display:flex;gap:6px;align-items:baseline;font-size:10.5px;color:#EDEDF2;margin:0 0 6px;}
+  .lgr i{font-style:normal;font-size:9px;color:#FFD27A;}
+  .lgs{border-top:1px solid rgba(180,180,200,.10);margin:5px 0 8px;}
+  .lgi{font-size:9.5px;color:#9494A2;margin:0 0 5px;}
+  .lgi.dim{font-size:8.5px;color:#5A5A68;}
+  .lgo{margin-top:auto;text-align:center;padding:12px 0;
+    background:rgba(255,210,122,.12);border:1px solid rgba(255,210,122,.5);
+    clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+    font-size:13px;font-weight:700;letter-spacing:3px;color:#FFD27A;}
+  .lch{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 2px;}
+  .lch b{font-size:9px;letter-spacing:2px;color:#5A5A68;font-weight:400;}
+  .lch i{font-style:normal;font-size:10.5px;color:#9494A2;}
+  .sec{display:flex;align-items:center;gap:7px;margin:5px 0 4px;}
+  .sec .dt{width:6px;height:6px;border-radius:1px;background:var(--fc);}
+  .sec b{font-size:10px;font-weight:600;color:var(--fc);letter-spacing:.06em;}
+  .sec i{font-style:normal;font-size:9px;color:#5A5A68;}
+  .sg{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+  .sg.c6{grid-template-columns:repeat(6,1fr);}
+  /* 카드 한 장 — 왼쪽 세로줄(계열 색) + 아이콘 + 이름 + 아랫줄(계열/여는 곳) */
+  .sk{position:relative;display:flex;align-items:center;gap:8px;height:44px;padding:5px 6px 5px 11px;
+    background:rgba(16,16,26,.62);border:1px solid rgba(180,180,200,.13);
+    clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,7px 100%,0 calc(100% - 7px));}
+  .sk::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--fc);opacity:.6;}
+  .sk .ic{width:24px;height:24px;flex:0 0 24px;display:grid;place-items:center;}
+  .sk .tx{min-width:0;}
+  .sk .nm{display:block;font-size:10.5px;color:#C9C9D6;line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sk .fm{display:block;font-size:8px;letter-spacing:.08em;margin-top:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sk .fm b{color:var(--fc);font-weight:400;}
+  .sk .fm i{font-style:normal;color:#6E6E7C;letter-spacing:.02em;}
+  .sk.on{border-color:rgba(255,210,122,.55);background:rgba(255,210,122,.07);}
+  .sk.on .nm{color:#FFD27A;font-weight:600;}
+  .sk.on::after{content:"●";position:absolute;top:3px;right:6px;font-size:6px;color:#FFD27A;}
+  .sk.no{border-style:dashed;border-color:rgba(180,180,200,.12);background:rgba(12,12,18,.45);}
+  .sk.no::before{opacity:.22;}
+  .sk.no .ic{opacity:.35;filter:grayscale(1);}
+  .sk.no .nm{color:#5A5A68;}
+  .sk.no .fm b{opacity:.55;}
+  .sk.hu .ic{opacity:.5;} /* 성좌 전용 — 열렸는데 효과가 아직 없다(점선 아님) */
+  .sk.hu .nm{color:#6E6E7C;}
+  /* 아이콘 자리표시 도형 — 그림의 정본은 도감 시안이 갖는다 */
+  .gy{background:var(--fc);}
+  .g-d{width:13px;height:13px;transform:rotate(45deg);}
+  .g-o{width:14px;height:14px;border:2px solid var(--fc);border-radius:50%;background:none;}
+  .g-t{width:15px;height:13px;clip-path:polygon(50% 0,100% 100%,0 100%);}
+  .g-s{width:16px;height:16px;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);}
+  .g-h{width:15px;height:13px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);}
+  .g-v{width:15px;height:13px;clip-path:polygon(0 0,50% 45%,100% 0,100% 55%,50% 100%,0 55%);}
+  .g-b{width:14px;height:14px;background:repeating-linear-gradient(90deg,var(--fc) 0 3px,transparent 3px 6px);}
+  /* 문법 해부용 확대 카드 + 상태 견본 */
+  .sk.big{width:238px;height:88px;flex:0 0 auto;gap:13px;padding:10px 12px 10px 16px;}
+  .sk.big::before{width:4px;}
+  .sk.big .ic{width:40px;height:40px;flex-basis:40px;}
+  .sk.big .g-s{width:26px;height:26px;}
+  .sk.big .nm{font-size:16px;}
+  .sk.big .fm{font-size:11px;margin-top:4px;}
+  .stc{display:flex;flex-direction:column;gap:6px;width:172px;}
+  .stc .sk{width:172px;}
+  .stc p{margin:0;font-size:10.5px;color:#66667A;line-height:1.5;}
+  .stc p b{color:#A6A6B8;font-weight:600;}
+  .csl{display:grid;place-items:center;width:72px;height:30px;font-size:10px;color:#9494A2;
+    background:rgba(16,16,26,.62);border:1px solid rgba(180,180,200,.13);
+    clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));}
+  .csl.on{color:#FFD27A;border-color:rgba(255,210,122,.5);background:rgba(255,210,122,.08);}
+  .csl.no{border-style:dashed;color:#5A5A68;}
+  .sw{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px;}
+  /* ── 문·기본값(⑭~⑯) — 이 절에만 있는 것 ── */
+  .dkg{display:grid;grid-template-columns:repeat(10,20px);gap:4px;}
+  .dk{width:20px;height:20px;border:1px solid rgba(150,150,175,.22);}
+  .dk.f{background:rgba(255,255,255,.04);border-color:rgba(255,210,122,.40);position:relative;}
+  .dk.f::after{content:"";position:absolute;inset:5px;background:#FFD27A;opacity:.8;
+    clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);}
+  .door{outline:1px dashed rgba(90,200,255,.55);outline-offset:3px;}
+  /* 공용 버튼(회백) 견본 — 7부위의 정본은 UI 장 「버튼의 해부」, 여기는 창틀 자리만 */
+  .gbtn{display:inline-grid;place-items:center;height:52px;padding:0 30px;
+    background:linear-gradient(180deg,#272733 0 34%,#1E1E27 34% 70%,#15151C 70% 100%);
+    border:1px solid rgba(180,180,200,.30);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.20),inset 0 -3px 0 rgba(0,0,0,.45);
+    clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,11px 100%,0 calc(100% - 11px));
+    font-size:15px;font-weight:600;letter-spacing:.10em;color:#D6D6E2;}
+  /* 잠긴 출격 띠 — 테마 색을 안 입는다(색은 「갈 수 있다」의 신호) */
+  .sbar{height:32px;display:grid;place-items:center;margin:0 0 6px;max-width:604px;
+    background:linear-gradient(90deg,#14121A,#1A1820);border:1px solid rgba(255,210,122,.13);
+    clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+    font-size:12.5px;color:#9494A2;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-map">장 셋</a><a href="#s-pop">스테이지 팝업</a><a href="#s-loadout">출격 전 편성</a><a href="#s-doors">문 · 기본값</a><a href="#s-minetab">채굴 무기</a><a href="#s-slotsplit">슬롯 재편(25)</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+
+<h1 id="s-map">관측소 — 은하(장)를 고르고, 그 안의 스테이지로</h1>
+<p class="sub">
+  <b>은하를 누르면 그 장 안으로.</b> 장마다 스테이지 수가 다르다(아래 표).<br>
+  길의 순서는 <b>은하 형태가 아니라 뱀처럼 접힌 줄</b>로 고정한다 — 은하는 배경일 뿐이다.
+</p>
+
+<p class="note">⓪ <b>1뎁스 — 은하 지도</b> <span style="color:#4A4A58">(로비의 그 관측소.
+  <code style="color:#6E6E7C">gxDraw</code>·<code style="color:#6E6E7C">WGALAXY</code> 정본을 그대로 부른다)</span></p>
+<div class="scale"><div class="phone"><canvas id="c0" width="852" height="393"></canvas></div></div>
+
+<table class="tbl">
+  <thead><tr><th>장</th><th>스테이지</th><th>배경 은하</th></tr></thead>
+  <tbody>
+    <tr><td>1장</td><td>12</td><td>E3 타원</td></tr>
+    <tr><td>2장</td><td>8</td><td>S0 렌즈</td></tr>
+    <tr><td>3장</td><td>14</td><td>Sb 나선</td></tr>
+  </tbody>
+</table>
+
+<p class="note">① <b>1장</b></p>
+<div class="scale"><div class="phone"><canvas id="c1" width="852" height="393"></canvas></div></div>
+
+<p class="note">② <b>2장</b></p>
+<div class="scale"><div class="phone"><canvas id="c2" width="852" height="393"></canvas></div></div>
+
+<p class="note">③ <b>3장</b></p>
+<div class="scale"><div class="phone"><canvas id="c3" width="852" height="393"></canvas></div></div>
+
+<p class="sub" id="s-pop" style="margin-top:26px">
+  <b>스테이지를 누르면 팝업.</b> 왼쪽은 <b>편성 요약</b>, 오른쪽은 <b>장비 + 난이도</b> —
+  출격 버튼은 여기 하나뿐이다(지도 창틀에서는 뺐다).<br>
+  <b>난이도 색이 팝업 전체를 물들인다</b> — 빨강에서 누르는 출격과 하양에서 누르는 출격은 각오가 다르다.<br>
+  덱 요약(1 / 20 · 아이콘 스무 칸)과 그 줄의 「편집 ›」은 <b>편성으로 가는 문</b>이다 — 규약은 아래 ⑮.<br>
+  🔊 출격 버튼은 0.75초 게이지+소리 후 나간다 — <b>20분을 거는 결정</b>이라 손 뗄 한 박자를 준다.
+</p>
+<table class="tbl">
+  <thead><tr><th>난이도</th><th>색</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td>쉬움</td><td>초록</td><td>신호등의 「안전」</td></tr>
+    <tr><td>보통</td><td>하양</td><td>앵커=「기준」의 색(금빛은 이미 「지금」이 쓴다)</td></tr>
+    <tr><td>어려움</td><td>빨강</td><td>—</td></tr>
+    <tr><td>매우어려움</td><td>보라</td><td>★★ 필요</td></tr>
+  </tbody>
+</table>
+
+<p class="note">④ <b>쉬움</b></p>
+<div class="scale"><div class="phone"><canvas id="c4" width="852" height="393"></canvas></div></div>
+<p class="note">⑤ <b>보통</b></p>
+<div class="scale"><div class="phone"><canvas id="c5" width="852" height="393"></canvas></div></div>
+<p class="note">⑥ <b>어려움</b></p>
+<div class="scale"><div class="phone"><canvas id="c6" width="852" height="393"></canvas></div></div>
+<p class="note">⑦ <b>매우어려움</b></p>
+<div class="scale"><div class="phone"><canvas id="c7" width="852" height="393"></canvas></div></div>
+
+<table class="tbl">
+  <thead><tr><th>노드 상태</th><th>표현</th></tr></thead>
+  <tbody>
+    <tr><td>지나온 것</td><td>회백 채움 + ★</td></tr>
+    <tr><td style="color:#E8C879">지금</td><td style="color:#E8C879">금빛</td></tr>
+    <tr><td>열린 것</td><td>윤곽</td></tr>
+    <tr><td>잠긴 것</td><td>옅은 점</td></tr>
+  </tbody>
+</table>
+<p class="sub">
+  <b>색은 화면에 하나</b>라 금빛은 「지금」 하나뿐이다. 창틀은 바깥 지도와 <b>같은 문법</b> —
+  요약 한 줄 + 「편집 ›」(공용 버튼 · ⑮). 출격은 팝업이 맡는다.
+</p>
+
+<h2 id="s-loadout">출격 전 편성 — 「편집 ›」·덱 아이콘이 여는 곳</h2>
+<p class="sub">
+  실기에서 반려된 둘이 이 시안의 물음이다.<br>
+  ① <b>「아이콘만 떠서 어떤 스킬인지 모르겠다」</b> → 카드 한 칸에 <b>아이콘 · 이름 · 계열</b>이 같이 선다.<br>
+  ② <b>「일반은 미보유가 안 뜨고 마법은 다 눌린다」</b> → 한 규칙: <b>도감 전부가 뜨고, 미보유는
+  점선으로 잠긴다</b> — 일반공격·덱·성좌·궁극기·채굴 다섯 탭 공통. 숨는 카드는 없다
+  (채굴만은 셋 다 처음부터라 잠길 것이 없다 — ⑰).
+</p>
+
+<p class="note">⑧ <b>카드 한 장의 문법</b></p>
+<div class="row" style="align-items:center">
+  <div class="sk big" style="--fc:#96BEFF"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">낙광</span><span class="fm"><b>마법</b></span></span></div>
+  <table class="tbl" style="margin:0">
+    <thead><tr><th>자리</th><th>무엇</th><th>왜</th></tr></thead>
+    <tbody>
+      <tr><td>왼쪽 세로줄 + 아이콘</td><td>계열 색 · 스킬 도형</td><td>계열이 색으로 먼저 읽힌다</td></tr>
+      <tr><td>이름</td><td>스킬 이름 그대로</td><td>아이콘만으로는 무엇인지 모른다 — 반려 ①의 답</td></tr>
+      <tr><td>아랫줄</td><td>계열 이름 · 잠기면 여는 곳이 이어 붙는다</td><td>색을 못 읽어도 글자가 받친다</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="sub" style="margin-top:8px">칸 속 <b>도형은 자리표시</b>다 — 아이콘 그림의 정본은 도감 시안이
+  갖는다. 이 장이 정하는 것은 <b>칸</b>이다: 도형이 어떻게 생겼든 이름과 계열이 함께 선다.</p>
+
+<p class="note">⑨ <b>상태 셋 — 계열 불문 · 탭 불문 한 벌</b></p>
+<div class="row">
+  <div class="stc" style="--fc:#96BEFF">
+    <div class="sk"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">파문</span><span class="fm"><b>마법</b></span></span></div>
+    <p><b>보유</b> — 또렷. 누르면 담긴다</p>
+  </div>
+  <div class="stc" style="--fc:#96BEFF">
+    <div class="sk on"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">파문</span><span class="fm"><b>마법</b></span></span></div>
+    <p><b>고른 것</b> — 금빛 테 + 오른위 금점. 다시 누르면 뺀다</p>
+  </div>
+  <div class="stc" style="--fc:#96BEFF">
+    <div class="sk no"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">파문</span><span class="fm"><b>마법</b><i> · 상점에서</i></span></span></div>
+    <p><b>미보유</b> — 점선 · 흐림 · 여는 곳 한 줄. 눌러도 아무 일 없다</p>
+  </div>
+</div>
+<table class="tbl" style="margin-top:14px">
+  <thead><tr><th>상태</th><th>테</th><th>속</th><th>누르면</th></tr></thead>
+  <tbody>
+    <tr><td>보유</td><td>실선</td><td>또렷 · 아이콘 계열 색</td><td>담긴다 / 든다 / 낀다</td></tr>
+    <tr><td style="color:#E8C879">고른 것</td><td style="color:#E8C879">금빛 + 오른위 금점</td><td style="color:#E8C879">이름도 금빛</td><td>빠진다</td></tr>
+    <tr><td>미보유</td><td>점선</td><td>흐림 · 아이콘 잿빛 · 여는 곳 한 줄</td><td>아무 일도 없다</td></tr>
+    <tr><td>효과 미배선 (성좌만)</td><td>실선 — 점선 아님</td><td>흐림 · 여는 곳 없음</td><td>끼워진다</td></tr>
+  </tbody>
+</table>
+<p class="sub">금빛의 뜻은 탭이 정한다 — 덱에서는 「담긴 것」, 일반공격·궁극기·채굴에서는 「든 것 하나」,
+  성좌에서는 「낀 셋」. <b>모양은 다섯 탭이 같다.</b></p>
+
+<table class="tbl">
+  <thead><tr><th>계열</th><th>색</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td>일반</td><td><span class="sw" style="background:#FFD27A"></span>#FFD27A</td><td>스테이지 팝업(위 ④~⑦)과 같은 벌</td></tr>
+    <tr><td>보조</td><td><span class="sw" style="background:#DCA08C"></span>#DCA08C</td><td><b>여기서 신설</b> — 팝업 다섯에 없던 하나</td></tr>
+    <tr><td>마법</td><td><span class="sw" style="background:#96BEFF"></span>#96BEFF</td><td></td></tr>
+    <tr><td>방어</td><td><span class="sw" style="background:#A0DCC8"></span>#A0DCC8</td><td></td></tr>
+    <tr><td>회복</td><td><span class="sw" style="background:#C8A0DC"></span>#C8A0DC</td><td></td></tr>
+    <tr><td>버프</td><td><span class="sw" style="background:#DCC8A0"></span>#DCC8A0</td><td></td></tr>
+    <tr><td>궁극기</td><td><span class="sw" style="background:#FF9E5A"></span>#FF9E5A</td><td>계열 밖 — 판당 한 번의 격</td></tr>
+    <tr><td>채굴</td><td><span class="sw" style="background:#5FD9FF"></span>#5FD9FF</td><td>계열 밖 — 운석 장 4-1 의 그 찬 색 · 강제 슬롯 하나(⑰)</td></tr>
+  </tbody>
+</table>
+
+<p class="note">⑩ <b>일반공격 탭</b> <span style="color:#4A4A58">(하나만 든다 — 미보유도 자리에 서 있다)</span></p>
+<div class="scale"><div class="phone"><div class="lo"><div class="lop">
+  <div class="loh"><b>출격 전 편성</b><i>✕</i></div>
+  <div class="lot"><span class="ltc on">일반공격</span><span class="ltc">덱</span><span class="ltc">성좌</span><span class="ltc">궁극기</span><span class="ltc">채굴</span></div>
+  <div class="lob">
+    <div class="loc">
+      <div class="lch"><b>일반공격 — 판이 시작할 때부터 든다</b><i>하나</i></div>
+      <div style="--fc:#FFD27A">
+        <div class="sg" style="margin-top:5px">
+          <div class="sk on"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">빛파동</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-b"></span></span><span class="tx"><span class="nm">빛따발총</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-t"></span></span><span class="tx"><span class="nm">바람산탄총</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-t"></span></span><span class="tx"><span class="nm">화염방사</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-v"></span></span><span class="tx"><span class="nm">서릿발</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-d"></span></span><span class="tx"><span class="nm">서리결정</span><span class="fm"><b>일반</b><i> · 5-4 에서</i></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">순포</span><span class="fm"><b>일반</b><i> · 6-2 에서</i></span></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="log">
+      <div class="lgl">고른 것</div>
+      <div class="lgr"><i>●</i>일반공격 — 빛파동</div>
+      <div class="lgr"><i>●</i>덱 12 / 20</div>
+      <div class="lgr"><i>●</i>채굴 — 채굴빔</div>
+      <div class="lgs"></div>
+      <div class="lgi">성좌 2 / 3</div>
+      <div class="lgi">궁극기 — 개안</div>
+      <div class="lgi dim">둘은 출격을 안 막는다</div>
+      <div class="lgo">완 료</div>
+    </div>
+  </div>
+</div></div></div></div>
+<p class="sub">덱에서 금빛이던 빛파동·빛따발총도 <b>여기서는 무색</b>이다 — 이 탭의 금빛은 「든 것 하나」뿐.
+  오른쪽 「고른 것」 기둥은 <b>탭이 바뀌어도 그대로다.</b></p>
+
+<p class="note">⑪ <b>덱 탭</b> <span style="color:#4A4A58">(도감 전부 · 계열로 묶어 · 격자는 제 안에서 스크롤)</span></p>
+<div class="scale"><div class="phone"><div class="lo"><div class="lop">
+  <div class="loh"><b>출격 전 편성</b><i>✕</i></div>
+  <div class="lot"><span class="ltc">일반공격</span><span class="ltc on">덱</span><span class="ltc">성좌</span><span class="ltc">궁극기</span><span class="ltc">채굴</span></div>
+  <div class="lob">
+    <div class="loc">
+      <div class="lch"><b>덱 · 성흔 — 도감 전부가 선다</b><i>12 / 20</i></div>
+      <div style="--fc:#FFD27A">
+        <div class="sec"><span class="dt"></span><b>일반</b><i>덱에 3</i></div>
+        <div class="sg">
+          <div class="sk on"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">빛파동</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk on"><span class="ic"><span class="gy g-b"></span></span><span class="tx"><span class="nm">빛따발총</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk on"><span class="ic"><span class="gy g-t"></span></span><span class="tx"><span class="nm">바람산탄총</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-t"></span></span><span class="tx"><span class="nm">화염방사</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-v"></span></span><span class="tx"><span class="nm">서릿발</span><span class="fm"><b>일반</b></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-d"></span></span><span class="tx"><span class="nm">서리결정</span><span class="fm"><b>일반</b><i> · 5-4 에서</i></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">순포</span><span class="fm"><b>일반</b><i> · 6-2 에서</i></span></span></div>
+        </div>
+      </div>
+      <div style="--fc:#DCA08C">
+        <div class="sec"><span class="dt"></span><b>보조</b><i>덱에 2</i></div>
+        <div class="sg">
+          <div class="sk on"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">공전</span><span class="fm"><b>보조</b></span></span></div>
+          <div class="sk on"><span class="ic"><span class="gy g-t"></span></span><span class="tx"><span class="nm">유도탄</span><span class="fm"><b>보조</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-d"></span></span><span class="tx"><span class="nm">빛폭탄</span><span class="fm"><b>보조</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">바람원반</span><span class="fm"><b>보조</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-v"></span></span><span class="tx"><span class="nm">뇌광</span><span class="fm"><b>보조</b></span></span></div>
+        </div>
+      </div>
+      <div style="--fc:#96BEFF">
+        <div class="sec"><span class="dt"></span><b>마법</b><i>덱에 4</i></div>
+        <div class="sg">
+          <div class="sk on"><span class="ic"><span class="gy g-h"></span></span><span class="tx"><span class="nm">성역</span><span class="fm"><b>마법</b></span></span></div>
+          <div class="sk on"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">파문</span><span class="fm"><b>마법</b></span></span></div>
+          <div class="sk on"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">낙광</span><span class="fm"><b>마법</b></span></span></div>
+          <div class="sk on"><span class="ic"><span class="gy g-b"></span></span><span class="tx"><span class="nm">광주</span><span class="fm"><b>마법</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-d"></span></span><span class="tx"><span class="nm">극독</span><span class="fm"><b>마법</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-t"></span></span><span class="tx"><span class="nm">감염</span><span class="fm"><b>마법</b></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-v"></span></span><span class="tx"><span class="nm">공명</span><span class="fm"><b>마법</b><i> · 상점에서</i></span></span></div>
+        </div>
+      </div>
+      <div style="--fc:#A0DCC8">
+        <div class="sec"><span class="dt"></span><b>방어</b><i>덱에 1</i></div>
+        <div class="sg">
+          <div class="sk"><span class="ic"><span class="gy g-h"></span></span><span class="tx"><span class="nm">풍벽</span><span class="fm"><b>방어</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-v"></span></span><span class="tx"><span class="nm">역풍</span><span class="fm"><b>방어</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-d"></span></span><span class="tx"><span class="nm">빙벽</span><span class="fm"><b>방어</b></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">파동정지</span><span class="fm"><b>방어</b><i> · 상점에서</i></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-t"></span></span><span class="tx"><span class="nm">빙벽 · 바늘 숲</span><span class="fm"><b>방어</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-b"></span></span><span class="tx"><span class="nm">빙벽 · 모자이크 석벽</span><span class="fm"><b>방어</b></span></span></div>
+          <div class="sk on"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">결계</span><span class="fm"><b>방어</b></span></span></div>
+        </div>
+      </div>
+      <div style="--fc:#C8A0DC">
+        <div class="sec"><span class="dt"></span><b>회복</b><i>덱에 1</i></div>
+        <div class="sg">
+          <div class="sk on"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">맥박</span><span class="fm"><b>회복</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-d"></span></span><span class="tx"><span class="nm">저금</span><span class="fm"><b>회복</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-t"></span></span><span class="tx"><span class="nm">수확</span><span class="fm"><b>회복</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-h"></span></span><span class="tx"><span class="nm">공물</span><span class="fm"><b>회복</b></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-v"></span></span><span class="tx"><span class="nm">잔향 되감기</span><span class="fm"><b>회복</b><i> · 상점에서</i></span></span></div>
+        </div>
+      </div>
+      <div style="--fc:#DCC8A0">
+        <div class="sec"><span class="dt"></span><b>버프</b><i>덱에 1</i></div>
+        <div class="sg">
+          <div class="sk on"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">축복</span><span class="fm"><b>버프</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-h"></span></span><span class="tx"><span class="nm">성전</span><span class="fm"><b>버프</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">은총</span><span class="fm"><b>버프</b></span></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="log">
+      <div class="lgl">고른 것</div>
+      <div class="lgr"><i>●</i>일반공격 — 빛파동</div>
+      <div class="lgr"><i>●</i>덱 12 / 20</div>
+      <div class="lgr"><i>●</i>채굴 — 채굴빔</div>
+      <div class="lgs"></div>
+      <div class="lgi">성좌 2 / 3</div>
+      <div class="lgi">궁극기 — 개안</div>
+      <div class="lgi dim">둘은 출격을 안 막는다</div>
+      <div class="lgo">완 료</div>
+    </div>
+  </div>
+</div></div></div></div>
+<p class="sub">잠긴 카드가 계열 불문 <b>같은 점선</b>이다 — 순포(스테이지가 연다)와 서리결정·공명(상점이 연다)은
+  <b>여는 곳 한 줄만</b> 다르다. 계열 묶음 순서는 위 계열 색 표 그대로, 묶음 안은 도감 순.
+  아래로 잘린 것은 격자가 제 안에서 스크롤한다는 뜻이다(방어·회복·버프가 이어진다).</p>
+
+<p class="note">⑫ <b>성좌 탭</b> <span style="color:#4A4A58">(별이 연다 — 잠긴 것은 「몇 장 ★ 몇」을 적는다)</span></p>
+<div class="scale"><div class="phone"><div class="lo"><div class="lop">
+  <div class="loh"><b>출격 전 편성</b><i>✕</i></div>
+  <div class="lot"><span class="ltc">일반공격</span><span class="ltc">덱</span><span class="ltc on">성좌</span><span class="ltc">궁극기</span><span class="ltc">채굴</span></div>
+  <div class="lob">
+    <div class="loc">
+      <div class="lch"><b>성좌 3칸 — 별이 연다</b><i>2 / 3</i></div>
+      <div style="display:flex;gap:6px;margin:3px 0 4px">
+        <span class="csl on">사자</span><span class="csl on">물병</span><span class="csl no">빈 칸</span>
+      </div>
+      <div style="--fc:#FFD27A">
+        <div class="sec"><span class="dt"></span><b>상승</b><i>여섯</i></div>
+        <div class="sg c6">
+          <div class="sk on"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">사자 獅子</span><span class="fm"><b>공격력 +8%</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">쌍둥이 雙子</span><span class="fm"><b>공격속도 +10%</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">황소 金牛</span><span class="fm"><b>최대 HP +15%</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">궁수 弓手</span><span class="fm"><b>8타마다 확정 치명</b></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">전갈 天蠍</span><span class="fm"><i>2장 ★★★ 이 연다</i></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">천칭 天秤</span><span class="fm"><i>3장 ★★★ 이 연다</i></span></span></div>
+        </div>
+      </div>
+      <div style="--fc:#5AC8FF">
+        <div class="sec"><span class="dt"></span><b>게임</b><i>여섯</i></div>
+        <div class="sg c6">
+          <div class="sk on"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">물병 寶瓶</span><span class="fm"><b>흡수 반경 +30%</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">처녀 處女</span><span class="fm"><b>경험치 +10%</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">게 巨蟹</span><span class="fm"><b>초당 회복 +0.2</b></span></span></div>
+          <div class="sk hu"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">물고기 雙魚</span><span class="fm"><i>효과가 아직 없다</i></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">양 白羊</span><span class="fm"><i>3장 ★ 이 연다</i></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">염소 磨羯</span><span class="fm"><i>3장 ★★ 이 연다</i></span></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="log">
+      <div class="lgl">고른 것</div>
+      <div class="lgr"><i>●</i>일반공격 — 빛파동</div>
+      <div class="lgr"><i>●</i>덱 12 / 20</div>
+      <div class="lgr"><i>●</i>채굴 — 채굴빔</div>
+      <div class="lgs"></div>
+      <div class="lgi">성좌 2 / 3</div>
+      <div class="lgi">궁극기 — 개안</div>
+      <div class="lgi dim">둘은 출격을 안 막는다</div>
+      <div class="lgo">완 료</div>
+    </div>
+  </div>
+</div></div></div></div>
+<p class="sub">열린 것은 아랫줄이 <b>효과</b>, 잠긴 것은 <b>여는 곳</b>이다 — 이름은 잠겨도 남는다.
+  물고기는 열렸는데 효과가 아직 안 붙어 <b>실선인 채 흐리다</b> — 점선(미보유)과 다른 흐림.
+  상승 금빛 · 게임 하늘빛은 성좌 시안(성좌 · 아이템 · 덱 장)의 그 두 색이다.</p>
+
+<p class="note">⑬ <b>궁극기 탭</b> <span style="color:#4A4A58">(하나 — 비워 두고 나가도 된다)</span></p>
+<div class="scale"><div class="phone"><div class="lo"><div class="lop">
+  <div class="loh"><b>출격 전 편성</b><i>✕</i></div>
+  <div class="lot"><span class="ltc">일반공격</span><span class="ltc">덱</span><span class="ltc">성좌</span><span class="ltc on">궁극기</span><span class="ltc">채굴</span></div>
+  <div class="lob">
+    <div class="loc">
+      <div class="lch"><b>궁극기 1칸 — 판당 한 번, 눌러서 쓴다</b><i>비워도 된다</i></div>
+      <div style="--fc:#FF9E5A">
+        <div class="sg" style="margin-top:5px">
+          <div class="sk on"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">개안</span><span class="fm"><b>궁극기</b><i> · 처음부터</i></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">포화 砲火</span><span class="fm"><b>궁극기</b><i> · 상점 600</i></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-d"></span></span><span class="tx"><span class="nm">인력 引力</span><span class="fm"><b>궁극기</b><i> · 상점 900</i></span></span></div>
+          <div class="sk no"><span class="ic"><span class="gy g-h"></span></span><span class="tx"><span class="nm">정적 靜寂</span><span class="fm"><b>궁극기</b><i> · 상점 1200</i></span></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="log">
+      <div class="lgl">고른 것</div>
+      <div class="lgr"><i>●</i>일반공격 — 빛파동</div>
+      <div class="lgr"><i>●</i>덱 12 / 20</div>
+      <div class="lgr"><i>●</i>채굴 — 채굴빔</div>
+      <div class="lgs"></div>
+      <div class="lgi">성좌 2 / 3</div>
+      <div class="lgi">궁극기 — 개안</div>
+      <div class="lgi dim">둘은 출격을 안 막는다</div>
+      <div class="lgo">완 료</div>
+    </div>
+  </div>
+</div></div></div></div>
+<p class="sub">여기서도 같은 벌이다 — 미보유 셋은 점선에 <b>여는 곳(상점 · 값)</b>이 적혀 있다.
+  금빛 개안을 다시 누르면 빈 채가 되고, 빈 채로도 완료는 눌린다.</p>
+
+<p class="sub" id="s-doors" style="margin-top:34px">
+  실기에서 막힌 둘이 아래 세 규칙의 물음이다 (2026-08-21).<br>
+  ① <b>「레벨 1인데 왜 내가 고르나」</b> → 고를 것이 하나뿐이면 <b>이미 골라져 있다</b> — ⑭.<br>
+  ② <b>「지금은 출격 페이지에서도 못 세팅해」</b> → 출격 직전 화면(스테이지 팝업) <b>안에</b>
+  편성으로 가는 문이 선다 — ⑮. 그래도 비면 무엇이 말하는지 — ⑯.
+</p>
+
+<p class="note">⑭ <b>기본 선택 — 고를 것이 하나뿐이면 이미 골라져 있다</b>
+  <span style="color:#4A4A58">(일반공격은 1칸이라 첫 판엔 고를 것이 없다 — 자동이 곧 답)</span></p>
+<div class="row">
+  <div style="width:238px;--fc:#FFD27A">
+    <div class="lch"><b>일반공격 — 첫 판</b><i>하나</i></div>
+    <div class="sg" style="grid-template-columns:repeat(2,1fr);margin-top:5px">
+      <div class="sk on"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">빛파동</span><span class="fm"><b>일반</b></span></span></div>
+      <div class="sk no"><span class="ic"><span class="gy g-b"></span></span><span class="tx"><span class="nm">빛따발총</span><span class="fm"><b>일반</b><i> · 상점에서</i></span></span></div>
+      <div class="sk no"><span class="ic"><span class="gy g-t"></span></span><span class="tx"><span class="nm">바람산탄총</span><span class="fm"><b>일반</b><i> · 상점에서</i></span></span></div>
+      <div class="sk no"><span class="ic"><span class="gy g-v"></span></span><span class="tx"><span class="nm">서릿발</span><span class="fm"><b>일반</b><i> · 상점에서</i></span></span></div>
+    </div>
+  </div>
+  <div class="log" style="height:168px">
+    <div class="lgl">고른 것</div>
+    <div class="lgr"><i>●</i>일반공격 — 빛파동</div>
+    <div class="lgr"><i>●</i>덱 6 / 20</div>
+    <div class="lgr"><i>●</i>채굴 — 채굴빔</div>
+    <div class="lgs"></div>
+    <div class="lgi">성좌 0 / 3</div>
+    <div class="lgi">궁극기 — 없음</div>
+    <div class="lgo">완 료</div>
+  </div>
+</div>
+<p class="sub" style="margin-top:8px"><b>첫 판 — 손대기 전인데 이미 나갈 수 있다.</b>
+  가진 것을 손으로 다시 누르게 하지 않는다: 자동이 채우고, 고치고 싶은 사람만 연다.
+  <b style="color:#FFD27A">첫 판의 덱은 여섯 장이다</b> — 갓 깐 저장본이
+  <b>계열마다 기초 한 장씩</b>을 들고 시작하기 때문이고(⑭-c), 남은 열네 칸은 상점에서 사면서 찬다.</p>
+<table class="tbl">
+  <thead><tr><th>칸</th><th>비어 있으면 (= 아직 안 정함)</th><th>첫 판의 결과</th></tr></thead>
+  <tbody>
+    <tr><td>일반공격</td><td>보유 중 <b>도감 순 첫째</b>가 골라진다</td><td>빛파동 — 하나뿐이라 곧 그것</td></tr>
+    <tr><td>덱</td><td><b>보유한 것</b>이 깔린다 — 기준 덱에 든 것을 먼저, 남은 칸은 도감 순으로</td><td>6 / 20 — 시작 여섯</td></tr>
+    <tr><td>채굴</td><td><b>목록 순 첫째 = 빔</b>이 골라진다 — 강제 슬롯이라 비울 수 없다(⑰)</td><td>채굴빔</td></tr>
+    <tr><td>성좌 · 궁극기</td><td>자동 없음 — 안 껴도 출격을 안 막는다</td><td>빈 채</td></tr>
+  </tbody>
+</table>
+<table class="tbl">
+  <thead><tr><th>규칙</th><th>왜</th></tr></thead>
+  <tbody>
+    <tr><td>채우는 때는 <b>저장본을 연 직후 한 번</b></td>
+      <td>출격 직전에만 채우면 팝업·창틀은 계속 「없음」을 말한다 — 「이미 골라져 있다」는 화면에 보여야 하는 규칙이다</td></tr>
+    <tr><td>이미 정한 칸(안 빈 칸)은 <b>안 덮는다</b></td>
+      <td>지난 판 편성이 그대로 뜬다 — 자동은 빈 칸의 것이다</td></tr>
+    <tr><td>덱 기본값은 <b>보유한 것</b>이다 · 기준 덱은 <b>차례</b>일 뿐</td>
+      <td><b style="color:#FFD27A">2026-08-21 판정이 앞의 규칙을 뒤집었다.</b> 옛 규칙은
+      「보유분이 아니라 기준 덱」이었고 근거는 「사다리를 잰 판이 곧 나가는 판이어야 한다」였다 —
+      그런데 그러면 <b>첫 판의 덱 20장 중 19장이 미보유인데 그대로 3택에 뜬다</b>.
+      상점이 플레이에 사실상 영향이 없어진다.<br>
+      옛 근거는 시뮬이 보유를 모른다는 전제 위에 서 있었는데, 그 전제가 없어졌다 —
+      이제 보유가 판으로 들어간다(<code>RunConfig.owned</code>). 사다리를 재는 자는
+      하네스가 계속 기준 덱으로 들고 있고, 그 앵커의 뜻이 <b>「기준 덱을 전부 보유한
+      플레이어」</b>로 한 절 늘었을 뿐이다</td></tr>
+    <tr><td>덱에 든 <b>미보유는 걷힌다</b> (열 때마다)</td>
+      <td>안 걷으면 편성 화면은 「20 / 20」인데 3택엔 하나만 뜨는 <b>화면이 거짓말하는</b> 상태가
+      된다. 옛 저장본(08-18~08-21)이 정확히 그 상태로 저장돼 있다</td></tr>
+    <tr><td>새로 산 성흔은 자동으로 안 담긴다</td>
+      <td>안 빈 덱 = 「정한 것」. 스스로 뺀 것을 자동이 도로 담으면 정한 뜻이 사라진다</td></tr>
+    <tr><td>덱을 다 비우고 닫으면 다음에 저장본을 열 때 <b>보유한 것으로</b> 다시 찬다</td>
+      <td>빈 덱 = 「아직 안 정함」 — 0장은 「고르는 중」이 아니라 「기본으로 돌린다」로 읽는다</td></tr>
+  </tbody>
+</table>
+
+<p class="note">⑭-b <b>보유가 칸을 연다 — 상점 · 덱 · 3택을 잇는 한 줄</b>
+  <span style="color:#4A4A58">(2026-08-21 사용자 판정 셋. 그전까지 셋이 서로 안 닿아 상점이 장식이었다)</span></p>
+<p class="sub" style="margin-top:6px;font-size:12px;color:#CED0E0">
+  <b style="color:#FFD27A">상점에서 산다 &nbsp;→&nbsp; 그 계열 칸이 열린다 &nbsp;→&nbsp; 3택에 뜬다</b></p>
+<table class="tbl">
+  <thead><tr><th>규칙</th><th>무엇을 한다</th><th>왜</th></tr></thead>
+  <tbody>
+    <tr><td>① <b>보유한 것만 3택에 뜬다</b></td>
+      <td>산 적 없는 스킬은 새 카드로 안 나온다. 첫 화면(하드코딩)도 예외가 아니다 —
+        낼 새 무기가 없으면 그 자리를 <b>방어구</b>가 받는다</td>
+      <td>덱만 보던 옛 코드는 상점을 우회했다. 카드를 좁히는 문이 <b>한 곳</b>이라
+        (<code>_newWeaponOfferable</code>) 예외가 생길 자리가 없다</td></tr>
+    <tr><td>③ <b>보유가 0인 계열은 칸을 안 연다</b></td>
+      <td>레벨 10·20·30·40·50·60 의 때가 와도, 그 계열을 하나도 안 샀으면 <b>0칸</b>이다.
+        하나 사면 그때 시작 칸까지 통째로 열린다</td>
+      <td>열어 봐야 채울 카드가 없으면 「비었는데 왜 안 채워지지」인 칸이 된다.
+        ⚠️ <b>정원 배열은 안 줄어든다</b> — 여는 것은 런 중의 칸 수이지 배열 크기가 아니다</td></tr>
+    <tr><td>② <b>없으면 100% 뜬다</b> — 단 <b>계열마다 한 번</b></td>
+      <td>칸이 <b>열려 있는데</b> 그 계열이 0개면, 다음 3택 중 <b>1칸</b>을 그 계열로 확정한다.
+        계열은 확정이고 어느 장인지는 추첨이다. <b>한 번 띄우면 그 계열은 보통 추첨으로
+        돌아간다</b>(집었든 안 집었든)</td>
+      <td>Death Must Die 의 「공격 축복 미보유 → 1칸 100% 확정」의 우리 판본.
+        자리는 <b>넓히기 슬롯(2번)</b>을 좁혀 쓴다 — 넷째 칸을 만들면 「3장 보장」이
+        조용히 「4장 보장」이 된다.<br>
+        <b style="color:#FFD27A">「한 번」이 없으면 방어구가 사라진다</b> — 첫 판본은 조건이
+        서는 동안 계속 걸어 넓히기 자리를 통째로 먹었고, 그 자리가 원래 「새 무기 <b>또는
+        새 방어구</b>」 반반이라 밴드가 스1 60.0 → 36.5% 로 내려앉았다(도달 전 사망
+        18 → 51% · 받은 피해 중 탄 24 → 49%). 2026-08-21 사용자 판정으로 되돌렸다</td></tr>
+  </tbody>
+</table>
+<p class="sub"><b>②와 ③은 안 부딪힌다.</b> ③이 「보유 0 = 칸 0」으로 접으므로, ②의 「칸이
+  열렸는데 0개」는 <b>보유는 있는데 아직 안 뽑은 계열</b>에만 선다 — 살 수 없는 것을 100% 로
+  권하는 화면이 물리적으로 안 생긴다.</p>
+<p class="note">⑭-c <b>시작 보유 — 여섯 계열 각 1종</b>
+  <span style="color:#4A4A58">(2026-08-21. 그전엔 빛파동 하나였고, 그 판은 200판 전멸했다)</span></p>
+<table class="tbl">
+  <thead><tr><th>계열</th><th>시작 스킬</th><th>왜 그것인가</th></tr></thead>
+  <tbody>
+    <tr><td>일반</td><td><b>빛파동</b></td><td rowspan="6">규칙 하나로 도감에서 접는다 —
+      <b>계열마다 도감 순 첫째</b>. 손으로 여섯을 적으면 도감과 갈리는 세 번째 목록이
+      생긴다(<code>skill_tag.dart</code> 의 「두 번째 목록을 만들지 않는다」).<br><br>
+      ⚠️⚠️ <b>이 표는 2026-08-21·22 두 판정에 뒤진 상태다.</b> ① 시작 보유가
+      「여섯 계열 각 1종」에서 <b>「무속성 고유 6 + 공유 계열 첫째 2 = 여덟」</b>로
+      바뀌었고(<code>store/starting_skills.dart</code>), ② 고르는 자에서 <b>등급이
+      빠졌다</b> — 등급이 「화려함」이 된 뒤로는 등급이 「초보가 배우기 쉬운가」를
+      한 글자도 안 말한다. 지금 자는 <b>도감 순 첫째</b> 하나뿐이고 결과는
+      그대로 <b>맥박 · 축복</b>이다.<br>
+      <b>도감 순 첫째</b>인 이유: 이 레포가 이미 그 손을 쓴다 — 시작 무기도
+      「보유 중 도감 순 첫째」로 고르고, 빈 덱 칸도 도감 순으로 찬다</td></tr>
+    <tr><td>보조</td><td><b>공전</b></td></tr>
+    <tr><td>마법</td><td><b>성역</b></td></tr>
+    <tr><td>방어</td><td><b>빙벽</b></td></tr>
+    <tr><td>회복</td><td><b>맥박</b></td></tr>
+    <tr><td>버프</td><td><b>축복</b></td></tr>
+  </tbody>
+</table>
+<p class="sub"><b>「6종 무료」와 다르다.</b> 늘어난 것은 <b>보유</b>뿐이고
+  <b>덱 정원 20 · 계열 정원 11 · 시작 칸 5</b>는 한 칸도 안 건드렸다 — 예전에 「계열마다
+  하나씩 6종 무료」가 시작 정원 5칸과 부딪혀 불가능했던 그 충돌이 여기선 없다.
+  여섯 계열의 <b>문이 열린 채</b> 시작할 뿐, 그 안에서 무엇을 언제 집을지는 여전히 3택의 물음이다.</p>
+<p class="sub"><b>③이 실게임에서는 잠잠해진다.</b> 저장본은 시작 여섯을 <b>뺏을 수 없어</b>
+  (<code>Progress.fromJson</code> 이 기본값 위에 얹는다) 여섯 계열이 늘 열린다 ⇒ 「보유 0인 계열」은
+  이제 하네스·테스트에서만 서는 상태다. 규칙은 <b>불변식으로 남는다</b> — 나중에 기초가 없는
+  계열(오라·마법진)에 정원이 생기면 그때 다시 산다.<br>
+  ⚠️ 그래서 장착 HUD 의 「0 / 0」 빈 랙도 <b>보조·회복·버프 셋</b>으로 줄었다(그 셋은 보유가
+  아니라 <b>레벨 개방</b>이 L10·L20·L30 에 여는 칸이라, 원래부터 그랬다).
+  시안에 「잠김」 그림이 없으므로 <b>새로 만들지 않았다.</b></p>
+<p class="sub">⚠️ <b>상점 등급 문과 한 곳에서 만난다.</b> 그 문은 「그 계열의 아랫 등급을 <b>다</b>
+  사야 윗 등급이 열린다」라 기초 한 장으로는 변주가 안 열린다 — <b>버프만 예외</b>다(기초가
+  축복 하나뿐이라 그 하나가 곧 「다」). 규칙 위반이 아니라 「기초가 1종인 계열」의 귀결이고,
+  등급표에서 버프 기초가 둘이 되면 저절로 사라진다.</p>
+
+<p class="note">⑮ <b>들어가는 문 — 출격 직전 화면에 문이 있다</b>
+  <span style="color:#4A4A58">(창틀의 11.5px 글자는 버튼으로 안 읽혀 실기에서 못 찾았다)</span></p>
+<div class="row">
+  <div style="width:330px;background:#0A0710;border:1px solid rgba(180,180,200,.22);padding:12px 16px 16px;
+    clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))">
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <span style="font-size:9px;letter-spacing:2px;color:#5E5E6C">들 고  가 는  것</span>
+      <span class="door" style="font-size:11.5px;color:#CED0E0">편집 ›</span>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#CED0E0;margin:8px 0 5px">16 / 20
+      <span style="font-size:9.5px;color:#5E5E6C;font-weight:400;margin-left:8px">빈 칸 4</span></div>
+    <div class="dkg door"><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk f"></span><span class="dk"></span><span class="dk"></span><span class="dk"></span><span class="dk"></span></div>
+    <p style="margin:11px 0 0;font-size:9.5px;color:#5AC8FF">파랑 점선 = 문. 스테이지 팝업(④~⑦)의 「들 고 가 는 것」 칸 그대로다</p>
+  </div>
+  <div>
+    <div class="cap">창틀의 문 — 공용 버튼(회백)</div>
+    <span class="gbtn">편집 ›</span>
+  </div>
+</div>
+<table class="tbl" style="margin-top:14px">
+  <thead><tr><th>문</th><th>자리</th><th>누르면</th></tr></thead>
+  <tbody>
+    <tr><td>덱 아이콘 스무 칸</td><td>스테이지 팝업 · 1 / 20 요약 격자 — <b>빈 칸도 눌린다</b></td><td>출격 전 편성 · <b>덱 탭</b></td></tr>
+    <tr><td>「편집 ›」 (팝업)</td><td>같은 줄의 오른끝 — 격자가 문인 걸 모르는 사람의 글자 문</td><td>같은 곳 · 덱 탭</td></tr>
+    <tr><td>「편집 ›」 (창틀)</td><td>관측소 하단 창틀 — <b>공용 버튼(회백)</b>. 7부위의 정본은 UI 장 「버튼의 해부」</td><td>같은 곳 · 덱 탭</td></tr>
+  </tbody>
+</table>
+<p class="sub">
+  규칙 하나 — <b>누른 자리가 첫 탭이다.</b> 셋 다 덱 요약이라 덱 탭으로 열고, 다른 탭은 안의 탭 넷으로 오간다.<br>
+  편성 팝업은 스테이지 팝업 <b>위에</b> 얹힌다 — 완료·✕로 닫으면 <b>스테이지 팝업으로 돌아온다</b>
+  (고른 장·난이도 그대로, 요약은 새 값). 「팝업 안에서 또 팝업」을 막던 옛 판정의 근거는
+  「되돌아올 자리를 못 찾는다」였다 — 얹힌 것은 닫으면 제자리라, 그 걱정이 여기엔 없다.
+</p>
+
+<p class="note">⑯ <b>비어 있을 때 — 출격 띠가 무엇을 말하나</b></p>
+<div style="max-width:604px">
+  <div class="sbar">일반공격을 고르세요</div>
+  <div class="sbar">덱을 한 장 이상 담으세요</div>
+</div>
+<table class="tbl" style="margin-top:10px">
+  <thead><tr><th>상태</th><th>출격 띠</th><th>문</th></tr></thead>
+  <tbody>
+    <tr><td>일반공격 없음</td><td>잿빛 잠김 · 「일반공격을 고르세요」 — 일반공격이 먼저다</td><td>편집 › · 덱 아이콘 그대로 열린다</td></tr>
+    <tr><td>덱 0장</td><td>잿빛 잠김 · 「덱을 한 장 이상 담으세요」</td><td>빈 칸 스무 개도 전부 문이다</td></tr>
+  </tbody>
+</table>
+<p class="sub">
+  잠긴 띠는 테마 색을 안 입는다 — 색은 「갈 수 있다」의 신호라, 못 가는 상태에 칠하면 거짓말이 된다.<br>
+  기본 선택(⑭) 뒤엔 이 화면은 <b>스스로 비운 사람만</b> 본다 — 첫 판은 이미 채워져 있다.
+  0장을 그래도 막는 이유: 빈 덱은 시뮬이 「안 좁힌다」로 접는다(v1 저장본 호환) —
+  0을 허용하면 덜 가진 사람이 3택 후보를 <b>더 넓게</b> 보는 역전이 된다.
+</p>
+
+<h2 id="s-minetab">채굴 무기 — 강제 슬롯 하나 · 비울 수 없다</h2>
+<p class="sub">
+  빔·포·탄(운석 장 4-1)이 엔진에 서고도 <b>고르는 문이 없었다</b> — 빔 고정이라 포·탄이
+  판에 한 번도 안 나왔다. 문은 편성 팝업의 <b>다섯째 탭</b>이다 — ⑩~⑬의 탭 줄에 「채굴」이 는다.<br>
+  <b>일반공격과 같은 결</b>(하나만 든다 · 기본이 채워져 있다 — ⑭)에 하나 더 세다:
+  강제 슬롯이라 <b>비울 수 없다</b> — 고른 것을 다시 눌러도 그대로다.
+</p>
+
+<p class="note">⑰ <b>채굴 탭</b> <span style="color:#4A4A58">(하나만 든다 — 비울 수 없다 · 셋 다 처음부터라 잠긴 카드가 없다)</span></p>
+<div class="scale"><div class="phone"><div class="lo"><div class="lop">
+  <div class="loh"><b>출격 전 편성</b><i>✕</i></div>
+  <div class="lot"><span class="ltc">일반공격</span><span class="ltc">덱</span><span class="ltc">성좌</span><span class="ltc">궁극기</span><span class="ltc on">채굴</span></div>
+  <div class="lob">
+    <div class="loc">
+      <div class="lch"><b>채굴 — 운석만 때린다 · 적을 안 때린다</b><i>하나 · 비울 수 없다</i></div>
+      <div style="--fc:#5FD9FF">
+        <div class="sg" style="margin-top:5px">
+          <div class="sk on"><span class="ic"><span class="gy g-b"></span></span><span class="tx"><span class="nm">채굴빔</span><span class="fm"><b>이어진다</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-o"></span></span><span class="tx"><span class="nm">채굴포</span><span class="fm"><b>한 발씩</b></span></span></div>
+          <div class="sk"><span class="ic"><span class="gy g-s"></span></span><span class="tx"><span class="nm">채굴탄</span><span class="fm"><b>뭉친 광맥을 한 번에</b></span></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="log">
+      <div class="lgl">고른 것</div>
+      <div class="lgr"><i>●</i>일반공격 — 빛파동</div>
+      <div class="lgr"><i>●</i>덱 12 / 20</div>
+      <div class="lgr"><i>●</i>채굴 — 채굴빔</div>
+      <div class="lgs"></div>
+      <div class="lgi">성좌 2 / 3</div>
+      <div class="lgi">궁극기 — 개안</div>
+      <div class="lgi dim">둘은 출격을 안 막는다</div>
+      <div class="lgo">완 료</div>
+    </div>
+  </div>
+</div></div></div></div>
+<p class="sub">아랫줄이 <b>어떻게 닿나</b>다 — 성좌의 「효과」 자리와 같은 문법이고, 말은 4-1 표
+  그대로다(이어진다 · 한 발씩 · 뭉친 걸 한 번에). 셋의 차이가 <b>고르는 자리에서</b> 읽힌다.
+  칸 속 도형은 자리표시(줄 · 낱알 · 터짐) — 그림의 정본은 운석 장 4-1 이 갖는다.
+  「고른 것」의 채굴 줄은 게이트가 아니라 <b>사실</b>이다 — 비울 수 없어 늘 금점이다.</p>
+
+<table class="tbl">
+  <thead><tr><th>무기</th><th>아랫줄 — 어떻게 닿나</th><th>정체</th></tr></thead>
+  <tbody>
+    <tr><td>채굴빔</td><td>이어진다</td><td>조준이 유지된다 · <b>기본</b>(목록 순 첫째)</td></tr>
+    <tr><td>채굴포</td><td>한 발씩</td><td>날아가는 동안은 빈다</td></tr>
+    <tr><td>채굴탄</td><td>뭉친 광맥을 한 번에</td><td>터진다 — 셋째의 존재 이유</td></tr>
+  </tbody>
+</table>
+<table class="tbl">
+  <thead><tr><th>규칙</th><th>왜</th></tr></thead>
+  <tbody>
+    <tr><td><b>하나만 고른다</b></td><td>일반공격과 같은 결 — 세계가 채굴 무기 하나를 소유한다(<code style="color:#6E6E7C">SimWorld.mining</code>)</td></tr>
+    <tr><td><b>비울 수 없다</b> — 다시 눌러도 그대로</td><td>강제 슬롯이라 빼는 문 자체가 없다. 궁극기(다시 누르면 뺀다)와 다른 이 한 점이 곧 정의다</td></tr>
+    <tr><td><b>기본은 빔</b> — 안 고르면 빔이 들어간다</td><td>⑭의 그 규칙 — 비어 있으면(= 아직 안 정함) 저장본을 연 직후 한 번 채운다. 목록 순 첫째 = 빔</td></tr>
+    <tr><td><b>셋 다 처음부터</b> — 잠긴 카드가 없다</td><td>설계 정본(채굴-파밍)이 해금을 말하지 않고, 강제 슬롯을 잠그면 첫 판에 선택지가 없다</td></tr>
+    <tr><td><b>전투력을 안 준다</b></td><td>셋 다 적을 안 때린다(4-1) — 강제 슬롯 하나가 밸런스를 안 흔든다. 그래서 색도 계열 밖의 찬 색(#5FD9FF)이다</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s-slotsplit">슬롯 구조 확정 — 일반공격 1 · 마법 5 · 채굴 1(2026-08-25 사용자 결정)</h2>
+<p class="sub">
+  ⭐⭐ <b>편성 다섯 탭 중 셋의 정원이 여기서 못 박힌다.</b> 위 <a href="#s-loadout">「출격
+  전 편성」</a>이 그린 다섯 탭(일반공격 · 덱 · 성좌 · 궁극기 · 채굴) 중 <b>「덱」이
+  「마법」으로 이름이 바뀌고 정원이 여섯에서 다섯이 된다.</b> 나머지 넷(일반공격 ·
+  성좌 · 궁극기 · 채굴)은 이 결정이 안 건드린다.
+</p>
+<table class="tbl">
+  <thead><tr><th>탭</th><th>정원</th><th>규칙</th></tr></thead>
+  <tbody>
+    <tr><td><b>일반공격</b></td><td>1</td><td>그대로 — 판이 시작할 때부터 든다(⑩)</td></tr>
+    <tr><td><b>마법</b> <span style="color:#4A4A58">(옛 이름 「덱」)</span></td><td>5 <span style="color:#4A4A58">(옛 6)</span></td>
+      <td>공격 · 보조 · 방어를 <b>안 가른다</b> — 계열별 상한이 이미 폐기된 그 정책 그대로다(⑪이
+      「도감 전부를 계열로 묶어」 보여 주는 그림과 같은 결). 다만 <b>일반공격 계열은 이 탭에서
+      빠진다</b> — 총구 몫은 위 「일반공격」 탭 하나가 이미 진다</td></tr>
+    <tr><td><b>궁극기</b></td><td>1</td><td>그대로 — 비워도 된다(⑬)</td></tr>
+    <tr><td><b>채굴</b></td><td>1</td><td>그대로 — 강제 슬롯 · 비울 수 없다(⑰)</td></tr>
+  </tbody>
+</table>
+<p class="sub">
+  ⚠️ <b>성좌 3칸은 이 결정 밖이다</b> — 사용자 결정문이 못 박은 것은 「일반 1 ·
+  마법 5 · 채굴 1」 셋뿐이고, 성좌 · 궁극기는 그 결정문에 안 나온다. 그대로 둔다.
+</p>
+<p class="sub">
+  이 결정이 지금 엔진과 어긋나는 자리는 <code>mockup-shop.html</code> 의
+  <a href="mockup-shop.html#s-gap">엔진과 어긋난 자리</a> 표에 있다 — 상점 ·
+  슬롯 · 도감이 한 결정이라 표도 하나다.
+</p>
+
+</div>
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script src="vfx.js"></script>
+<!-- ⚠️ **페이지 제 스크립트도 쿼리로 캐시를 깬다.** `vfx.css` 만 깨고
+     이걸 안 깼더니 2026-08-19 에 시안 수정이 안 실려 「안 고쳐졌다」로
+     또 읽혔다 — css 에서 겪은 것과 **같은 함정**이다. -->
+<script>document.write(unescape("%3Cscript src=\"chapter.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"))</script>
+</body>
+</html>

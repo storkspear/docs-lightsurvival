@@ -1,0 +1,127 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 난다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 염 炎</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-body">몸</a><a href="#s-affinity">상성</a><a href="#s-skill">스킬 열두 칸</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 캐릭터 · 기본</p>
+  <h1>염 炎</h1>
+</header>
+
+<h2 id="s-body">몸</h2>
+<p class="def"><b>갈라진 불꽃 여덟이 태양 문양을 이룬다</b> — <code>EVSET</code> 여섯 줄 중 <b>둘째 값(개수)이 제일 큰 줄</b>이고(<code>vfx.js</code>: <code>ember:[["flame",8,.30,0]]</code> ↔ 독 3 · 풍 4 · 빙 6 · 뇌 7), 그 여덟이 <b>둘레를 빈틈없이 채우기 때문에</b> 「불꽃 몇 개가 돈다」가 아니라 <b>「문양」</b>으로 읽힌다. 셋째 값 <code>.30</code>(도는 빠르기)은 제일 빠른 풍(<code>1.05</code>)의 <b>3분의 1 이 안 된다</b> — <b>많고 느리게</b> 도는 것이 이 몸의 문법이고, <b>적고 빠르게</b> 도는 풍(<code>4</code> · <code>1.05</code>)이 정확히 그 반대편이다. 평상시에는 <b>코어만 물들고</b>, 발현하면 둘레에 그 여덟이 선다.<br>
+<b>그림은 새로 안 그렸다</b> — <a href="mockup.html">속성 · 몸</a>이 정본이고 여기서는 같은 함수(<code>ELEM.preFire</code> · <code>ELEM.fire</code>)를 그대로 부른다. 캡션 문구도 그 목록(<code>ELEMS</code>)에서 읽어 온다.<br>
+⚠️ <b>짝 이름이 다섯 속성의 규칙 그대로다</b> — <code>preFire</code>/<code>fire</code>. 어긋난 것은 무속성 하나뿐이고(<code>base</code>/<code>goldMani</code>), 염은 안 어긋난다.</p>
+
+<div class="grid" id="cfbody"></div>
+
+<h2 id="s-affinity">상성</h2>
+<p class="def"><b>배수는 한 곳이 정한다</b> — <code>lib/sim/combat/damage.dart</code> 의 <code>affinityMul()</code>. 스킬은 자기 속성만 넘기면 되고, 값은 <b>셋뿐</b>이다: <b>0.5 · 1.0 · 2.0</b>(<code>sim/config/balance.dart</code> 의 <code>kAffinityWeak</code> <code>:162</code> · <code>kAffinityStrong</code> <code>:163</code>).<br>
+<b>5×5 를 안 채운 것이 설계다.</b> 스물다섯 칸을 채우면 아무도 못 외우고, 맞았을 때 왜 피해가 줄었는지 몰라 억울해진다 — 그래서 <b>상극 셋 · 상생 하나</b>뿐이다.</p>
+
+<table class="st">
+<tr><th>때리는 속성</th><th>적의 상태</th><th>배수</th><th>왜 · 어디</th></tr>
+<tr><td><b>염 炎</b></td><td>동상</td><td><b>×0.5</b></td><td>얼음이 녹는다 — 열이 결빙을 상쇄한다 <code>:188</code></td></tr>
+<tr><td><b>빙 氷</b></td><td><b>연소 중</b></td><td><b>×0.5</b></td><td>불이 꺼진다 — <b>내가 건 상태가 남의 피해를 깎는다</b> <code>:186</code></td></tr>
+<tr><td><b>독 毒</b></td><td><b>연소 중</b></td><td><b>×0.5</b></td><td>타는 몸에선 독이 끓어 없어진다 — <b>여기도 내가 건 상태다</b> <code>:190</code></td></tr>
+<tr><td><b>뇌 雷</b></td><td>동상 · 젖음</td><td><b>×2.0</b></td><td><b>전도</b> — 표에서 유일한 상생 <code>:191~194</code></td></tr>
+<tr><td><b>풍 風</b></td><td>—</td><td>×1.0</td><td><b>상성표 밖.</b> 위치만 건드리는 속성이라 피해 상성에 안 낀다 <code>:177 · :196</code></td></tr>
+<tr><td><b>암 影</b></td><td>—</td><td>×1.0</td><td><b>상성표 밖.</b> 빛의 문법에 참여하지 않는 것이 정체다 <code>:197</code></td></tr>
+<tr><td><b>무속성</b></td><td>—</td><td>×1.0</td><td>거는 상태가 없다 <code>:195</code></td></tr>
+</table>
+
+<h3>염이 이 표에서 서는 자리 — <b>제 피해가 아니라 남의 피해를 정한다</b></h3>
+<p class="def">① <b>내가 손해 보는 자리 하나</b> — <b>동상</b>인 적을 때리면 <b>피해가 반</b>이다. 표 넉 줄 중 염이 「때리는 쪽」으로 나오는 것은 이 한 줄뿐이다.<br>
+② <b>내가 이득 보는 자리는 없다</b> — ×2.0 은 뇌 한 줄뿐이고 염은 거기 안 나온다.<br>
+③ ⭐⭐ <b>그런데 내가 건 상태가 표에 두 줄로 나온다.</b> 염이 거는 것은 <b>연소</b>이고(<code>element_hit.dart</code> 의 <code>applyBurn</code>), <code>affinityMul</code> 이 읽는 비트 셋 중 <b>연소는 빙과 독 둘의 배수를 깎는 조건</b>이다. 상태가 표에 두 번 나오는 것은 <b>연소와 동상 둘뿐</b>인데(중독 · 감전은 비트가 서고도 <b>한 번도 안 읽힌다</b>), <b>방향이 반대다</b>: 빙의 <b>동상</b>은 하나를 깎고 하나를 <b>두 배로 열어 주는데</b>(뇌 ×2.0), 염의 <b>연소</b>는 <b>둘 다 깎는다</b>. ⇒ 여섯 중 <b>남의 피해를 두 번 깎는 유일한 속성</b>이다.</p>
+<p class="def">④ ⚠️⚠️ <b>그리고 염은 남이 연 문을 닫는다.</b> 상극 명중은 배수만 바꾸는 것이 아니라 <b>걸린 상태를 끈다</b> — 그리고 <b>끄는 것은 빙과 염 둘뿐</b>이다(<code>element_hit.dart:37~42</code>: 빙은 연소를, 염은 동상을 끈다). 염이 언 적을 때리면 ×0.5 로 맞히면서 <b>동상을 지우고</b>, 그 순간 <b>뇌의 ×2.0 도 같이 사라진다</b>(뇌가 언 적을 여러 번 ×2.0 으로 때릴 수 있는 것은 <b>상생은 상태를 안 끄기</b> 때문인데, 염은 그 조건 자체를 없앤다).<br>
+⇒ 표에서 염을 읽는 한 줄은 <b>「제 피해가 흔들리는 폭은 제일 작고, 남의 피해를 흔드는 폭은 제일 크다」</b>다.</p>
+<p class="def"><b>곱하는 자리가 중요하다.</b> 상성은 <b>단일 곱셈 지점 바깥에서 마지막에</b> 곱한다 — <code>amp</code> 안에 넣으면 상극이 상쇄가 아니라 <b>감산</b>이 되어 음수 피해가 난다. 바닥도 값으로 못 박혀 있다(<code>element_hit.dart</code>: <code>if (out &lt; 1) out = 1</code>).</p>
+<p class="def">⚠️ <b>다만 상성이 이 캐릭터의 세기는 아니다.</b> 캐릭터 단위 실측(<code>tools/character_dps.dart</code> · 스1 · n=24, 배분표 §7-6)에서 염은 <b>클리어 4.2% · 총 DPS 117 · 앵커比 1.13×</b> 로 <b>앵커(무속성)보다 13% 높은 데 그친다</b> — 여섯을 줄 세우면 독 0.19× · 무속성 1.00× 다음이라 <b>아래에서 셋째</b>이고, 위의 셋(빙 5.67× · 뇌 9.72× · 풍 42.65×)과는 자릿수가 다르다. 위의 셋 ①~④ 는 <b>화력이 아니라 자리</b>의 이야기이고, 화력이 모자란 이유는 상성표가 아니라 <b>아래의 열두 칸</b>에 있다.</p>
+
+<h2 id="s-skill">스킬 — 열두 칸</h2>
+<p class="def">⚠️⚠️ <b>2026-08-25 — 고유 스킬 풀 목표가 12 → 20 으로 갱신됐다</b>(<code>docs/vfx/mockup-basic.html#s-skillelem</code>). <b>캐릭터마다 고유 스킬 스무 종</b>이다. 염은 지금 <b>일곱</b>이 서 있고 <b>열세 칸이 비어 있다</b> — 계열은 일반 2 · 보조 1 · 마법 3 · 방어 1 이다. 정본은 <code>lib/data/skill_element.dart</code> 이고, 빠짐·겹침은 <code>test/sim/skill_element_test.dart</code> 가 막는다.</p>
+<p class="def"><b>덱 = 공유 13 + 내 속성 20 = 서른셋</b>, 그중 <b>여섯</b>을 골라 판에 들어간다. ⚠️ <b>내 속성이 셋 이상</b>이어야 나갈 수 있다(<code>data/characters.dart</code> 의 <code>kCharacterOwnMin</code>=3, 게이트는 <code>ui/loadout_gate.dart</code>) — 공유만으로 여섯을 채우면 어느 캐릭터로 들어가든 같은 판이 되기 때문이다.<br>
+<b>공유 13 = 버프 3 + 회복 5 + 다섯 축 5</b>(이동 · 시야 · 재화 · 부활 · 시간). ⚠️ <b>그 열셋 안에 공격도 방어도 없다</b> — 배분표 §2-1 ① 이 그것을 못 박아 뒀다: <b>공유가 못 주는 것은 12 안에 있어야 한다</b>.<br>
+⚠️ <b>염에 회복이 하나도 없는데 그건 더는 구멍이 아니다</b> — 회복 다섯이 통째로 공유로 갔고, 염이 갖고 있던 <b>공물</b>이 그때 나갔다. 배분표 §4 표의 「염 7 · 회복 1」은 <b>그 이동 전의 수</b>다.</p>
+
+<h3>⚠️⚠️ 2026-08-21 재배치 + 2026-08-22 방어 편입 + 2026-08-23 제거</h3>
+<p class="def">다섯 속성 전부에 사용자 판정이 났다(원장 = <code>docs/design/속성-개선-백로그.md</code>). 재배치로 <b>드나든 것은 없었고</b>(넷이 다 개명·크기·색·그림), <b>2026-08-22 에 결계 · 염 炎 이 들어와 여덟이 됐다.</b> 그 뒤 <b>2026-08-23 에 광선검이 게임에서 빠져 일곱</b>이 되고, 자물쇠가 <b>다섯</b>이다.</p>
+<table class="st">
+<tr><th>스킬</th><th>판정</th><th>무엇이 달라지나</th></tr>
+<tr><td>광선검 <code>lance</code></td><td><b>제거</b> <i>(2026-08-23)</i></td><td>게임에서 뺀다 — 사용자: 「둘 다 ‘칼’의 부류인데 재미가 없음」(<a href="mockup-char-ice.html">빙</a>의 <code>saber</code> 와 같이). <b>일반 · 변주</b> 하나가 사라지고, 2026-08-21 의 개명 판정도 함께 무효가 된다</td></tr>
+<tr><td>순포 <code>sunpo</code></td><td>크기 ✅</td><td>L3~L5 <b>탄환을 더 길게</b> — 탄 길이 사다리 <code>7 · 7 · 9.5 · 12 · 14.5</code>. ⚠️ <b>판정 반경은 안 따라간다</b>(<code>f.r+(hv?9:5)</code> 그대로) — 폭도 안 건드려서 <b>굵어지는 게 아니라 뾰족해진다</b></td></tr>
+<tr><td>빛폭탄 <code>shotgun</code></td><td>색 ✅</td><td>염 속성색으로. ⭐ <b>엔진은 이미 염 색이었다</b>(<code>#FF6A22</code> 20° ≈ <code>kToneEmber</code> <code>#FF6A1E</code>) — 어긋난 건 시안이었고, <code>WTONE.shotgun</code> 을 <code>wShotgun</code>(담금 48°)에서 <b><code>ember</code></b> 로 옮겼다. ⚠️ <code>TONE.wShotgun</code> 은 <b>성좌 「전갈」이 써서 안 지웠다</b>.<br>⚠️⚠️ <b>2026-08-23 — 「채널 하나 차이」가 결함으로 판정됐다</b>(사용자: 「빛폭탄은 속성에맞게 색 변경」). ΔE2000 으로 재면 <b>0.5</b>(1 = 겨우 감지)라 결계·염과 같은 화면에서 구분이 안 된다. 각도로는 못 푼다 — 염 대역 15~26° 에 일곱이 서 있다. ⇒ <b>밝기로 갈랐다</b>: 56.7 → <b>73.9</b>, <code>#FFA07A</code> 17°(<code>TONE.wShotgunHot</code> = 엔진 <code>cel_tones.dart</code> 와 바이트 동일). 제일 가까운 이웃이 ΔE <b>9.7</b>(회염)이다</td></tr>
+<tr><td>화염방사 <code>flamer</code></td><td>그림 교체</td><td>실기에서 화염<b>「연기」</b>로 보였다 → <b>끊이지 않는 화염방사</b>로. 3안 — <b>아직 안 그렸다</b></td></tr>
+<tr><td>결계 · 염 炎 <code>WLwardEmber</code></td><td><b>편입</b> ✅ <i>(2026-08-22)</i></td><td>「결계 방어를 <b>아예 속성의 방어 스킬로 편입</b>」 — <b>염의 방어 0 이 여기서 메워진다</b>. 그림·문구는 <a href="mockup-guard.html">방어</a> 장의 <code>WLTBL</code> 정본 그대로다</td></tr>
+</table>
+<p class="def">⚠️⚠️ <b>2026-08-21 의 개명 판정은 스킬과 함께 무효가 됐다.</b> 그날 <code>lance</code>(광선검)를 「빙격검」으로 고쳐 부르고 그 이름을 <a href="mockup-char-ice.html">빙</a>의 <code>saber</code> 와 주고받기로 했었는데, 2026-08-23 에 <b>둘 다 게임에서 빠졌다</b>. 옛 문서에서 「빙격검」을 만나면 <b>지금은 없는 스킬</b>이다.<br>
+⭐ <b>색·크기는 2026-08-22 에 했다</b> — 빛폭탄의 「염 색으로」와 순포의 「탄환을 더 길게」가 위 칸에 실제로 그려져 있다. <b>남은 것은 화염방사의 그림 교체 하나</b>이고 그건 판정만 났다(3안). <b>없는 그림을 지어내지 않는다.</b></p>
+
+<h3>제거된 그 <code>lance</code> 가 남긴 것 — <b>속성은 셋이 같은 곳을 가리킬 때 정한다</b></h3>
+<p class="def">광선검은 처음에 <b>독</b>이었고 근거가 「꿰고 <b>남는다</b>」로 적혀 있었다. <b>남는 것이 무엇인지를 안 봤다</b> — 남는 것은 독이 아니라 <b>잔열</b>이었다(2026-08-21 사용자 발견). 도감 문구(「잔열」·「계속 탄다」) · 엔진 구현(<code>burnPeriod</code>·<code>_burnSears</code>) · 팔레트(중간색 <code>#FFCC2E</code> = 45°, 염이 15~47° 로 모여 있다) 셋이 전부 염을 가리켰다.</p>
+<p class="def">⚠️ <b>스킬은 없어졌어도 이 자가 남는다</b> — 속성은 <b>도감 문구 · 엔진 구현 · 팔레트 셋이 같은 곳을 가리킬 때</b> 정하고, 「남는다」 같은 동사 하나에 걸지 않는다. 근거 전문은 <code>lib/data/skill_element.dart</code> 의 「✂ 정정」 절에 표로 남아 있다.</p>
+
+<h3>⚠️⚠️ 이 장의 논점 — <b>기초 0 · 방어 0</b></h3>
+<p class="def"><b>염은 일곱이 전부 변주·연계다.</b> 기초 <b>0</b> · 변주 6 · 연계 1 — <b>기초가 0 인 캐릭터는 염과 독 둘뿐</b>이다(<code>skill_element.dart</code> × <code>skill_rank.dart</code> 실집계, 2026-08-21). 배분표 §2-1 ② 는 <b>캐릭터마다 기초 3종 이상</b>을 요구한다.</p>
+<p class="def">그게 왜 문제인지는 그 절이 이미 적어 뒀다. <b>내 속성 셋만 들고 나가는 사람이 있다</b>(덱 여섯 중 공유는 최대 셋이라 3:3 이 62,920가지로 제일 흔하다). 그 셋이 무엇이냐에 따라 판이 이렇게 갈린다:</p>
+<table class="st">
+<tr><th>등급</th><th>전제가</th><th>셋만 들었을 때</th><th>염은</th><th>독은</th></tr>
+<tr><td><b>기초</b> 基</td><td><b>없다</b></td><td><b>혼자 돈다</b> ○</td><td><b>0 종</b></td><td><b>0 종</b></td></tr>
+<tr><td><b>변주</b> 變</td><td>플레이어(어디 서고 언제 놓나)</td><td><b>돈다.</b> 값이 덜 난다 △</td><td><b>6 종 — 거의 전부</b></td><td>0 종</td></tr>
+<tr><td>연계 連</td><td>판에 이미 선 다른 것</td><td>공급자가 없으면 <b>0</b> ✗</td><td>1 종</td><td><b>4 종 — 전부</b></td></tr>
+</table>
+<p class="def">⭐ <b>그래서 염은 독과 처지가 다르다.</b> 둘 다 기초가 0 인데, 독의 넷은 <b>연계</b>라 짝이 안 서면 값이 <b>0</b> 이고 염의 여섯은 <b>변주</b>라 <b>혼자서도 돈다</b>(<code>skill_rank.dart</code>: 변주의 전제는 다른 카드가 아니라 <b>플레이어</b>다 — 어디 서고 언제 놓느냐가 값을 가른다). ⇒ 염이 모자란 것은 <b>「도는가」가 아니라 「손에 익는가」</b>다: 첫 판에 배울 것이 한 칸도 없고, 일곱이 전부 <b>자리와 때를 대야</b> 값이 난다.<br>
+⚠️ <b>그렇다고 가벼운 결손은 아니다.</b> 캐릭터 실측에서 염이 <b>1.13×</b>(뒤에서 둘째)인 것이 그 값이고, 배분표 §4 는 염을 <b>「여섯 중 제일 급하다」</b>로 적어 뒀다.</p>
+<p class="def"><b>그리고 계열이 하나 통째로 비어 있다 — 방어 0.</b> <b>염과 독 둘뿐</b>이고(배분표 §4 ②), 공유 열셋이 방어를 한 칸도 안 주므로 <b>염으로 들어가면 막는 물건을 아예 못 든다</b>. ⇒ 다섯 칸이 메워야 할 바닥은 <b>기초 3 · 방어 1</b> 이고, 남는 하나가 성격의 몫이다. <b>자물쇠 다섯 칸이 화면에서 말하는 것이 그것</b>이다.</p>
+
+<h3>「즉시 여섯 / 추가 여섯」은 무엇으로 가르나</h3>
+<p class="def"><b>자는 이미 서 있다</b> — 등급이다(<code>lib/data/skill_rank.dart</code>). <b>기초 基 → 변주 變 → 연계 連</b> 이고, <b>그 차례가 곧 해금 순서</b>다. 등급은 세기가 아니라 <b>전제의 크기</b>다. ⚠️ <b>연계 = 약한 것이 아니다.</b></p>
+<p class="def">⭐ <b>염은 등급 차례로 자르면 앞머리가 전부 변주다</b> — 광선검이 빠지기 전에는 <b>변주 여섯이 그대로 즉시 여섯</b>이었고, 지금은 <b>즉시 다섯 + 자물쇠 하나</b>가 된다. 남은 <b>연계 하나</b>(화염방사)와 <b>결계 · 염</b>이 「추가 여섯」의 첫 두 칸이다. 등급 하나가 <b>띠를 가로질러 쪼개지지 않으면서</b> 「추가 여섯」에 <b>남는 것도 있는</b> 캐릭터는 재배치 뒤 <b>염과 풍 둘</b>이다(풍은 기초 2 + 변주 4 로 앞 여섯이 차고 연계 하나가 남는다). 무속성은 여섯이 딱 차지만 <b>남는 것이 하나도 없고</b>, 빙은 여덟이라 <b>연계 넷이 띠를 가로질러 2 : 2 로 쪼개진다</b>. <b>뇌(넷)와 독(다섯)은 여섯을 못 채운다</b>.<br>
+⚠️ <b>이 셈은 2026-08-21 이적을 얹은 값이다</b>(<code>skill_element.dart</code> × <code>skill_rank.dart</code>). 재배치 전에는 뇌가 <b>기초 3 · 변주 3 · 연계 2</b> 로 이 자리에 같이 섰는데, 넷이 나가며 <b>기초 3 · 변주 1 · 연계 0</b> 이 되어 여섯을 못 채우게 됐다.</p>
+<p class="def">⚠️ <b>그렇다고 「기초 = 즉시 여섯」인 것은 아니다.</b> 여섯 캐릭터의 기초 수가 <b>무속성 5 · 뇌 3 · 빙 2 · 풍 2 · 염 0 · 독 0</b> 이라, 그렇게 읽으면 <b>어느 캐릭터도 여섯을 못 채우고</b> <b>염과 독은 한 칸도 안 열린다</b>. ⇒ <b>선은 아직 안 그어졌다</b>(배분표 §7: 등급이 자가 될 수 있지만 값표 <code>ui/shop_data.dart</code> 와 같이 봐야 한다). 이 장의 띠는 <b>등급 차례로 앞에서 여섯을 자른 잠정선</b>이고, 근거는 칸마다 적힌 <b>계열 · 등급</b>이다.</p>
+
+<h3>그림 · 문구가 어디서 오나</h3>
+<p class="def"><b>그림도 문구도 새로 안 만들었다.</b> 칸의 이펙트는 계열 장(<a href="mockup-weapon.html">일반</a> · <a href="mockup-support.html">보조</a> · <a href="mockup-magic.html">마법</a>)이 쓰는 <b>같은 함수</b>를 부르고, 칸마다 전역 <code>LV</code> 만 갈아 끼운다. 성장표 문구는 <b>도감 그대로</b>다 — <code>lib/data/weapons.dart</code>(도감 이름 그대로 — 순포 · 빛폭탄 · 화염방사) · <code>magic_attack5.dart</code>(불자취 · 회염 · 화염회오리).<br>
+⚠️ <b>칸 키가 엔진 id 와 다른 것이 넷이다</b> — 엔진 <code>flamer</code> ↔ 시안 <code>FX.FLconeA</code> · <code>trail</code> ↔ <code>FX.FLtrail</code> · <code>boomerang</code> ↔ <code>FX.FLret</code> · <code>vortex</code> ↔ <code>FX.FVvortB</code>. 지어내면 그 줄이 <b>예외 없이 조용히</b> 사라진다 — <code>charMISS</code> 가 콘솔에 밝힌다. 대조표의 정본은 <code>tools/mockup_sheet.js</code> 의 <code>SKILL</code> 표다.<br>
+⭐ <b>격자 키가 아니라 성장표 키를 걸었다.</b> 같은 스킬이 시안에 <b>두 이름</b>으로 서 있다: 계열 장의 낱칸은 <b>L5 로 못 박은</b> 이름(<code>FCcone6</code> · <code>FLtrailL5</code> · <code>FLretL5</code> · <code>FZvortex1</code>)이고, 다섯 레벨을 도는 것은 <b><code>LV</code> 를 읽는</b> 이름(<code>FLconeA</code> · <code>FLtrail</code> · <code>FLret</code> · <code>FVvortB</code>)이다. 이 장의 칸은 성장표라 뒤쪽이라야 다섯 칸이 서로 달라진다(<a href="mockup-char-ice.html">빙 장</a>이 <code>SDspineD</code> · <code>WLwall1/2/4</code> 를 고른 것과 같은 이유).<br>
+⭐ <b>안이 여럿이던 셋은 「엔진·시안이 고른 것」을 걸었다</b> — 화염방사는 성장 3안(<code>FLconeA/B/C</code>) 중 <b>A</b>, 화염회오리는 <b>B</b>(<code>FVvortA/B/C</code>) 다. 판정의 자취는 코드에 남아 있다: 라우팅표 <code>TINTABLE</code> · 아이콘 목록 · <code>#levelsm</code> 성장표에 선 것이 각각 <code>FLconeA</code> 와 <code>FVvortB</code> 하나씩이고, 나머지 넷은 함수만 남아 있다. 회염·불자취는 안이 하나다.</p>
+
+<h3>도감과 그림이 갈리는 한 칸 — <b>이 장은 도감을 옮긴다</b></h3>
+<p class="def">성장표 문구의 정본은 <b>도감(Dart)</b>이라 그대로 옮겼다. 일곱 중 여섯은 도감 · 엔진 상수 · 시안 성장표가 <b>같은 사건</b>을 말한다(순포 <code>kSunpoCells = [0,2,2,3,3,3]</code>·<code>kSunpoWays = [0,1,1,2,3,3]</code> 가 도감 「판 2기 → 5기」·「2갈래 → 3갈래」와 같은 사다리인 식이다). <b>어긋나는 것은 화염회오리 하나</b>인데, 그건 도감이 틀린 것이 아니라 <b>시안이 다른 축을 판 것</b>이다.</p>
+<table class="st">
+<tr><th>칸</th><th>도감 문구 · 엔진 상수</th><th>시안 채택안 <code>FVvortB</code></th><th>어긋남</th></tr>
+<tr><td><b>화염회오리</b> L2 · L5</td><td>축이 <b>개수</b>다 — <code>kVortexCount = [0,<b>1,1,2,2,3</b>]</code>(<code>magic/attack5_tuning.dart:167</code>). 도감 L3 「하나 더 — 동시에 둘」 · L5 「셋째 회오리」가 그 사다리 그대로다</td><td>축이 <b>깔때기가 열리는 것</b>이다(<code>RT .72 → 2.18</code>). 개수는 <code>FVLB</code> 의 <code>NV = [<b>1,2,2,2,2</b>]</code> 라 <b>L2 에 이미 둘</b>이고 <b>L5 에도 둘</b>이다</td><td><b>L2</b> 그림은 둘인데 글은 아직 하나 · <b>L5</b> 글은 셋인데 그림은 둘</td></tr>
+</table>
+<p class="def">⭐ <b>어느 쪽도 「틀린」 것이 아니다.</b> 엔진과 도감이 서로 맞고(<code>kVortexRadiusL2</code> L2 반경 · <code>kVortexBurstMul</code> L4 꺼질 때 터짐 · <code>kVortexAwakenDmgMul</code> L5 각성까지 넉 줄이 다 붙는다), 시안 B 는 <b>그림에서 갈리는 축</b>을 고른 것이다 — 그 블록이 스스로 적어 둔 이유가 「<b>한 축을 다섯으로 써는 것은 성장이 아니다</b>, 칸마다 사건이 하나씩 붙어야 한다」이고, 개수는 A·B·C 셋 중 B 에서 L2 에 한 번만 쓰인다. ⇒ <b>맞출 곳은 개수 사다리 하나</b>이고, 어느 쪽으로 맞출지는 <b>이 장의 일이 아니다</b>(시안은 그래픽의 정본이지 거동의 정본이 아니다).</p>
+
+<div class="lvset char-lv" id="cfskill"></div>
+</div>
+<!-- 목차는 서른두 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라 따로 부른다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 간다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⭐ **화염방사 확정본의 L1~L5** — `vfx.js` 의 `PKflameC4`(확정된 모양·재료·색)
+     에 도감·`flamer_tuning.dart` 의 성장축을 태운 것. `FX.FLconeA` 를 덮어쓰므로
+     아래 `CF_LATER` 의 화염방사 줄이 그대로 새 그림이 된다(낙광·뇌광이 간 길).
+     ⚠️ **`char-page.js` 앞이라야 한다** — `charReg` 가 그 시점의 `FX` 를 뜬다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx-flamelv.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **캐릭터 장의 틀** — 일곱 장이 같이 쓴다(띠·자물쇠·빈 칸·가드).
+     `vfx.js` **뒤**, 이 장의 스크립트 **앞**이라야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"char-page.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **페이지 제 스크립트도 쿼리로 캐시를 깬다** — css 에서 겪은 것과 같은 함정이다.
+     `vfx.js` **뒤에** 실린다: `tile`·`ELEM`·`ELEMS`·`FX` 를 그쪽에서 쓴다. -->
+<script>document.write(unescape("%3Cscript src=\"mockup-char-fire.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

@@ -1,0 +1,177 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — SF HUD 홈</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<!-- 이 장 전용 배치 규칙 — hud.js 의 부품(.hudpanel·.hudbtn·.hudrail…)은
+     범용이라 크기·자리를 안 갖는다. 이 화면 하나의 배치만 여기 둔다
+     (mockup-ui.html 의 오버레이 전용 <style> 과 같은 자리). -->
+<style>
+.hh-screen{background:#050B14}
+/* ⚠️⚠️ **직전 판의 오버라이드가 실제로는 한 번도 안 먹고 있었다** — 실측
+   (헤드리스 캡처 후 `getComputedStyle`)으로 드러났다: 이 화면은 가로판
+   (`.phone.land`)이라 실제로 적용되는 규칙은 `vfx.css` 의 `.screen .scrim`
+   (클래스 2개)이 아니라 그보다 더 구체적인 `.phone.land .screen .scrim`
+   (클래스 4개, 좌우 90deg 그라디언트: 0%→.90, 92%→.94 그리고 그 뒤로도 .94
+   유지)이었다. 직전 판이 적어 둔 `.hh-screen .scrim`(클래스 2개)은 그보다
+   낮은 우선순위라 **CSS 명시도 규칙상 무조건 진다** — 어느 파일에 뒤에
+   적히든 상관없다. 그래서 오른쪽 귀퉁이(x≈95%, 마지막 정지점 92% 밖이라
+   .94 로 고정)의 블록이 실측상 거의 안 보였다(대비 델타 5~10, 배경 대비
+   1.4~2.0배 — 왼쪽·아래 대비의 절반 이하). 이 화면은 위(톱바)·아래(로스터)
+   에 글이 앉지 좌우가 아니라서 애초에 좌우 그라디언트가 안 맞기도 했다.
+   ⇒ **명시도를 실제로 이기게 잡는다**(`.phone.land .screen.hh-screen
+   .scrim`, 클래스 5개) — `vfx.css` 는 그대로 두고(다른 화면 무영향, 이
+   페이지에만 `hh-screen` 클래스가 있다) 방향도 이 화면의 실제 글 자리
+   (위·아래)에 맞춰 세로로 되돌린다. */
+.phone.land .screen.hh-screen .scrim{background:
+  linear-gradient(180deg,rgba(8,8,12,.40) 0%,rgba(8,8,12,.06) 24%,rgba(8,8,12,.06) 54%,rgba(8,8,12,.44) 88%),
+  radial-gradient(130% 74% at 50% 46%,rgba(8,8,12,0) 46%,rgba(8,8,12,.26) 100%)}
+.hh-ui{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column}
+/* ⚠️⚠️ 중심을 하나로 못박는다 — `#hh-rail`(58px 고정) 을 뺀 나머지 전부가
+   `.hh-stage` 다. 좌우로 폭을 갈라 붙이던 옛 `.hh-side` 두 칸을 걷어냈다
+   (사용자 실측 지적: 「중앙 원형 리액터의 중심과 스탯 패널들의 중심이
+   안 맞는다」 — 원인이 바로 이 자리였다, 캔버스 수식은 레일만 빼고 폭
+   전체의 절반을 중심으로 잡는데 CSS 는 양옆에 150px 칸을 더 빼고 있었다).
+   `mockup-hud-home.js` 의 `hhLayout()` 이 잡는 (cx,cy) 는 정확히 이
+   `.hh-stage` 박스의 flexbox 가운데(`align-items:center` ·
+   `justify-content:center`)와 같은 값이어야 한다 — 레일 폭(58) · 아래
+   로스터 높이(74) 둘 다 자바스크립트 쪽 상수와 여기 CSS 값이 같다. */
+.hh-mid{flex:1 1 auto;display:flex;align-items:stretch;min-height:0}
+#hh-rail{width:58px;flex:0 0 58px;justify-content:center;padding:0 0 0 2px}
+.hh-stage{flex:1 1 auto;min-width:0;position:relative;display:flex;align-items:center;justify-content:center}
+#hh-hero-wrap{position:relative;width:210px;height:210px}
+#hh-hero-wrap canvas{width:100%;height:100%;display:block}
+.hh-heroname{position:absolute;left:0;right:0;bottom:-19px;text-align:center;
+  font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#D8F2FF;
+  text-shadow:0 0 10px rgba(79,195,247,.6)}
+.hh-bottom{flex:0 0 74px;display:flex;align-items:center;gap:10px;padding:0 10px 6px 64px}
+/* 로스터는 가운데 정렬 — 옛 기본값(왼쪽 packing)이 오른쪽에 큰 빈 공간을
+   남겼다(사용자 지적: 「화면 전체가 왼쪽으로 쏠려서 오른쪽에 빈 공간」). */
+#hh-roster{flex:1 1 auto;display:flex;justify-content:center;gap:6px;overflow:hidden}
+.hh-ros{position:relative;flex:0 0 46px;width:46px;display:flex;flex-direction:column;
+  align-items:center;gap:2px;cursor:pointer;padding:3px 2px;border:1px solid transparent}
+.hh-ros canvas,.hh-rosart{width:36px;height:36px;display:block}
+.hh-rosart.lockonly{display:flex;align-items:center;justify-content:center;
+  font-size:7.5px;color:#3A5468;border:1px dashed #3A5468;box-sizing:border-box}
+.hh-ros .nm{font-size:7px;color:#6E93AD;letter-spacing:.02em;white-space:nowrap}
+.hh-ros.sel{border-color:#FFD27A55;background:#FFD27A14}
+.hh-ros.sel .nm{color:#FFD27A}
+.hh-ros.sel::after{content:"메인";position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  font-size:6.5px;letter-spacing:.06em;color:#241505;background:#FFD27A;padding:1px 4px}
+.hh-ros.lock{opacity:.55;cursor:default}
+.hh-actions{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.hh-actions .hudbtn{height:30px;font-size:10.5px;padding:0 12px}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-home">홈</a><a href="#s-notes">설계 메모</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · SF HUD 홈</p>
+  <h1>인트로 다음 화면 — 캐릭터가 서고 HUD 가 두른다</h1>
+  <p class="lede">세 번째 판. 앞선 두 판은 사용자에게 「촌스럽다」 판정을
+  받았고, 원인은 색이나 기법이 아니라 <b>요소의 개수</b>였다 — 참조 이미지엔
+  화면 하나에 동심원 고리가 대여섯 겹, 회로형 연결선이 예닐곱 가닥, 귀퉁이
+  마다 다른 판독값 블록이 있는데 지난 판은 원 하나에 패널 여섯뿐이었다.
+  이 판은 그 개수를 맞춰 <b>백지에서 다시 짰다</b>(기존 로비의 규약은
+  근거로 안 썼다). <b>보유 캐릭터 중 메인을 실제로 골라 세우는 것</b>도
+  그대로 된다 — 아래 로스터를 클릭해 보면 캐릭터가 바뀐다.</p>
+</header>
+
+<h2 id="s-home">홈</h2>
+<table class="st">
+<tr><th>요구</th><th>이 화면에서</th></tr>
+<tr><td>캐릭터가 크게 서고 HUD 가 둘레를 두른다 — 밀도가 판정 기준</td>
+<td>중앙 캐릭터(<code>ELEM.*</code> 그대로) 뒤로 동심원 고리 아홉 겹(구조
+넷 + 눈금 셋 + 궤도 둘) · 십자 레티클 · 부챗살 세그먼트 고리가 돈다.
+그 바깥으로 회로형 인출선 아홉 가닥(패널 여섯 + 귀퉁이 둘 + 대각선 하나,
+전부 꺾이고 끝에 접속 노드가 박힌다) · 귀퉁이 데이터 블록 넷 · 미세
+판독값 라벨 열넷 · 뷰파인더 브래킷 · 별 입자를 흩었다(<code>hh-bg</code>).
+장식은 전부 낮은 알파로 죽여 캐릭터·스탯·버튼보다 어둡다</td></tr>
+<tr><td>보유 캐릭터 중 메인을 고를 수 있다</td>
+<td>아래 로스터 10칸(보유 6 · 미보유 2 · 잠김 2) — 클릭하면 <code>HHMAIN</code>
+이 바뀌고 중앙 캐릭터가 그 자리에서 다시 그려진다. 그림이 아직 없는 마·
+플라즈마는 지어내지 않고 「잠김」만 그린다</td></tr>
+<tr><td>스킬 편성 페이지로 진입 가능</td>
+<td>우하단 <b>스킬 편성 ›</b> 버튼 — 정본은 여전히
+<a href="mockup-chapter.html#s-loadout">관측소의 「출격 전 편성」</a>이라
+그 절로 연결한다(편성 화면 자체를 다시 그리는 것은 이 작업 범위 밖이다)</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">홈 — 캐릭터 선택 + 스탯 6줄 + 편성 진입</div>
+  <div class="phone land"><div class="screen hh-screen">
+    <canvas class="bg" id="hh-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="scrim"></div>
+    <div class="topbar"><span><b>COMMAND DECK</b></span><span class="setico" id="hh-set" title="설정"></span></div>
+    <div class="thumb"></div>
+    <div class="hh-ui">
+      <div class="hh-mid">
+        <div class="hudrail" id="hh-rail"></div>
+        <div class="hh-stage">
+          <div id="hh-hero-wrap">
+            <canvas id="hh-hero"></canvas>
+            <div class="hh-heroname" id="hh-mainname">무속성</div>
+          </div>
+        </div>
+      </div>
+      <div class="hh-bottom">
+        <div id="hh-roster"></div>
+        <div class="hh-actions">
+          <a class="hudbtn sel" href="mockup-chapter.html#s-loadout">스킬 편성 ›</a>
+        </div>
+      </div>
+    </div>
+  </div></div>
+ </div>
+</div>
+<div class="ctl">
+  <span class="cl">검증</span>
+  <button id="thumbBtn2">엄지 존 표시</button>
+</div>
+
+<h2 id="s-notes">설계 메모</h2>
+<table class="st">
+<tr><th>결정</th><th>왜</th></tr>
+<tr><td>재화(암흑물질·빛의 결정)를 안 건다</td>
+<td>이 화면은 보는 곳이지 쓰는 곳이 아니다 — 눌러도 아무 일이 안 일어나는
+화면에 잔액을 띄우면 그 숫자는 정보가 아니라 장식이 된다</td></tr>
+<tr><td>스탯 6줄의 <b>값</b>은 <code>HSTAT</code> 을 그대로 읽는다(자리·
+장식은 이번에 전부 새로 짰다)</td>
+<td>수치의 정본이 이미 있다 — 여기서 값을 다시 베끼면 둘이 갈라질 자리가
+생긴다. 값만 정본에서 읽고, 그 값을 어떻게 배치·장식할지는 이 화면이
+스스로 정한다(60° 여섯 자리·꺾인 인출선·귀퉁이 대비 전부 새 결정이다)</td></tr>
+<tr><td>캐릭터 몸은 <code>ELEM.*</code> 를 그대로 부른다 — 로스터 썸네일도
+같은 함수를 작게 그린 것</td>
+<td>아이콘을 따로 그리면 「캐릭터 페이지의 몸」과 「홈의 아이콘」 둘이
+생겨 반드시 어긋난다. 이미 그려져 있는 자산을 안 쓰는 것도 화면이
+빈약해지는 원인이라 적극 가져다 썼다</td></tr>
+<tr><td>장식 요소(귀퉁이 블록·틈새 라벨·궤도·대각선)는 전부 낮은 알파,
+HSTAT 여섯 줄과 캐릭터·버튼은 알파 1</td>
+<td>요소를 늘리라는 게 소음을 늘리라는 뜻이 아니다 — 읽어야 할 것이
+장식에 묻히면 밀도가 오히려 화면을 망친다. 그림 순서 자체로 위계를
+강제한다(장식을 먼저 깔고 읽을 것을 맨 나중에 덮어 그린다)</td></tr>
+<tr><td>패널 여섯·귀퉁이 인출선은 되풀이 없이 흐르거나(<code>hudPolyPoint</code>
+로 꺾인 선을 따라 흐르는 빛) 연속 회전만 한다</td>
+<td>홈은 「머무는 화면」이다 — 부팅 화면처럼 되풀이해서 여닫으면 계기판이
+계속 깜빡이는 고장난 기계로 읽힌다. 연속 회전·선형 흐름은 원래 이음매가
+없어 되풀이해도 안전하다</td></tr>
+</table>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라
+     따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"hud.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-hud-home.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

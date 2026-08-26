@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Light Survival — 운석 보석(A안, 보류)</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<style>
+  h1{font-size:15px;letter-spacing:.18em;color:#9C9CAC;font-weight:400;margin:0 0 4px;}
+  .sub{font-size:11.5px;color:#66667A;margin:0 0 20px;line-height:1.75;}
+  .sub b{color:#A6A6B8;font-weight:600;}
+  .note{font-size:11px;color:#66667A;margin:14px 0 8px;letter-spacing:.02em;}
+  .note b{color:#E8C879;font-weight:600;}
+  .board{position:relative;width:100%;height:420px;margin:0 0 6px;
+    background:#0A0910;border:1px solid rgba(180,180,200,.16);
+    clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,13px 100%,0 calc(100% - 13px));
+    overflow:hidden;}
+  .board canvas{display:block;position:absolute;inset:0;width:100%;height:100%;}
+  table.t{border-collapse:collapse;font-size:11.5px;color:#8B8B99;margin:6px 0 18px;}
+  table.t th,table.t td{border:1px solid rgba(180,180,200,.14);padding:5px 11px;text-align:left;}
+  table.t th{color:#9C9CAC;font-weight:600;background:rgba(180,180,200,.05);}
+  table.t b{color:#E8E8F0;}
+  code{color:#C8A87A;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-body">계단식 다섯 단</a><a href="#s-rim">금속 테</a><a href="#s-spark">스파클</a><a href="#s-diff">균열(B안)과 차이</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+
+<h1 id="s-body">운석 재질 후보 — 보석(A안, 보류)</h1>
+<p class="sub">
+  <b>정본이 아니다.</b> 2026-08-24 사용자 판정 — 색 운석 자리는
+  <code>mockup-rock-fissure.html</code>의 <b>균열(B안)</b>으로 확정됐다.
+  이 페이지의 「몸통 자체를 등급색 보석으로 칠한다」 방향은 <b>「보석으로
+  읽힌다」</b>는 이유로 그 자리에서 빠졌다. 버리지 않고 <b>다른 종류의
+  운석 보석</b> 후보로 여기 킵해 둔다 — 정본이던 짧은 동안 실제로
+  <code>docs/vfx/rock.js</code>의 <code>rkStone</code>과
+  <code>lib/render/rock_paint.dart</code>의 <code>paintOreStone</code>에
+  있었다(2026-08-24 하루). 다시 자리를 얻으면 그때의 접두로 새로 정리한다.
+</p>
+<table class="t">
+  <tr><th>무엇</th><th>이 안(A) — 보석</th><th>정본(B) — 균열</th></tr>
+  <tr><td>몸의 색</td><td><b>몸 전체가 등급 색</b>(계단식 다섯 단)</td>
+    <td>몸은 계속 무채 3단, 색은 <b>틈에서만</b> 새어나온다</td></tr>
+  <tr><td>읽히는 인상</td><td>귀한 결정을 <b>캔다</b></td>
+    <td>안에 갇힌 것이 표면을 <b>뚫고 나오려</b> 한다</td></tr>
+  <tr><td>실루엣</td><td>등급색 <b>금속 테</b></td><td>그늘 쪽 무채 림라이트</td></tr>
+  <tr><td>발광</td><td>꼭짓점 <b>스파클</b> 둘</td><td>균열 그물 전체 + 마디 스파크</td></tr>
+</table>
+
+<p class="note">1 · <b>몸 — 계단식 다섯 단</b>. 등급 색의 그늘·몸·앞날 세 값을
+  축으로 <b>사이 값 없는 다섯 칸</b>을 짠다(그라디언트가 아니다) — 정본이던
+  동안 실측한 이웃 단 최소 색차(ΔE2000)는 공격 16.1 · 치명 16.5 · 생존
+  13.6 · 중력 8.7(넷 다 「나란히 놓으면 보임」선 3을 훌쩍 넘는다). 이
+  페이지의 몸은 <code>rock.js</code>의 다면체(<code>rkSolidFaces</code>)
+  대신 조각(<code>rkB</code>)이 쓰는 「광원 축으로 민 판을 겹쳐 계단을
+  만드는」 가벼운 기법을 다섯 단으로 늘려 근사한다 — 실제 다면체 위에서
+  다시 살릴 때는 이 파일이 아니라 <code>rock.js</code>의
+  <code>rkSolidFaces</code> 위에서 다시 짜야 한다.</p>
+<div class="board"><canvas id="rg-grade"></canvas></div>
+<table class="t">
+  <tr><th>등급</th><th>강화석</th><th>톤 키</th></tr>
+  <tr><td>공격</td><td>공격석</td><td><code>ember</code> <span style="color:#FF6A1E">■</span></td></tr>
+  <tr><td>치명</td><td>치명석</td><td><code>blast</code> <span style="color:#E14CFF">■</span></td></tr>
+  <tr><td>생존</td><td>생존석</td><td><code>magnet</code> <span style="color:#6E8AE8">■</span></td></tr>
+  <tr><td>중력</td><td>중력석</td><td><code>murk</code> <span style="color:#A8C43C">■</span></td></tr>
+  <tr><td colspan="3" style="color:#66667A;font-size:10.5px;">
+    톤은 새로 짓지 않았다 — <code>lib/game/rock_view.dart</code>의
+    <code>kRockGradeTones</code>가 직결하는 <code>vfx.js</code>의
+    <code>TONE</code> 키를 그대로 썼다(<code>rock.js</code>의
+    <code>RK_KIND</code>·<code>rock-fissure.js</code>의
+    <code>RF_GRADES</code>와 같은 넷).</td></tr>
+</table>
+
+<p class="note" id="s-rim">2 · <b>금속 테</b> — 실루엣 그늘 쪽에 몸의 가장
+  밝은 단보다도 밝은 테를 두른다. 흰색을 65% 섞는다 — 「생존」처럼 몸의
+  가장 밝은 단이 이미 순백에 가까운 등급에서도 42%로는 색차가 3.9밖에 안
+  벌어져 테가 그냥 다섯째 단으로 먹혔다(정본이던 동안의 실측). 65%로 네
+  등급 전부 색차 6을 넘긴다 — 일반 운석의 무채 림라이트보다 밝고 두꺼운
+  이유다.</p>
+
+<p class="note" id="s-spark">3 · <b>스파클</b> — 가장 밝은 자리에 별빛
+  십자(<code>IBspark</code>, 저장소 원시함수를 그대로 부른다)를 얹는다.
+  정본이던 동안은 다면체의 <b>가장 밝은 면(과 충분히 떨어진 둘째 면)의
+  무게중심</b>이 자리였다 — 이 페이지는 다면체가 없어 광원 방향으로 근사한
+  두 점을 대신 쓴다. 광맥과 같은 스케줄(<code>pulse</code>)로 숨쉰다.</p>
+
+<p class="note" id="s-diff">4 · <b>균열(B안)과 차이 · 왜 정본에서 빠졌나</b> —
+  이 안은 몸 자체를 보석면으로 깎아 <b>몸이 곧 색</b>이 되는 방향이라
+  「귀한 결정을 캔다」는 인상은 강했지만, 그 강한 인상이 문제였다:
+  색 운석이 <b>운석보다 보석·재화처럼 읽혀</b>, 판 위의 다른 재화
+  (강화석·유니크)와 실루엣 단계에서부터 헷갈렸다. 균열(B안)은 몸을
+  계속 무채로 남겨 「운석」이라는 물성을 지키면서 틈에서만 색이 새어나오게
+  해 그 문제를 피한다. 이 페이지는 폐기가 아니라 <b>보관</b>이다 — 색
+  운석이 아닌 다른 종류의 운석(예: 유니크·특수 채굴 대상)에 「몸 자체가
+  보석」이라는 이 방향이 다시 맞을 수 있어서다.</p>
+
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script src="vfx.js"></script>
+<script>document.write(unescape("%3Cscript src=\"rock-gem.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"))</script>
+</div>
+</body>
+</html>

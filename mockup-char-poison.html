@@ -1,0 +1,152 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 난다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 독 毒</title>
+<!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** -->
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-body">몸</a><a href="#s-affinity">상성</a><a href="#s-skill">스킬 열두 칸</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 캐릭터 · 기본</p>
+  <h1>독 毒</h1>
+</header>
+
+<h2 id="s-body">몸</h2>
+<p class="def"><b>날 셋이 도는 삼엽 표식</b>이다 — <code>EVSET</code> 여섯 줄 중 <b>넷째 값(고리 반경)이 0 이 아닌 유일한 줄</b>이고(<code>vfx.js</code>: <code>toxin:[["leaf",3,.50,.56]]</code>), 그래서 날 셋 <b>바깥에 고리가 같이 돈다</b> — 「번지는 것」이 아니라 <b>「표식이 걸려 있다」</b>로 읽히는 이유가 그 한 줄이다. 평상시에는 <b>코어만 물들고</b>, 발현하면 둘레에 그 날 셋이 선다.<br>
+<b>그림은 새로 안 그렸다</b> — <a href="mockup.html">속성 · 몸</a>이 정본이고 여기서는 같은 함수(<code>ELEM.prePoison</code> · <code>ELEM.poison</code>)를 그대로 부른다. 캡션 문구도 그 목록(<code>ELEMS</code>)에서 읽어 온다.<br>
+⚠️ <b>짝 이름이 다섯 속성의 규칙 그대로다</b> — <code>prePoison</code>/<code>poison</code>. 어긋난 것은 무속성 하나뿐이고(<code>base</code>/<code>goldMani</code>), 독은 안 어긋난다.</p>
+
+<div class="grid" id="cpbody"></div>
+
+<h2 id="s-affinity">상성</h2>
+<p class="def"><b>배수는 한 곳이 정한다</b> — <code>lib/sim/combat/damage.dart</code> 의 <code>affinityMul()</code>. 스킬은 자기 속성만 넘기면 되고, 값은 <b>셋뿐</b>이다: <b>0.5 · 1.0 · 2.0</b>(<code>sim/config/balance.dart</code> 의 <code>kAffinityWeak</code> <code>:162</code> · <code>kAffinityStrong</code> <code>:163</code>).<br>
+<b>5×5 를 안 채운 것이 설계다.</b> 스물다섯 칸을 채우면 아무도 못 외우고, 맞았을 때 왜 피해가 줄었는지 몰라 억울해진다 — 그래서 <b>상극 셋 · 상생 하나</b>뿐이다.</p>
+
+<table class="st">
+<tr><th>때리는 속성</th><th>적의 상태</th><th>배수</th><th>왜 · 어디</th></tr>
+<tr><td><b>독 毒</b></td><td>연소 중</td><td><b>×0.5</b></td><td>타는 몸에선 독이 끓어 없어진다 — <b>정화가 아니라 상쇄</b> <code>:190</code></td></tr>
+<tr><td><b>빙 氷</b></td><td>연소 중</td><td><b>×0.5</b></td><td>불이 꺼진다 — 얼음이 불을 상쇄한다 <code>:186</code></td></tr>
+<tr><td><b>염 炎</b></td><td>동상</td><td><b>×0.5</b></td><td>얼음이 녹는다 — 열이 결빙을 상쇄한다 <code>:188</code></td></tr>
+<tr><td><b>뇌 雷</b></td><td>동상 · <b>젖음</b></td><td><b>×2.0</b></td><td><b>전도</b> — 넷 중 유일한 상생 <code>:191~194</code></td></tr>
+<tr><td><b>풍 風</b></td><td>—</td><td>×1.0</td><td><b>상성표 밖.</b> 위치만 건드리는 속성이라 피해 상성에 안 낀다 <code>:177 · :196</code></td></tr>
+<tr><td><b>암 影</b></td><td>—</td><td>×1.0</td><td><b>상성표 밖.</b> 빛의 문법에 참여하지 않는 것이 정체다 <code>:197</code></td></tr>
+<tr><td><b>무속성</b></td><td>—</td><td>×1.0</td><td>거는 상태가 없다 <code>:195</code></td></tr>
+</table>
+
+<h3>독이 이 표에서 서는 자리 — <b>손해만 있고 이득이 없다</b></h3>
+<p class="def">① <b>내가 손해 보는 자리 하나</b> — <b>연소 중</b>인 적을 때리면 <b>피해가 반</b>이다. 옛 「독에 광」의 자리를 광 폐기와 함께 물려받은 칸이다(<code>damage.dart</code> 머리 주석).<br>
+② <b>내가 이득 보는 자리는 없다</b> — 표에서 ×2.0 은 뇌 한 줄뿐이고 독은 거기 안 나온다.<br>
+③ ⚠️⚠️ <b>내가 남의 문을 열어 주지도 못한다.</b> 독이 거는 것은 <b>중독</b>이고 비트도 실제로 선다(<code>combat/element.dart:248</code> 의 <code>kStatusPoisoned</code>). 그런데 <code>affinityMul</code> 이 읽는 비트는 <b>연소 · 동상 · 젖음 셋뿐</b>이라 <b>중독은 한 번도 안 읽힌다</b>. 빙이 <b>동상</b>으로 뇌에게 ×2.0 을 열어 주는 그 일을, 독은 <b>상태를 걸고도</b> 못 한다.</p>
+<p class="def">⭐ <b>무속성과 다른 점이 여기다.</b> 무속성은 <b>걸 상태가 아예 없어서</b> 표 밖이고(그래서 손해도 이득도 0), 독은 <b>상태를 거는데도 표가 안 읽어서</b> 손해만 남는다. ⇒ 여섯 중 <b>상성 수지가 마이너스인 유일한 속성</b>이다.<br>
+⚠️ <b>다만 그것이 「약하다」는 뜻은 아니다.</b> 독의 값은 상성표가 아니라 <b>계열 안</b>에 있다 — 넷이 <code>FVSYN</code> 의 특수 속성 넷과 하나씩 짝이 맞게 갈라(매연=만연 · 역병=기생 · 폭마=극독 · 독무=감염) <b>어느 특수 속성을 잡느냐가 곧 빌드</b>가 되고, <b>기폭</b>이 그 넷이 쌓아 둔 겹을 한꺼번에 결제한다(<code>vfx.js</code> 의 <code>MGFX</code> 머리 「독의 성격」).</p>
+<p class="def"><b>곱하는 자리가 중요하다.</b> 상성은 <b>단일 곱셈 지점 바깥에서 마지막에</b> 곱한다 — <code>amp</code> 안에 넣으면 상극이 상쇄가 아니라 <b>감산</b>이 되어 음수 피해가 난다. 바닥도 값으로 못 박혀 있다(<code>magic/element_hit.dart</code>: <code>if (out &lt; 1) out = 1</code>).<br>
+<b>상극은 상태를 끄기도 한다</b> — 다만 <b>끄는 것은 빙과 염 둘뿐</b>이다(<code>element_hit.dart:37~42</code>). <b>독은 연소를 못 끈다</b>: 손해만 보고 불은 그대로 남는다.</p>
+
+<h3>⭐ 2026-08-22 — <b>결계 · 독 毒 이 이 장으로 들어왔다 — <b>방어 0 이 메워진다</b></b></h3>
+<p class="def">사용자 판정: 「결계 방어를 <b>결계가 입힌다는 느낌이 아니라 아예 속성의 방어 스킬로 편입</b>」 · 「결계:염 은 염 속성의 스킬 중 하나로, 결계:빙 은 빙 속성의 스킬 중 하나로. 풍, 독 전부 동일」 (원장 = <code>docs/design/속성-개선-백로그.md</code> 「방어 계열 판정」). 배분표 §2-1 ① 이 요구하는 계열 넷 중 <b>0</b> 이던 방어가 <b>1</b> 이 된다. 그 칸은 「<b>판이 떨어져 있다</b> — 늘어진 가닥」이라 독의 문법(맺히고 떨어진다) 그대로다. ⚠️ <b>기초 0 · 일반 0 은 그대로</b>다 — 이 편입은 바닥 셋 중 <b>하나만</b> 메운다.</p>
+<p class="def">⚠️⚠️ <b>이 여덟은 시안에만 있다</b> — 엔진 방어는 7종뿐이라(결계 · 풍벽 · 역풍 · 빙벽 · 파동정지 · 바늘 숲 · 모자이크 석벽) <b>옮겨 두지 않으면 없어진다</b>. 그래서 이 편입은 그림 정리가 아니라 <b>보관</b>이다.<br>⚠️ <b>그림도 문구도 새로 안 만들었다</b> — <a href="mockup-guard.html">방어</a> 장의 <code>#wardlv</code> 성장표가 쓰는 <b>같은 표</b>(<code>vfx.js</code> 의 <code>WLTBL</code> · <code>WLtxt</code>)에서 읽어 온다. <code>char-page.js</code> 의 <code>charWard</code> 한 함수를 <b>여덟 장이 같이 쓴다</b>.<br>⚠️ <b>칸 키가 「방어 › 속성 입힘 가능」 격자와 다르다</b> — 저쪽(<code>WDward*</code> · <code>GDground3/4</code>)은 <b>확정된 그림 한 장</b>이라 레벨을 안 읽어 다섯 칸이 통째로 같아진다. 레벨을 읽는 <code>WLFX</code>(<code>WLward*</code>) 쪽을 걸었다.<br>⚠️ <b>등급은 <code>lib/data/skill_rank.dart</code> 에 아직 없다</b>(엔진 편입이 마지막). 같은 처지의 속성 방어(풍벽 · 역풍 · 파동정지)가 전부 <b>변주</b>라 그 자리로 봤다 — <b>판정 대기</b>.</p>
+
+<h2 id="s-skill">스킬 — 열두 칸</h2>
+<p class="def">⚠️⚠️ <b>2026-08-25 — 두 갱신을 같이 반영한다.</b> ① 고유 스킬 풀 목표가 12 → 20 으로 늘었다(<code>docs/vfx/mockup-basic.html#s-skillelem</code>). ② <b>「독가스는 여기 없다」는 더 안 맞다</b> — <code>lib/data/skill_element.dart</code> 를 다시 보면 <code>gasbomb</code>(독가스)이 이미 배열에 들어가 있다(주석: 「2026-08-23 신설」). 아래 「독가스(신설안)」 절과의 관계는 이 페이지 담당이 다시 봐야 한다. <b>캐릭터마다 고유 스킬 스무 종</b>이다. 독은 지금 <b>여덟</b>이 서 있고 <b>열두 칸이 비어 있다</b> — 계열은 일반 2(독침·기생) · 보조 2 · 마법 3(독가스 포함) · 방어 1(결계·독) 이다. ⭐ <b>즉시 여섯</b>(독침·분열·기생·단전·극독·감염)이 <b>처음으로 꽉 찼다</b> — 독침이 들어오면서다. <b>추가 것</b>은 결계·독과 독가스 둘이다. 정본은 <code>lib/data/skill_element.dart</code> 이고, 빠짐·겹침은 <code>test/sim/skill_element_test.dart</code> 가 막는다.</p>
+
+<h3>⚠️⚠️ 2026-08-21 재배치 — <b>둘을 받고 하나를 보냈다</b></h3>
+<p class="def">다섯 속성 전부에 사용자 판정이 났다(원장 = <code>docs/design/속성-개선-백로그.md</code>). 독은 <b>넷에서 다섯</b>이 된다.</p>
+<table class="st">
+<tr><th>스킬</th><th>판정</th><th>무엇이 달라지나</th></tr>
+<tr><td>분열 <code>split</code></td><td><b>뇌 雷 에서 왔다</b></td><td>보조 · <b>변주</b> — 넷이 전부 연계이던 이 캐릭터에 <b>「짝이 없어도 도는 것」이 처음 하나</b> 생긴다</td></tr>
+<tr><td>단전 <code>halt</code></td><td><b>뇌 雷 에서 왔다 + 색</b></td><td>보조 · 연계. <b>색도 독으로</b> — 판정만 났고 그림은 아직 뇌의 것이다</td></tr>
+<tr><td>기폭 <code>detonate</code></td><td><b>특수 「폭마」로 이적</b></td><td><code>numb</code> · <b>뇌+독 융화</b>. 독에서는 뺀다 → <a href="mockup-char-numb.html">폭마 장</a></td></tr>
+<tr><td>기생 · 극독 · 감염</td><td><b>변경 없음</b></td><td>—</td></tr>
+</table>
+<p class="def">⚠️⚠️ <b>이 이적으로 「기초 0」이 안 풀린다.</b> 분열은 <b>변주</b>, 단전은 <b>연계</b>라 <b>기초는 여전히 0</b> 이고, 둘 다 <b>보조</b>라 <b>일반 0 · 방어 0</b> 도 그대로다. ⇒ 독에 필요한 것은 <b>수가 아니라 기초</b>이고, 그중에서도 <b>일반 계열</b>이다 — <b>이적으로는 못 고친다</b>.<br>
+⚠️⚠️ <b>단전은 「색 교체 예정」이다.</b> 원장이 「색도 독으로」를 명시했지만 판정만 났고 그림은 그대로다 — 칸에는 <b>지금 있는 <code>FX.mgBoltHalt</code></b> 를 그대로 걸었다(그 키는 <code>WTONE</code> 에 <code>"gold"</code> 가 걸려 있다). <b>없는 그림을 지어내지 않는다.</b><br>
+⭐ <b>기폭이 폭마로 간 것은 결이 맞는다.</b> 폭마는 <b>뇌+독</b>이고 기폭은 「깔아 두고 <b>터뜨린다</b>」 — 뇌의 즉발과 독의 지속이 만나는 자리다. ⚠️ 다만 <b>특수 열둘은 출시 범위 밖 · 상점 해금 대상</b>이라 엔진에는 안 녹인다. 그래서 <a href="mockup-char-numb.html">그 장</a>은 캐릭터 시안이 아니라 <b>보관소</b>다.</p>
+<p class="def">⚠️ <b>넷까지 줄었던 것은 같은 날 두 번 빠졌기 때문이다</b>(위 재배치로 다시 다섯이 됐다). ① <b>광선검이 독 → 염으로 갔다</b>(2026-08-21 사용자 발견): 도감 문구·엔진 구현·팔레트 <b>셋이 전부 염을 가리켰다</b>. ⚠️ 그 스킬은 <b>2026-08-23 에 게임에서 아예 빠졌다</b> — 독으로 돌아올 자리가 아니다. ② <b>수확이 공유로 갔다</b> — 회복 다섯이 통째로 공유 열셋에 편입됐다.<br>
+⚠️ 그래서 배분표 §4 표의 「독 6 · 공격 3 · 회복 1 · 기초 1」은 <b>옛 수</b>다. 그 둘에 <b>2026-08-21 재배치</b>(분열·단전 유입 · 기폭 유출)까지 얹은 실집계가 이 장의 <b>다섯</b>이다.</p>
+<p class="def"><b>덱 = 공유 13 + 내 속성 20 = 서른셋</b>, 그중 <b>여섯</b>을 골라 판에 들어간다. ⚠️ <b>내 속성이 셋 이상</b>이어야 나갈 수 있다(<code>data/characters.dart</code> 의 <code>kCharacterOwnMin</code>=3, 게이트는 <code>ui/loadout_gate.dart</code>) — 공유만으로 여섯을 채우면 어느 캐릭터로 들어가든 같은 판이 되기 때문이다.<br>
+<b>공유 13 = 버프 3 + 회복 5 + 다섯 축 5</b>(이동 · 시야 · 재화 · 부활 · 시간). ⚠️ <b>그 열셋 안에 공격도 방어도 없다</b> — 배분표 §2-1 ① 이 그것을 못 박아 뒀다: <b>공유가 못 주는 것은 12 안에 있어야 한다</b>.</p>
+
+<h3>⚠️⚠️ 이 장의 논점 — <b>기초 0 · 일반 0 · 방어 0</b></h3>
+<p class="def"><b>독은 다섯 중 넷이 연계다.</b> 기초 <b>0</b> · 변주 1 · 연계 4 (<code>skill_element.dart</code> × <code>skill_rank.dart</code> 에 2026-08-21 이적을 얹어 다시 센 값 — ⚠️ <code>skill_element.dart</code> 는 <b>아직 판정 전 상태</b>다). 재배치 전에는 <b>넷이 전부 연계</b>라 등급이 한 칸에 통째로 몰린 유일한 캐릭터였고, 분열 하나가 오면서 <b>변주 칸에 처음 하나가 섰다</b>.</p>
+<p class="def">그게 왜 문제인지는 배분표 §2-1 ② 가 이미 적어 뒀다. <b>내 속성 셋만 들고 나가는 사람이 있다</b>(덱 여섯 중 공유는 최대 셋이므로 그 짜임이 제일 흔하다 — 3:3 이 62,920가지로 최다). 그 셋이 전부 <b>「짝이 서야 사는 것」</b>이면:</p>
+<table class="st">
+<tr><th>등급</th><th>전제가</th><th>셋만 들었을 때</th><th>독은</th></tr>
+<tr><td><b>기초</b> 基</td><td><b>없다</b></td><td><b>혼자 돈다</b> ○</td><td><b>0 종</b></td></tr>
+<tr><td>변주 變</td><td>플레이어(어디 서고 언제 놓나)</td><td>돈다. 값이 덜 난다 △</td><td><b>1 종</b> — 분열(뇌에서 왔다)</td></tr>
+<tr><td>연계 連</td><td><b>판에 이미 선 다른 것</b></td><td>공급자가 없으면 <b>0</b> ✗</td><td><b>4 종</b> — 기생 · 단전 · 극독 · 감염</td></tr>
+</table>
+<p class="def">⇒ <b>§2-1 ② 는 「캐릭터마다 기초 3종 이상」을 요구하는데 독은 0 이다.</b> 다섯 중 셋을 들고 나가면 <b>그 판은 시작부터 죽는다</b> — 기폭은 남이 쌓아 준 겹이 있어야 값이 나고(도감이 직접 그렇게 적었다: 「<b>혼자 쓰면 미지근하고</b> 독 위에 얹으면 판이 뒤집힌다」), 극독·감염·기생은 표식이 익을 시간이 있어야 값이 난다. <b>즉발로 첫 웨이브를 넘길 물건이 한 칸도 없다.</b><br>
+⚠️ <b>「연계 = 약한 것」이라는 말이 아니다</b>(<code>skill_rank.dart</code> 머리). 이 제약은 「연계를 줄여라」가 아니라 <b>「연계<i>만</i> 있으면 안 된다」</b>다. 독의 연계 넷은 짝이 서면 여섯 중 제일 세지는 대일 수 있고, 그래서 바꿀 것은 <b>있는 다섯이 아니라 없는 일곱</b>이다.</p>
+<p class="def"><b>그리고 계열도 둘이 비어 있다.</b> <b>일반 0</b> — 여섯 중 일반 공격이 한 종도 없는 유일한 캐릭터다(광선검이 나가며 그렇게 됐고, 뇌에서 받은 둘은 <b>보조라 이 칸을 못 메운다</b>). <b>방어 0</b> — 재배치로 <b>염 · 뇌 · 독 셋</b>이 됐고(파동정지가 뇌에서 무속성으로 나갔다), 공유가 방어를 한 칸도 안 주므로 <b>독으로 들어가면 막는 물건을 아예 못 든다</b>.<br>
+⇒ 일곱 칸이 메워야 할 바닥은 <b>기초 3 · 일반 1 · 방어 1</b> 이고, 남는 둘이 성격의 몫이다. <b>자물쇠 일곱 칸이 화면에서 말하는 것이 그것</b>이다.</p>
+
+<h3>「즉시 여섯 / 추가 여섯」은 무엇으로 가르나 — <b>독은 즉시 여섯도 못 채운다</b></h3>
+<p class="def"><b>자는 이미 서 있다</b> — 등급이다(<code>lib/data/skill_rank.dart</code>). <b>기초 基 → 변주 變 → 연계 連</b> 이고, <b>그 차례가 곧 해금 순서</b>다. 이 장도 앞의 셋과 같은 자를 쓴다: <b>등급 차례로 앞에서 여섯을 잘라</b> 격자에 띠를 하나 긋는다.</p>
+<p class="def">⇒ <b>그런데 다섯밖에 없어 「앞의 여섯」이 다섯에서 끝난다.</b> 그래서 <b>다섯이 전부 「즉시 여섯」</b>에 들어가고 <b>「추가 여섯」은 한 칸도 안 정해졌다</b> — 그 띠 아래가 통째로 자물쇠 여섯이고, 앞 띠 아래에도 자물쇠가 <b>하나</b> 남는다. 여섯을 못 채우는 캐릭터는 재배치 뒤 <b>독(다섯)과 뇌(넷) 둘</b>이다.<br>
+⚠️ <b>띠는 안 지웠다.</b> 무속성 장과 같은 이유다 — 표가 비었다고 띠를 빼면 「추가로 열릴 여섯이 아직 없다」는 사실이 화면에서 사라지고, 열두 칸 중 다섯만 있는 캐릭터가 <b>다섯 칸짜리 캐릭터</b>로 읽힌다. 무속성은 그래도 앞 여섯을 <b>채웠고</b>, 독은 <b>그것도 못 채웠다</b> — 그 차이가 격자에 그대로 보여야 한다.<br>
+⚠️ 그리고 <b>「기초 = 즉시 여섯」으로도 안 갈린다</b>: 여섯 캐릭터의 기초 수가 <b>무속성 5 · 뇌 3 · 빙 2 · 풍 2 · 염 0 · 독 0</b> 이라 그 자로 읽으면 <b>독은 한 칸도 안 열린다</b>. 선은 아직 안 그어졌다(배분표 §7: 등급이 자가 될 수 있지만 값표 <code>ui/shop_data.dart</code> 와 같이 봐야 한다). 이 장의 띠는 <b>잠정선</b>이고, 근거는 칸마다 적힌 <b>계열 · 등급</b>이다.</p>
+
+<h3>그림 · 문구가 어디서 오나</h3>
+<p class="def"><b>그림도 문구도 새로 안 만들었다.</b> 칸의 이펙트는 계열 장(<a href="mockup-support.html">보조</a> · <a href="mockup-magic.html">마법</a>)이 쓰는 <b>같은 함수</b>를 부르고, 칸마다 전역 <code>LV</code> 만 갈아 끼운다. 성장표 문구는 <b>도감 그대로</b>다 — <code>lib/data/magic_support.dart</code>(기생 · 분열 · 단전) · <code>magic.dart</code>(극독 · 감염). 기폭의 다섯 줄은 <a href="mockup-char-numb.html">폭마 장</a>으로 같이 옮겨 갔다.<br>
+⚠️⚠️ <b>다섯 중 넷이 <code>FX</code> 밖에 산다</b> — 이 장은 <code>FX</code> 만 뒤지면 <b>한 줄만 뜬다</b>. 기생은 <code>JDFX.JDlatch</code>(「말라간다」 채택안, 2026-08-13)이고 분열 <code>MGFX.mgNovaSplit</code> · 극독 <code>MGFX.mgPoisonBrand</code> · 감염 <code>MGFX.mgPoisonSpread</code> 다(창작 마법 열 종은 <code>tile</code> 의 물들임 규약 때문에 <code>FX</code> 밖에 산다). 그래서 <code>charReg(MGFX, JDFX)</code> 로 <b>둘 다</b> 얹었다. ⭐ 다섯째 단전만 <code>FX.mgBoltHalt</code> 인데, 그건 <code>MGW</code> 블록이 <code>FX</code> 에 얹었기 때문이다 — 대조표의 정본은 <code>tools/mockup_sheet.js</code> 의 <code>SKILL</code> 표다.<br>
+⚠️ <code>MGFX.mgPoisonLatch</code> 는 아직 살아 있지만 <b>채택본이 아니다</b> — 고르기 페이지의 대조군이라 함수만 남았다(그 자리를 <code>JDlatch</code> 가 물려받았다). 그 키를 걸면 옛 그림이 조용히 뜬다.</p>
+
+<h3>도감과 엔진이 갈리는 한 칸</h3>
+<p class="def">성장표 문구의 정본은 <b>도감(Dart)</b>이라 그대로 옮겼다. 다만 <b>기생 L5</b> 한 칸은 도감이 <b>자기 엔진 상수와 정반대</b>다.</p>
+<table class="st">
+<tr><th>칸</th><th>도감 문구</th><th>엔진 상수 · 시안 그림</th><th>어긋남</th></tr>
+<tr><td><b>기생</b> L5</td><td>각성 — <b>동시 정원 5</b>, 한꺼번에 더 많이 문다</td><td><code>kLatchTargetsAt = [0,2,<b>3,3,3,3</b>]</code> · <code>kLatchForkFrom = 5</code>(<code>magic/support_tuning.dart:29 · :37</code>) · 시안 <code>JDNB=[2,3,3,3,3]</code> + <code>FORK=atL(5)</code></td><td><b>정원은 L2 에서 멈춘다.</b> L5 각성은 정원이 아니라 <b>곁가지</b>(「하나가 셋을 문다」)다 — 도감만 정원 5 라고 말한다</td></tr>
+</table>
+<p class="def">⭐ <b>엔진 쪽이 이 자리를 이미 되돌린 적이 있다.</b> <code>support_tuning.dart</code> 의 그 상수 주석: 「한때 L5 를 5 로 늘려 각성을 표현했는데, 그건 <b>성장축을 바꾼 것</b>이라 되돌렸다 … 각성은 <code>kLatchForkFrom</code> 이 진다」. ⇒ <b>뒤처진 것은 도감 문구 한 줄</b>이고, 고칠 자리는 <code>lib/data/magic_support.dart</code> 의 <code>latch</code> 다.<br>
+⚠️ 같은 스킬 <b>L4</b> 는 어긋남이 아니라 <b>일부러 옮긴 것</b>이다 — 시안은 「마른 실뿌리」(뿌리 길이)를 파고 엔진은 「더 빨리 다 자란다」(<code>kLatchRampFastMul</code>)로 <b>같은 축을 수치로 번역</b>했다고 <code>support_tuning.dart:74~78</code> 이 근거를 적어 뒀다. 그래서 L4 칸은 <b>그림은 뿌리, 글은 속도</b>인데 그건 갈라짐이 아니다.</p>
+
+<div class="lvset char-lv" id="cpskill"></div>
+
+<!-- ⚠️ **「표창(신설안)」 절을 지웠다**(2026-08-23). 독침이 엔진에 들어가면서
+     (`b4b7bc8` · `skill_element.dart` 의 `venomdart`) **위 「스킬 열두 칸」 격자의
+     즉시 여섯**에 정식으로 선다. 신설안 절은 엔진에 없던 시절의 자리였고,
+     남겨 두면 한 페이지에 같은 스킬이 두 번 서서 어느 쪽이 정본인지 흐려진다.
+     ⚠️ 독가스 절도 2026-08-23 에 같은 이유로 지웠다(아래 주석). -->
+<!-- ⚠️ **「독가스(신설안)」 절도 지웠다**(2026-08-23). 독침과 **같은 이유 ·
+     같은 처리**다: 엔진에 들어갔으므로(`lib/sim/combat/magic/gasbomb.dart` ·
+     `skill_element.dart` 의 `gasbomb`) **위 「스킬 열두 칸」 격자의 추가 여섯**에
+     정식으로 선다. 남겨 두면 한 페이지에 같은 스킬이 두 번 서서 어느 쪽이
+     정본인지 흐려진다.
+     ⭐ **그림의 정본은 `docs/vfx/vfx-poison.js` 의 `PZgasBomb`**(= `FX.PZgasBombA`)
+       이고, 확정된 값 다섯(구 9 · 거리 37 · 구멍 88° · 진폭 2.00 · 왕복 2.40초)과
+       성장표(수류탄 11223 · 갈래 사방 · 방사 횟수 · 쿨 18~14 · 탐지 반경)는 그
+       파일의 머리말이 통째로 들고 있다. 여기서 옮겨 적지 않는다.
+     ⚠️⚠️ **「L5 프레임당 꼭짓점 119,440 = 정원의 364%」를 다시 인용하지 마라.**
+       그 수는 **복제본 `PZgasBombD`** 의 것이다(그 판만 머무는 안개 · 밀도
+       마스크 · 흔적 셋을 더 얹는다). 엔진이 옮긴 확정본 `PZgasBombA` 의 실측은
+       **최악 15,541 / 32,768 (47.4%) · 버린 삼각형 0** 이다
+       (`test/fx/fill_cost_test.dart --tags bench` 의 `solo-gas`). -->
+<!-- 목차는 스물넷이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라 따로 부른다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 간다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **캐릭터 장의 틀** — 일곱 장이 같이 쓴다(띠·자물쇠·빈 칸·가드).
+     `vfx.js` **뒤**, 이 장의 스크립트 **앞**이라야 한다. -->
+<script>document.write(unescape("%3Cscript src=\"char-page.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️ **페이지 제 스크립트도 쿼리로 캐시를 깬다** — css 에서 겪은 것과 같은 함정이다.
+     `vfx.js` **뒤에** 실린다: `tile`·`ELEM`·`ELEMS`·`FX`·`MGFX`·`JDFX` 를 그쪽에서 쓴다. -->
+<!-- ⚠️⚠️ **순서가 중요하다** — `vfx-poison.js` 가 `mockup-char-poison.js` 보다
+     **먼저** 실려야 한다. 격자를 그리는 쪽이 `FX.PZneedle30` 을 그 자리에서
+     찾기 때문이다. 뒤집혀 있던 탓에 독침 칸이 조용히 빠져 열두 칸이
+     **열한 칸**으로 그려졌다(2026-08-23). -->
+<script>document.write(unescape("%3Cscript src=\"vfx-poison.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-char-poison.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️⚠️ **독 신설안 셋은 별도 파일이다** — `vfx.js` 가 50,207줄이고 이 사이클에
+     다른 손이 같이 쓰고 있어(같은 날 그 파일에서 정규식 하나가 31,000줄을 날렸다)
+     새 그림은 `vfx-poison.js` 에만 만들고 `vfx.js` 는 읽기만 했다.
+     ⚠️ `vfx.js` **뒤**라야 한다 — `FX`·`TONE`·`tile`·`PK*` 를 그쪽에서 읽어 쓴다. -->
