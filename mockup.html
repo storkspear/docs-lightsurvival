@@ -17,7 +17,7 @@
 <div class="wrap">
 <nav class="toc">
   <div class="nav1"></div>
-  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-voc">그리기 문법</a><a href="#s-morph">변신 이펙트</a><a href="#s-elem">속성 두 갈래</a><a href="#s-fuse">특수 속성</a><a href="#s-elem3">속성별 기본·발현·전용기</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-voc">그리기 문법</a><a href="#s-morph">변신 이펙트</a><a href="#s-elem">속성 두 갈래</a><a href="#s-fuse">특수 속성</a><a href="#" id="bare" class="bare">설명 접기</a></div>
 </nav>
 <header>
   <p class="kicker">Light Survival · 셀 VFX 시안</p>
@@ -38,11 +38,12 @@
 <table class="st tiers">
 <tr><th>속성</th><th>층</th><th>무엇인가</th></tr>
 <tr><td><b>무 無</b></td><td>기본</td><td>속성을 고르기 전의 상태. 디버프가 붙지 않는다</td></tr>
-<tr><td><b>염 · 빙<br>뇌 · 풍<br>독</b></td><td>기본</td><td>각자 <b>고유한 디버프</b>를 하나씩 걸고, <b>서로 조합된다</b> — 둘을 쥐면 조합 열 가지가 나온다. 어떤 디버프인지는 <a href="mockup-basic.html">기본 공격·발현</a>에 있다</td></tr>
+<tr><td><b>염 · 빙<br>뇌 · 풍<br>독</b></td><td>기본</td><td>각자 <b>고유한 디버프</b>를 하나씩 걸고, <b>서로 조합된다</b> — 둘을 쥐면 조합 열 가지가 나온다. 어떤 디버프인지는 <a href="mockup-basic.html">기본 공격</a>에 있다</td></tr>
 <tr><td><b>암 影</b></td><td>특수</td><td><b>혼자만 조합에 안 낀다.</b> 그래서 조합 열 가지 셈에서는 빠지고, 특수 열둘의 한 칸으로 선다. 거는 것은 실명</td></tr>
 <tr><td><b>백 白光</b></td><td>특수</td><td><b>기본 다섯을 다 거친 끝.</b> 디버프를 거는 대신 <b>기본 공격의 규칙이 바뀐다</b> — 방어 무시 · 피해 두 배 · 적을 맞고 한 번 더 튕긴다</td></tr>
 </table>
 
+<p class="def">⚠️ 아래 격자에서 <b>「· 둘레 모티프」가 붙은 여섯 칸은 몸이 아니다</b> — 몸은 <b>한 벌</b>이고 늘 <b>코어만 물든다</b>(엔진도 같다: <code>lib/game/fx/body_elements.dart</code> 의 <code>drawElem</code> 이 코어 하나만 그린다). 둘레에 모티프가 서던 갈래는 폐기됐고 <b>그림만 남았다</b> — <b>안 지운다.</b> 다시 설 자리가 열려 있는 것은 <b>풍 · 암 둘뿐</b>이고, 염 · 뇌 · 독 · 빙은 몸 색과 속성 결계 색이 겹쳐 <b>그 후보에서도 빠졌다</b>(<code>docs/1차-개발.md</code> 「살아남은 모티프(풍 · 암)가 앉을 칸」).</p>
 <div class="grid" id="elem"></div>
 
 <h2 id="s-affinity">속성 상성</h2>
@@ -92,12 +93,10 @@
 뇌의 상생이 걸리는 두 상태 중 하나라 표에 남긴다.</p>
 
 <h2 id="s-fuse">특수 속성</h2>
+<p class="def">⚠️ 칸이 <b>둘씩 짝지어</b> 뜨는데 <b>몸으로 서는 것은 앞 칸 하나</b>다. 뒤의 <b>「안 쓰는 그림」</b>은 몸을 두 벌로 가르던 시절의 화려한 쪽이라 지금은 어디서도 안 선다 — 엔진 대조표가 그 칸을 <b>「영구 미제작」</b>으로 적어 뒀다(<code>docs/design/시안-엔진-대조.md</code>). <b>지울 그림이 아니라 안 쓰는 그림</b>이라 그대로 띄운다.</p>
 
 <div id="fuse"></div>
 
-<h2 id="s-elem3">속성별 기본·발현·전용기</h2>
-
-<div id="elem3"></div>
 </div>
 <!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
 <!-- 목차는 스물한 장이 같이 쓴다 — 그림(`vfx.js`)과 다른 관심사라

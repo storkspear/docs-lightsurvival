@@ -17,13 +17,69 @@
 <div class="wrap">
 <nav class="toc">
   <div class="nav1"></div>
-  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-all">열셋 한눈에</a><a href="#s-each">안별로 보기</a><a href="#s-proof">이펙트 얹기</a><a href="#s-mini">미니맵</a><a href="#s-num">밝기 실측</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-watch">관측소 은하</a><a href="#s-all">열셋 한눈에</a><a href="#s-each">안별로 보기</a><a href="#s-proof">이펙트 얹기</a><a href="#s-mini">미니맵</a><a href="#s-num">밝기 실측</a><a href="#" id="bare" class="bare">설명 접기</a></div>
 </nav>
 <header>
   <p class="kicker">Light Survival · 심우주 유니버스</p>
   <h1>배경은 그림이 아니라 위치감이다</h1>
   
 </header>
+
+<h2 id="s-watch">관측소 은하 — 텍스처를 얹은 판</h2>
+<p class="sub">
+  ⭐⭐ <b>은하는 정체가 있는 물건이 아니라 빛과 가스다.</b> 그래서 <code>assets/fx</code>
+  열여덟 장이 제일 잘 먹는 자리이고, 실제로 <b>화면에서 텍스처를 처음 쓴 자리</b>가
+  여기다(2026-08-27). 길은 시안 쪽 <code>uitex.js</code> · 엔진 쪽
+  <code>lib/ui/ui_tex.dart</code> <b>한 벌씩</b>으로 냈다 — 뒤에 올 화면(상점 칸 ·
+  도감 · 강화)이 같은 길을 쓴다.
+</p>
+<p class="sub">
+  ⚠️ 아래 두 장은 <b>같은 자리 · 같은 종 · 같은 씨앗</b>이다. 다른 것은 결뿐이다.
+  옛 판은 방사 램프와 선만 써서 「뭉개진 흰 덩어리」로 읽혔는데, 모자랐던 것은
+  밝기가 아니라 <b>결</b>이었다.
+</p>
+
+<div class="grid wide" id="gxt-new"></div>
+<div class="grid wide" id="gxt-old"></div>
+
+<h3>여섯 종 — 형태 자체가 이름이다</h3>
+<div class="grid wide" id="gxt-kinds-new"></div>
+<div class="grid wide" id="gxt-kinds-old"></div>
+
+<table class="tbl">
+  <thead><tr><th>자리</th><th>텍스처</th><th>왜 그것인가</th></tr></thead>
+  <tbody>
+    <tr><td>원반 · 타원의 몸</td><td><code>kenney_smoke</code></td>
+      <td>가운데가 밝고 결이 구름인 <b>유일한</b> 장이다(실측 프로파일: 중심 .62 →
+      바깥 0)</td></tr>
+    <tr><td>늙은 별무리의 알갱이</td><td><code>noise_grainy × kenney_smoke</code></td>
+      <td>노이즈 넉 장은 <b>판을 꽉 채운 네모</b>라 그대로 찍으면 네모 테가 보인다.
+      화면에서 오리려면 층을 새로 떠야 하므로 <b>굽는 단계에서 한 장으로</b> 곱해 둔다</td></tr>
+    <tr><td>원반을 흐르는 결</td><td><code>noise_streak × kenney_smoke</code></td><td>같은 이유</td></tr>
+    <tr><td>팔 위의 별 생성 마디</td><td><code>kenney_smoke</code></td>
+      <td>팔이 <b>머리카락 한 올</b>이 아니라 별무리 사슬로 읽히게</td></tr>
+    <tr><td>핵 · 밝은 별의 십자 빛</td><td><code>kenney_star</code></td>
+      <td>가운데가 뾰족하게 밝은 유일한 장</td></tr>
+    <tr><td>렌즈의 테</td><td><code>kenney_circle</code></td>
+      <td>팔 없이 「원반이 있다」를 말하는 테 하나</td></tr>
+    <tr><td>잠긴 칸의 부드러운 테</td><td><code>mask_glow_soft</code></td>
+      <td><b>속이 빈 고리</b>다 — 잠긴 칸은 윤곽만이라는 규약에 그대로 맞는다</td></tr>
+  </tbody>
+</table>
+<p class="sub">
+  ⚠️⚠️ <b><code>mask_glow_soft</code> 는 후광이 아니라 고리다.</b> 이름만 보고
+  「부드러운 빛」으로 쓰면 그리는 것마다 도넛이 된다(실측 반경 프로파일: 중심 .00 →
+  r56 에서 .79 → r64 에서 0). <b>매끈한 면이 필요한 자리는 텍스처가 아니라 램프의
+  몫</b>이다 — 핵 · 팽대부 · 헤일로 · 막대가 그렇다. 「텍스처를 얹는다」가
+  「전부를 텍스처로 그린다」는 뜻이 아닌 자리가 여기다.
+</p>
+<p class="sub">
+  ⚠️ <b>화면 합성은 전부 가산</b>(<code>lighter</code> / <code>BlendMode.plus</code>)이다.
+  둘이 같이 풀린다 — ① 텍스처가 그림을 <b>어둡게 못 만든다</b>(성긴 알파를 덮개로
+  쓰면 통째로 어두워지는 그 사고가 구조적으로 안 난다. 밝기는 <b>색</b>, 결은
+  <b>알파</b>), ② <b>순서가 결과를 안 바꾼다</b> — 그래서 엔진이 쿼드를 모았다
+  <code>drawAtlas</code> 한 번으로 낼 수 있다.
+</p>
 
 <h2 id="s-all">열셋 한눈에</h2>
 
@@ -81,3 +137,7 @@
      따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
 <script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
 <script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- UI 텍스처 경로(시안 쪽) + 관측소 은하. `vfx.js` 의 `A`·`hash`·`mk`·`WGALAXY`
+     를 **읽기만** 한다 — 그쪽은 안 고친다. -->
+<script>document.write(unescape("%3Cscript src=\"uitex.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"map-galaxy.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

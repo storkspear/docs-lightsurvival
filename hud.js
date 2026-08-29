@@ -45,6 +45,18 @@
 // 겹치지 않아 새로 그린 것: 눈금 고리 · 점선 궤도 · 막대/파형 그래프 ·
 //   모서리 브래킷을 사각 패널에 두르는 조립 · 각진 버튼/탭 CSS · 스캔라인·
 //   격자 배경 · 여는 연출 시퀀서 · 부팅 문구 타임라인 · 공용 허브 레일.
+//
+// ── 나중에 더해진 것 — ⑨절 (2026-08-27, 나머지 넉 장을 그린 손) ──────────
+// 강화 · 상점 · 도감 · 출격일지는 전부 **격자 한 판이 무대를 채우는 화면**이라
+// 인트로·홈이 안 겪은 세 가지가 한꺼번에 필요했다:
+//   ① **창을 한 번에 세우는 것** — 별밭 · 브래킷 · 귀퉁이 판독값 · 대각선을
+//      화면마다 다시 적으면 넷이 넷 언어가 된다 ⇒ [hudChrome] 하나로 굳혔다.
+//   ② **귀퉁이 판독값의 눕힌 판**([hudCornerBar]) — 홈의 두 줄 블록이 설
+//      자리가 격자 화면엔 없다. 요소는 같고 자리만 다르다.
+//   ③ **칸 · 머리줄 · 띠 · 오른쪽 창의 CSS** — 도감 칸 · 상점 칸 · 게이트 칸이
+//      한 뼈(`.hudcell`)를 쓰고, 격자를 자르는 띠도 하나(`.hudhead`)다.
+// ⚠️ 홈은 이 절이 생기기 전에 그려져 `hhStars`·`hhCornerCluster` 로 같은 그림을
+//   제 파일 안에 들고 있다 — 홈을 다시 만질 손이 생기면 그때 ⑨절로 합친다.
 "use strict";
 
 // ── 팔레트 ──────────────────────────────────────────────────────────────
@@ -63,6 +75,14 @@ const HUDGLOW = "#E8F8FF";             // 구조선 하이라이트(=frost[2])
 const HUDSEL = "#FFD27A";              // = --gold, 이 화면에서 「지금 누를 수 있는 것」
 const HUDACC = "#FF8A3D";              // = --amber, 라벨/킥커 — 기존 관례 그대로
 const HUDWARN = "#FF6A5A";             // 경고/부족 — HURT(#FF3B5C)와 안 겹치는 붉은끼
+
+// ── 창의 치수 — CSS 와 캔버스가 **같은 수**를 봐야 한다 ──────────────────
+// 홈이 `mockup-hud-home.html` 의 CSS 안에서 58 · 26 을 직접 적어 두고
+// `mockup-hud-home.js` 가 같은 수를 또 적는 방식을 썼는데(`HH_RAILW` 등),
+// 화면이 여섯이 되면 그 쌍이 열두 벌이 된다. ⇒ 정본을 여기 하나 둔다 —
+// ⑨절의 `.hudrail.side` 와 [hudChrome] 이 둘 다 이 상수를 읽는다.
+const HUD_RAILW = 58;                  // 좌측 허브 레일의 폭
+const HUD_TOPBARH = 26;                // 창틀(`.topbar`)이 먹는 높이
 
 /// 캔버스에서 자주 쓰는 세 톤을 한 번에 — `toneOf(HUDK)` 를 매번 안 풀어써도 되게.
 function hudTone() { return toneOf(HUDK); }
@@ -164,9 +184,9 @@ const HUDCSS = `
 .hudchip b{color:${HUDGLOW};font-weight:700}
 
 /* ── 허브 레일 — lbRail() 과 같은 자리 · 각진 냉광 스킨만 새로 입힌다. ── */
-.hudrail{display:flex;flex-direction:column;gap:3px}
+.hudrail{display:flex;flex-direction:column;gap:0}
 .hudrail .r{display:flex;flex-direction:column;align-items:center;gap:2px;
-  padding:6px 2px 5px;position:relative;color:${HUDDIM};
+  padding:4px 2px 4px;position:relative;color:${HUDDIM};
   border:1px solid transparent}
 .hudrail .r.on{color:${HUDINK};border-color:${HUDLINE}55;background:${HUDLINE}12;
   box-shadow:inset 0 0 12px -4px ${HUDLINE}AA}
@@ -174,6 +194,249 @@ const HUDCSS = `
   background:${HUDLINE};box-shadow:0 0 6px 1px ${HUDLINE}}
 .hudrail .r .nm{font-size:8.5px;letter-spacing:.06em}
 .hudrail .r.soon .nm{opacity:.4}
+
+/* ── ⑨ 격자 화면의 뼈 — 강화 · 상점 · 도감 · 출격일지 넷이 같이 쓴다 ───────
+   홈은 「가운데가 무대」인 화면이라 배치를 제 페이지 <style> 이 들었지만,
+   나머지 넷은 전부 **격자 한 판이 무대를 채우는 화면**이라 뼈가 같다 —
+   레일(58) + 무대, 무대 안은 띠 · 머리줄 · 칸. 같은 뼈를 네 번 베끼면
+   반드시 갈라지므로 여기 한 벌만 둔다. */
+.hudrail.side{width:${HUD_RAILW}px;flex:0 0 ${HUD_RAILW}px;justify-content:center;padding:0 0 0 2px}
+.hudui{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column}
+.hudmid{flex:1 1 auto;display:flex;align-items:stretch;min-height:0}
+/* ⚠️⚠️ 위·아래 여백은 장식이 아니라 **자리**다 — [hudCornerBar] 네 개가
+   정확히 거기 선다. 좁히면 귀퉁이 판독값이 격자 밑에 깔려 그린 것이 안
+   보인다(첫 판에서 실제로 그랬다 — 지갑 띠가 위 두 개를 통째로 덮었다).
+   위 54 = 창틀 26 + 판독값 띠(가운데 42, 위아래 ±10) + 여유 2.
+   아래 24 = 판독값 띠(가운데 H-14) 가 딱 드는 높이. */
+.hudstage{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;
+  padding:54px 20px 24px 10px}
+.hudbody{flex:1 1 auto;min-height:0;display:flex;gap:10px}
+.hudcol{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column}
+
+/* 나가는 문 — 창틀 왼쪽 끝. 「독립 화면」은 이것이 있어야 방이 안 갇힌다. */
+.hudback{display:inline-flex;align-items:center;gap:4px;color:${HUDDIM};
+  text-decoration:none;cursor:pointer}
+.hudback:hover{color:${HUDINK}}
+
+/* 띠 — 「지금 무엇을 갖고 있나」 한 줄(지갑 · 분수). */
+.hudstrip{display:flex;align-items:center;gap:12px;flex:0 0 auto;font-size:10px;
+  font-variant-numeric:tabular-nums;color:${HUDINK};
+  padding:4px 10px;margin-bottom:7px;background:${HUDLINE}12;border:1px solid ${HUDLINE}2E;
+  clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
+.hudstrip .one{display:flex;align-items:center;gap:4px}
+.hudstrip .one.zero{color:${HUDFAINT}}
+.hudstrip .lb{font-size:8.5px;letter-spacing:.2em;color:${HUDDIM}}
+.hudstrip .rt{margin-left:auto;color:${HUDDIM}}
+
+/* 격자 머리줄 — 등급 띠 · 묶음 띠. 격자의 한 줄을 통째로 먹는다. */
+.hudhead{grid-column:1/-1;display:flex;align-items:baseline;gap:7px;
+  font-size:8.5px;letter-spacing:.2em;color:${HUDDIM};
+  border-bottom:1px solid ${HUDLINE}2E;padding-bottom:3px;margin-top:3px}
+.hudhead b{font-size:10px;letter-spacing:.1em;color:${HUDINK};font-weight:600}
+.hudhead .ct{margin-left:auto;letter-spacing:0}
+
+/* 칸 — 도감 칸 · 상점 칸 · 게이트 칸이 **한 뼈**다. 모서리 둘을 깎는다. */
+.hudcell{position:relative;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding:6px 4px 5px;min-width:0;cursor:pointer;
+  background:${HUDBASE}B8;border:1px solid ${HUDLINE}2E;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.hudcell canvas{display:block}
+.hudcell .n{font-size:8.5px;color:${HUDINK};letter-spacing:-.01em;text-align:center;line-height:1.2}
+.hudcell .s{font-size:8px;color:${HUDDIM};font-variant-numeric:tabular-nums}
+.hudcell .v{display:flex;align-items:center;gap:3px;font-size:9px;color:${HUDLINE};
+  font-variant-numeric:tabular-nums}
+.hudcell .v em{font-style:normal;color:${HUDDIM};font-size:8px;margin:0 1px}
+.hudcell .why{font-size:7px;color:${HUDDIM};text-align:center;line-height:1.25}
+.hudcell:hover{border-color:${HUDLINE}8A}
+.hudcell.on{border-color:${HUDSEL};background:${HUDSEL}14}
+.hudcell.on .n{color:${HUDSEL}}
+.hudcell.on .v{color:${HUDSEL}}
+.hudcell.own{opacity:.5;cursor:default}
+.hudcell.own:hover{border-color:${HUDLINE}2E}
+.hudcell.lock{opacity:.44;cursor:default}
+.hudcell.lock:hover{border-color:${HUDLINE}2E}
+.hudcell.lock .v{color:${HUDFAINT}}
+.hudcell.poor .v,.hudcell.poor .why{color:${HUDWARN}}
+/* 잠긴 칸의 실루엣 — 엔진 _kLockedFilter 와 같은 수(채도 0 · 밝기 절반).
+   ⚠️ 이 문자열은 템플릿 리터럴 안이라 역따옴표를 못 쓴다(코드 인용은 맨글자로). */
+.hudcell.dim canvas{filter:saturate(0) brightness(.52)}
+.hudcell.void{border-style:dashed;border-color:${HUDFAINT}55;background:${HUDBASE}66;cursor:default}
+.hudcell.void .n{color:${HUDFAINT}}
+.hudcell .lk{position:absolute;top:2px;right:5px;font-size:6.5px;letter-spacing:.08em;color:${HUDACC}}
+
+/* 오른쪽 창 — 눌린 칸이 무엇인지 말하는 자리. **비어도 자리를 남긴다.** */
+.hudside{width:176px;flex:0 0 176px;display:flex;flex-direction:column;min-height:0;
+  background:${HUDBASE}C4;border:1px solid ${HUDLINE}2E;padding:7px 9px 8px;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+.hudside .ttl{font-size:11.5px;font-weight:600;color:${HUDINK}}
+.hudside .ttl i{font-style:normal;font-size:8px;letter-spacing:.18em;color:${HUDDIM};margin-left:5px}
+.hudkv{display:flex;gap:6px;margin-top:5px;font-size:9px;line-height:1.45;color:${HUDDIM}}
+.hudkv b{flex:0 0 20px;font-size:8px;font-weight:400;color:${HUDLINE}AA}
+.hudkv span{color:#8FB4CC}
+
+/* 넘치는 격자 — 「아래로 더 있다」를 말한다(자르고 끝내지 않는다). */
+.hudscrollbox{position:relative;flex:1 1 auto;min-height:0;overflow:hidden}
+.hudfade{position:absolute;left:0;right:0;bottom:0;height:28px;display:flex;
+  align-items:flex-end;justify-content:center;padding-bottom:1px;
+  font-size:7.5px;letter-spacing:.06em;color:${HUDDIM};
+  background:linear-gradient(180deg,${HUDBASE}00,${HUDBASE}F0 72%)}
+
+/* ── ⑩ 기르는 화면의 뼈 — 줄 · ± · 눈금 막대 ────────────────────────────
+   ⚠️⚠️ **⑨(격자)와 다른 문법이다.** 격자는 「카드를 고른다」라 낱칸이 서고,
+   여기는 「±를 여러 번 눌러 눈금을 채운다」라 **한 축이 한 줄**이다. 둘을 한
+   뼈로 묶으려 하면 칸이 줄 흉내를 내다가 상점으로 되돌아간다 — 강화가 상점
+   문법으로 읽힌 원인이 정확히 그 자리였다(2026-08-27 사용자 반려). */
+.hudgrow{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:3px}
+.hudrow{display:flex;align-items:center;gap:8px;flex:1 1 0;min-height:0;padding:0 8px 0 9px;
+  background:${HUDBASE}A8;border:1px solid ${HUDLINE}26;
+  clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,7px 100%,0 calc(100% - 7px))}
+.hudrow:hover{border-color:${HUDLINE}7A;background:${HUDLINE}0E}
+.hudrow .nm{flex:0 0 74px;min-width:0;line-height:1.14}
+.hudrow .nm b{display:block;font-size:10px;font-weight:600;color:${HUDINK};letter-spacing:-.01em}
+/* 막힌 줄의 「어디서 캔다」 — 이름 밑에 붙는다. 줄 높이를 안 늘리는 자리가
+   여기뿐이고, **못 누르는 이유가 못 누르는 것의 이름 옆**에 있어야 읽힌다. */
+.hudrow .nm i{display:block;font-style:normal;font-size:7px;color:${HUDWARN};line-height:1.2}
+.hudrow .lv{flex:0 0 54px;font-size:9px;font-variant-numeric:tabular-nums;color:${HUDDIM}}
+.hudrow .lv b{color:${HUDINK};font-weight:600}
+.hudrow .lv em{font-style:normal;color:${HUDSEL};font-weight:600}
+.hudrow .sc{flex:0 0 auto}
+.hudrow .sc canvas{display:block}
+.hudrow .cost{flex:0 0 52px;display:flex;align-items:center;justify-content:flex-end;gap:2px;
+  font-size:9px;font-variant-numeric:tabular-nums;color:${HUDLINE}}
+.hudrow .cost em{font-style:normal;color:${HUDDIM};font-size:8px;margin:0 1px}
+.hudrow.poor .cost{color:${HUDWARN}}
+.hudrow .st{flex:0 0 auto;display:flex;gap:4px}
+/* − 와 + — **이 화면의 손짓 전부**가 이 둘이다. 각진 냉광 사각.
+   ⚠️ 금빛을 안 준다: 금빛은 「이번에 내가 얹은 것」의 색이라 손잡이에 주면
+   누르기 전부터 얹은 것처럼 보인다. */
+.hudstep{width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+  font:inherit;font-size:12px;line-height:1;color:${HUDINK};cursor:pointer;
+  -webkit-user-select:none;user-select:none;
+  background:linear-gradient(180deg,#0C2032 0%,#081422 100%);border:1px solid ${HUDLINE}66;
+  clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,5px 100%,0 calc(100% - 5px))}
+.hudstep:hover{border-color:${HUDLINE}CC;background:linear-gradient(180deg,#12314A 0%,#0B1D2E 100%)}
+.hudstep.off{color:${HUDFAINT};border-color:${HUDFAINT}44;cursor:default;
+  background:linear-gradient(180deg,#0A1420 0%,#070E17 100%)}
+.hudstep.off:hover{border-color:${HUDFAINT}44;background:linear-gradient(180deg,#0A1420 0%,#070E17 100%)}
+
+/* 지갑 띠의 **줄어든 몫** — 「위에 모여 있고 줄어드는 게 보인다」의 그 자리.
+   남는 수를 큰 자리에 적고, 이번에 뺀 만큼을 금빛으로 옆에 붙인다. */
+.hudstrip .one i{font-style:normal;font-size:8px;color:${HUDSEL};margin-left:1px}
+
+/* 미리보기 창 — 「사기 전에 무엇인지 본다」. 한 번에 하나만 뜬다. */
+.hudpop{position:absolute;inset:0;z-index:9;display:flex;align-items:center;
+  justify-content:center;background:#02050999}
+.hudpop .bx{width:62%;background:${HUDBASE}F2;border:1px solid ${HUDLINE}6B;
+  box-shadow:0 0 34px -12px ${HUDLINE};
+  clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.hudpop .pv{height:92px;border-bottom:1px solid ${HUDLINE}2E;background:#02060C}
+.hudpop .pv canvas{width:100%;height:100%;display:block}
+.hudpop .bd{padding:8px 14px 11px}
+.hudpop .nm{font-size:13px;font-weight:600;color:${HUDINK}}
+.hudpop .ds{font-size:10px;color:${HUDDIM};margin-top:4px;line-height:1.5}
+.hudpop .rw{display:flex;align-items:center;gap:9px;margin-top:9px}
+.hudpop .rw .px{display:flex;align-items:center;gap:4px;font-size:11px;color:${HUDINK};
+  font-variant-numeric:tabular-nums}
+/* 전면 팝업 — 안쪽이 제 격자를 드는 팝업은 62% 로는 못 선다. */
+.hudpop.full .bx{position:absolute;inset:10px;width:auto;display:flex;flex-direction:column}
+.hudpop.full .bx>.bd{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding:7px 12px 10px}
+
+/* ── ⑪ 챙겨 가는 화면의 뼈 — 자리 하나 · 묶음 한 줄 · 캐릭터 칩 ─────────────
+   편성표 화면과 출격준비 화면이 **똑같은 한 줄**을 그린다(일반 1 ┃ 스킬 5 ┃ 채굴
+   1   성좌 3). 두 장에 같은 줄을 두 번 적으면 반드시 갈라지므로 뼈는 하나다.
+
+   ⚠️⚠️ **⑨의 .hudcell 과 다른 물건이다.** 칸(.hudcell)은 「고를 후보」라
+     늘 무언가 들어 있고, 자리(.hudslot)는 **「이미 든 것」**이라 **비어 있는
+     것이 정상 상태**다. 그래서 이 뼈가 지는 짐은 하나 더 있다 —
+     **비어 있음 · 잠김 · 살 수 있음 셋이 서로 달라야 한다.** 셋을 밝기로만
+     가르면 「어두운 칸」 하나로 뭉쳐 읽힌다 ⇒ **속을 다르게** 한다:
+       비어 있음 = 점선 테 + 가운데 ＋      (여기 넣을 수 있다)
+       잠김     = 실선 옅은 테 + 빗금 + 자물쇠 (여긴 못 넣는다)
+       살 수 있음 = 점선 테 + 값            (돈으로 열린다)
+   ⚠️ 금빛을 안 쓴다 — 자리는 「지금 누를 수 있는 단 하나」가 아니다. */
+.hudslot{position:relative;flex:0 0 auto;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+  background:${HUDBASE}C4;border:1px solid ${HUDLINE}4A;
+  clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px))}
+.hudslot canvas{display:block}
+.hudslot .n{font-size:7.5px;line-height:1.15;color:${HUDINK};text-align:center;
+  letter-spacing:-.02em;max-width:100%;overflow:hidden}
+.hudslot .n i{display:block;font-style:normal;font-size:6.5px;color:${HUDDIM}}
+.hudslot.void{border-style:dashed;border-color:${HUDFAINT}88;background:${HUDBASE}55}
+.hudslot.void .pl{font-size:13px;line-height:1;color:${HUDFAINT}}
+/* 잠김의 빗금 — 「막혀 있다」를 속으로 말한다. 테만 옅게 하면 빈 것과 안 갈린다. */
+.hudslot.lock{border-color:${HUDFAINT}66;background:
+  repeating-linear-gradient(135deg,${HUDFAINT}22 0,${HUDFAINT}22 1px,transparent 1px,transparent 6px),
+  ${HUDBASE}88}
+.hudslot.lock .lk,.hudslot.buy .lk{position:absolute;top:1px;right:3px;font-size:6px;
+  letter-spacing:.06em;color:${HUDACC}CC}
+.hudslot.lock .lk{color:${HUDFAINT}}
+.hudslot.buy{border-style:dashed;border-color:${HUDACC}88;background:${HUDACC}0E}
+.hudslot.buy .px{display:flex;align-items:center;gap:2px;font-size:8px;color:${HUDACC};
+  font-variant-numeric:tabular-nums}
+.hudslot.on{border-color:${HUDSEL};background:${HUDSEL}14}
+.hudslot.on .n{color:${HUDSEL}}
+
+/* 묶음 한 줄 — 자리들 + 사이의 세로 획 + 밑의 묶음 이름.
+   ⚠️ 묶음 이름은 **자리마다가 아니라 묶음마다** 붙는다(사용자 손그림 그대로) —
+     자리마다 붙이면 스킬 다섯의 이름 다섯과 겹쳐 줄이 두 배로 시끄러워진다. */
+.hudslots{display:flex;align-items:flex-start;gap:12px;flex:0 0 auto}
+.hudslots .gp{display:flex;flex-direction:column;gap:2px}
+.hudslots .gp .in{display:flex;gap:3px}
+.hudslots .gp .gl{font-size:7.5px;letter-spacing:.1em;color:${HUDDIM};text-align:center}
+.hudslots .gp .gl i{display:none}
+.hudslots .sep{align-self:stretch;width:1px;flex:0 0 1px;margin:0 3px;background:${HUDLINE}3D}
+.hudslots .rt{margin-left:auto}
+
+/* 묶음 판 — **묶음이 낱칸보다 먼저 읽혀야 하는 장**이 켠다.
+   ⚠️⚠️ 자리 사이 틈만으로 묶음을 가르는 것은 **칸이 작을 때만 되는 수**다:
+     묶음을 가르는 것은 틈의 절대 길이가 아니라 **칸에 대한 비율**이라, 30px 칸의
+     12px 틈(0.40)은 보이는데 같은 틈이 60px 칸에서는 0.15 로 사라진다. 사라지는
+     순간 칸들이 **균일 격자** 하나로 뭉치고, 균일 격자는 곧 도감이다.
+   ⇒ 칸이 큰 장은 묶음을 **판으로 감싸고 이름을 판 머리에 올린다.** 판이
+     생김새로 이미 갈라 주므로 이름은 확인이지 판독이 아니게 된다.
+   ⚠️ 판을 켜면 세로 획(.sep)은 **끈다** — 판 테와 겹쳐 두 겹으로 시끄럽다. */
+.hudslots.pane{align-items:stretch;gap:8px}
+.hudslots.pane>.sep{display:none}
+.hudslots.pane .gp{gap:0;padding:2px 6px 5px;background:${HUDBASE}8C;
+  border:1px solid ${HUDLINE}2B;
+  clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,7px 100%,0 calc(100% - 7px))}
+/* 이름이 **판 머리로 올라간다** — 밑에 두면 판 밖의 잔글로 읽혀 판이 이름을
+   안 가진 상자가 된다. order 하나로 옮겨 칸 짓는 차례는 안 건드린다. */
+.hudslots.pane .gp .gl{order:-1;text-align:left;padding:0 0 3px 1px;
+  display:flex;align-items:baseline;gap:5px;white-space:nowrap}
+.hudslots.pane .gp .gl i{display:inline;font-style:normal;letter-spacing:.02em;
+  color:${HUDFAINT}}
+/* ⭐ **일반은 하나뿐인데 제일 중요하다** — 캐릭터의 정체이고 늘 나가는 것이다.
+   판 왼쪽에 세로 획을 세우고 테를 올려 「기둥」으로 세운다. 금빛은 안 쓴다
+   (그 색은 이 화면에서 「지금 누를 수 있는 단 하나」가 이미 쥐고 있다). */
+.hudslots.pane .gp.lead{border-color:${HUDLINE}6E;background:${HUDLINE}12;
+  box-shadow:inset 3px 0 0 -1px ${HUDLINE}AA}
+.hudslots.pane .gp.lead .gl{color:${HUDINK}}
+/* 채굴도구는 **싸우는 물건이 아니다.** 무기 판과 같은 밝기로 서면 「여섯 번째
+   스킬」로 읽힌다 ⇒ 테를 구조선 색에서 빼고 바탕을 비운다. */
+.hudslots.pane .gp.aux{border-color:${HUDFAINT}7A;background:transparent}
+.hudslots.pane .gp.aux .gl{color:${HUDFAINT}}
+
+/* 캐릭터 칩 — 로스터 한 칸. 홈(.hh-ros)이 같은 그림을 제 페이지에 들고
+   있는데, 그것은 ⑪절이 생기기 전에 그려져서다. 편성표·출격준비 둘이 같이 쓰는
+   쪽은 여기다 — 홈을 다시 만질 손이 생기면 그때 합친다(⑨절과 같은 사정). */
+.hudchars{display:flex;align-items:center;gap:3px;min-width:0}
+.hudchar{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
+  gap:1px;padding:2px 1px;cursor:pointer;border:1px solid transparent}
+.hudchar canvas,.hudchar .noart{display:block}
+.hudchar .noart{display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+  font-size:6.5px;color:${HUDFAINT};border:1px dashed ${HUDFAINT}}
+.hudchar .nm{font-size:6.5px;letter-spacing:-.02em;color:${HUDDIM};white-space:nowrap}
+.hudchar.on{border-color:${HUDSEL}66;background:${HUDSEL}14}
+.hudchar.on .nm{color:${HUDSEL}}
+.hudchar.lock{opacity:.5;cursor:default}
+.hudchar.more{cursor:default;color:${HUDDIM};font-size:8px;line-height:1.3;text-align:center}
+
+/* 작은 버튼 — 줄 안에 앉는 [편집]·[삭제]. 38px 짜리 .hudbtn 은 편성표 카드
+   머리줄(20px)에 안 든다. 각·색은 그대로고 치수만 줄인다. */
+.hudbtn.sm{height:20px;padding:0 9px;font-size:9.5px;gap:4px;
+  clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px))}
 `;
 
 /// CSS 를 한 번만 심는다 — 페이지가 이 파일을 두 번 싣는 사고를 대비한다
@@ -440,16 +703,16 @@ function hudPhaseAt(u, segs) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// ⑦ 허브 레일 — 여섯 화면이 공유하는 좌측 탭 5칸                     (DOM+canvas)
+// ⑦ 허브 레일 — 여섯 화면이 공유하는 좌측 탭 여섯 칸                (DOM+canvas)
 // ══════════════════════════════════════════════════════════════════════════
 // **정본은 하나다.** 탭 목록·아이콘은 `vfx.js` 의 `LBRAIL`/`FLWGLYPH` 를
 // 그대로 읽는다(사본을 만들면 반드시 갈라진다 — 이 저장소가 이미 겪은 병).
 // 이 함수가 새로 하는 일은 **둘레만** — `lbRail()` 은 무채색 목록이고, 이건
 // 냉광 각진 칸으로 감싼다. 아이콘 그리는 함수(FLWGLYPH)는 그대로다.
 ///
-/// tabs 를 생략하면 `LBRAIL` 전체를 쓴다. 강화 화면처럼 탭 구성이 늘어날
-/// 자리가 아직 확정 전이므로(2026-08 시점 `LBRAIL` 은 5칸 — 강화는 없다),
-/// 다른 화면이 다른 구성을 보여줘야 하면 이 인자로 자기 배열을 넘기면 된다.
+/// tabs 를 생략하면 `LBRAIL` 전체를 쓴다 — **여섯 장 전부가 그렇게 쓴다.**
+/// 2026-08-27 에 여섯째 칸(강화)이 서면서 「레일에 없는 화면」이 없어졌다.
+/// 인자를 남겨 두는 것은 앞으로 **다른 구성**을 보여야 할 장이 생길 때뿐이다.
 function hudRail(hostId, cur, tabs) {
   const host = $(hostId); if (!host) return;
   const list = tabs || (typeof LBRAIL !== "undefined" ? LBRAIL : []);
@@ -557,6 +820,16 @@ function hudSectorRing(c, x, y, r, n, opt) {
   }
 }
 
+/// 각진 사각 하나 — `.hudcell` 의 캔버스 판(모서리 둘을 깎는다). 칠·획은
+/// 부르는 쪽이 정한다(면만 필요한 자리와 테만 필요한 자리가 둘 다 있다).
+function hudBox(c, x, y, w, h, cut) {
+  const k = cut == null ? 7 : cut;
+  c.beginPath();
+  c.moveTo(x, y); c.lineTo(x + w - k, y); c.lineTo(x + w, y + k);
+  c.lineTo(x + w, y + h); c.lineTo(x + k, y + h); c.lineTo(x, y + h - k);
+  c.closePath();
+}
+
 /// 아주 작은 배경 판독값 라벨 — 「SECTOR 07」·「[24]」류의 채움 장식. 항상
 /// 옅은 알파로 그린다 — 이 라벨이 읽혀야 하는 자리라면 [hudReadout] 을 쓴다.
 function hudTag(c, x, y, text, opt) {
@@ -566,5 +839,351 @@ function hudTag(c, x, y, text, opt) {
   c.font = hudFont(o.w || 600, o.fs || 7.5);
   c.fillStyle = A(o.color || HUDDIM, o.alpha == null ? 0.55 : o.alpha);
   lbText(c, text, x, y);
+  c.restore();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ⑨ 화면 껍질 — 여섯 장이 같은 창을 쓴다                              (canvas)
+// ══════════════════════════════════════════════════════════════════════════
+// 홈이 세운 창(별밭 → 뷰파인더 브래킷 → 귀퉁이 판독값 넷 → 가로지르는
+// 대각선)을 **함수 하나**로 굳힌다. 홈은 이 절이 생기기 전에 그려져 제
+// 파일 안에 같은 그림을 들고 있고(`hhStars`·`hhCornerCluster`), 나머지 넷은
+// 여기를 부른다 — 창을 화면마다 다시 정하면 여섯이 여섯 언어가 된다.
+//
+// ⚠️ 이 절의 반복 요소는 전부 **연속 회전**(`t*속도`)이거나 `hash` 로 뽑은
+//   정지값이다. 위상 파생값·누적기가 없으니 이음매를 걱정할 자리가 없다.
+
+/// 결정론 별밭 — 난수 0건 관례(`hash` 만 쓴다).
+/// ⚠️ 반지름 0.7~2.0 · 알파 .16~.42 는 홈이 **실측으로** 정한 값이다(첫 값은
+///   스크린샷에서 가장 밝은 별조차 배경과 안 갈렸다). 여기서 다시 낮추지 마라.
+function hudStars(c, W, H, n, seed) {
+  const N = n == null ? 42 : n, s = seed || 0;
+  for (let i = 0; i < N; i++) {
+    const x = hash(s + i * 12.9 + 41) * W, y = hash(s + i * 7.1 + 44) * H;
+    const r = 0.7 + hash(s + i * 3.3 + 47) * 1.3;
+    c.fillStyle = A("#CFE8FF", 0.16 + hash(s + i * 5.7 + 49) * 0.26);
+    c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill();
+  }
+}
+
+/// 결정론 미세 판독값 숫자 — 「SECTOR 07」의 07 자리.
+function hudNum(seed, digits) {
+  const d = digits || 2;
+  return String(Math.floor(hash(seed) * Math.pow(10, d))).padStart(d, "0");
+}
+
+/// 귀퉁이 판독값 **띠** — 홈의 두 줄 블록(`hhCornerCluster`)과 **같은 세
+/// 요소**(눈금 고리 · SECTOR 라벨 · 막대/파형)를 한 줄로 눕힌 것.
+///
+/// ⚠️ 왜 눕히나: 홈은 가운데가 캐릭터 하나라 귀퉁이에 68px 짜리 덩어리가 설
+///   자리가 있지만, 격자가 무대를 채우는 넉 장은 그 자리가 곧 칸이다. 두
+///   줄을 고집하면 판독값이 격자 밑에 깔려 **그린 것이 안 보인다**(홈이
+///   실측으로 겪은 그 자리와 같은 병). 요소가 같으니 같은 말이고 자리만 다르다.
+/// ⚠️ 알파를 중앙부보다 한 단 높게 잡는 것도 홈과 같은 이유다 — `.hudvig`
+///   비네트가 가장 세게 어둡히는 자리가 정확히 여기다.
+///
+/// (x,y) 는 띠가 시작하는 **귀퉁이 쪽 끝**이고, `sx` 가 +1 이면 오른쪽으로
+/// -1 이면 왼쪽으로 자란다. 띠는 y 를 가운데로 위아래 ±8px 안에 든다.
+function hudCornerBar(c, x, y, sx, seed, t, style) {
+  const r = 8, rx = x + sx * (r + 2);
+  if (style === 0) {
+    hudTicks(c, rx, y, r, 12, { len: 2, bigLen: 4.5, every: 4, alpha: 0.72 });
+    hudRing(c, rx, y, r * 0.55, { dash: [1, 3], alpha: 0.55, w: 1 });
+  } else {
+    hudRing(c, rx, y, r, { alpha: 0.48, w: 1.2 });
+    hudOrbit(c, rx, y, r * 1.2, r * 0.6, t * sx, { speed: 0.35, dots: 1, alpha: 0.52, dotR: 1.5 });
+  }
+  const align = sx > 0 ? "left" : "right";
+  hudTag(c, x + sx * 24, y + 3, "SECTOR " + hudNum(seed, 2) + " · [" + hudNum(seed + 5, 3) + "]",
+    { align, alpha: 0.62 });
+  const gw = 40, gh = 12, gy = y - gh / 2;
+  const gx = sx > 0 ? x + 104 : x - 104 - gw;
+  if (style === 0) hudBars(c, gx, gy, gw, gh, null, { t: t * 0.6 + seed, n: 7, alpha: 0.44 });
+  else hudWave(c, gx, gy, gw, gh, t * 0.7 + seed, { speed: 0.9, alpha: 0.46 });
+}
+
+/// 화면 한 장의 껍질 — **부르는 쪽이 배경 캔버스 맨 처음에 한 번 부른다.**
+/// opt: {rail, top, bottom, stars, seed}. 반환값은 안쪽 사각(브래킷이 두른
+/// 자리)이라, 화면마다 다른 제 장식을 그 안에서 파생시키면 된다.
+function hudChrome(c, W, H, t, opt) {
+  const o = opt || {};
+  const rail = o.rail == null ? HUD_RAILW : o.rail;
+  const top = o.top == null ? HUD_TOPBARH : o.top;
+  const bot = o.bottom || 0;
+  const seed = o.seed || 0;
+  c.fillStyle = HUDBASE; c.fillRect(0, 0, W, H);
+  hudStars(c, W, H, o.stars, seed);
+  const bx = rail + 6, by = top + 2, bw = W - rail - 12, bh = H - top - bot - 6;
+  hudBracket(c, bx, by, bw, bh, 16, { w: 1.7, alpha: 0.70 });
+  // 귀퉁이 넷 — 위·아래 여백(`.hudstage` 의 padding)이 정확히 이 띠의 자리다.
+  // ⚠️ `top + 16` 은 창틀 글자(y≈10~26)와 안 겹치는 첫 값이고, `.hudstage` 의
+  //   위 여백 54 와 한 벌이다 — 한쪽만 고치면 띠가 다시 격자 밑에 깔린다.
+  const yT = top + 16, yB = H - bot - 14;
+  hudCornerBar(c, rail + 16, yT, 1, seed + 4, t, 0);
+  hudCornerBar(c, W - 16, yT, -1, seed + 12, t, 1);
+  hudCornerBar(c, rail + 16, yB, 1, seed + 21, t, 1);
+  hudCornerBar(c, W - 16, yB, -1, seed + 33, t, 0);
+  // 프레임을 가로지르는 긴 선 하나 — 장식 중에서도 가장 옅게(0.07) 맨 뒤에.
+  c.save(); c.strokeStyle = A(HUDLINE, 0.07); c.lineWidth = 1;
+  c.beginPath(); c.moveTo(rail + 8, H - bot - 8); c.lineTo(W - 8, top + 4); c.stroke();
+  c.restore();
+  return { x: bx, y: by, w: bw, h: bh, cx: bx + bw / 2, cy: by + bh / 2 };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ⑩ 기르는 화면의 부품 — 눈금 막대 · 받침                             (canvas)
+// ══════════════════════════════════════════════════════════════════════════
+// ⑨ 는 「고른다」의 부품이고 이 절은 **「채운다」의 부품**이다. 2026-08-27
+// 사용자 반려(「강화가 상점에서 사는 UI 다」)의 답이 여기 둘에 걸려 있다 —
+// 「기른다」의 정체가 **눈금이 차는 것이 보이는 것**과 **되돌릴 수 있는 것**이라,
+// 눈금을 그리는 자리와 대상을 올려놓는 자리가 부품으로 서야 화면이 갈린다.
+
+/// 눈금 막대 — **상한이 큰 축 하나를 한 줄에 담는다.**
+///
+/// ⚠️⚠️ **칸 아흔아홉 개는 못 그린다.** 참조(레이싱 강화 화면)는 상한이 10 이라
+///   눈금이 그대로 열 칸으로 서지만, 라서의 상한은 99([kStatLevelMax])다 —
+///   208px 폭에 99칸을 그으면 칸 하나가 2.1px 이라 눈금이 아니라 **결**이 되고,
+///   숫자만 남기면 이 화면의 정체(「차는 것이 보인다」)가 통째로 죽는다.
+///
+/// ⭐ **그래서 눈의 크기를 5 로 잡고, 그 위에 「대의 경계」만 키를 키운다.**
+///   라서의 99 는 고른 99 가 아니다 — Lv1~20 일반 · Lv21~70 색 · Lv71~99
+///   색+유니크로 **드는 재료가 갈리는** 99 라(지갑 띠의 「대 셋」 한 줄),
+///   눈이 실제로 외워야 하는 자리는 그 경계 둘뿐이다. 참조의 평평한 열 칸에는
+///   없던 정보고, 99 를 접는 근거이기도 하다.
+///
+/// ⚠️ 눈금은 **채운 면 위에도** 그린다 — 밑에 깔면 찬 만큼이 민 면이 되어
+///   「얼마나 찼나」는 보여도 「몇 눈 올랐나」가 안 보인다.
+///
+/// o: {lv, add, max, bands:[…], tick, blocked}
+///   `add` = 이번에 얹었지만 **아직 확정 안 한** 단(금빛). `blocked` 면 찬
+///   면의 앞머리가 경고색이다 — 「여기서 멈춘다」가 막대 자체에도 선다.
+function hudScale(c, x, y, w, h, o) {
+  if (!(w > 0) || !(h > 0)) return;
+  const opt = o || {};
+  const max = opt.max || 1, tick = opt.tick || 5;
+  const lv = hudCl((opt.lv || 0) / max), nx = hudCl(((opt.lv || 0) + (opt.add || 0)) / max);
+  const px = (u) => x + w * u;
+  // 바탕 — **빈 자리는 거의 검다.** 안 그러면 찬 면과 대비가 안 서서 「막대에
+  // 눈금이 그어져 있다」로만 읽히고 「얼마나 찼나」가 안 보인다(첫 판이 그랬다).
+  c.fillStyle = "#02060C"; c.fillRect(x, y, w, h);
+  // 찬 면 → 이번에 얹은 면. 얹은 쪽이 뒤에 서야 앞머리가 금빛으로 남는다.
+  if (nx > lv) {
+    c.fillStyle = A(HUDSEL, 0.70); c.fillRect(px(lv), y, px(nx) - px(lv), h);
+  }
+  c.fillStyle = A(HUDLINE, 0.58); c.fillRect(x, y, px(lv) - x, h);
+  // 찬 면의 윗날 — 한 줄. 면이 「유리판에 찬 액체」로 읽히는 자리다.
+  c.fillStyle = A(HUDGLOW, 0.30); c.fillRect(x, y, px(nx) - x, 1);
+  // 눈 — 5레벨마다. 찬 면 위에서는 어둡게(획이 그대로면 면을 갉아 먹는다).
+  for (let v = tick; v < max; v += tick) {
+    const u = v / max, tx = Math.round(px(u)) + 0.5;
+    const on = u <= nx;
+    c.strokeStyle = A(on ? HUDBASE : HUDLINE, on ? 0.34 : 0.26);
+    c.lineWidth = 1;
+    c.beginPath(); c.moveTo(tx, y + h * 0.52); c.lineTo(tx, y + h); c.stroke();
+  }
+  // 대의 경계 — 키가 다르다. **재료가 갈리는 자리**라 눈금과 같은 급이 아니다.
+  (opt.bands || []).forEach((v) => {
+    if (!(v > 0) || v >= max) return;
+    const tx = Math.round(px(v / max)) + 0.5;
+    c.strokeStyle = A(v / max <= nx ? HUDGLOW : HUDLINE, 0.78);
+    c.lineWidth = 1.2;
+    c.beginPath(); c.moveTo(tx, y - 1); c.lineTo(tx, y + h + 1); c.stroke();
+  });
+  // 앞머리 — 지금 어디까지 왔나. 막힌 축이면 경고색이다.
+  const cap = Math.round(px(nx)) + 0.5;
+  c.strokeStyle = nx > lv ? HUDSEL : (opt.blocked ? HUDWARN : HUDGLOW);
+  c.lineWidth = 1.6;
+  c.beginPath(); c.moveTo(cap, y - 1); c.lineTo(cap, y + h + 1); c.stroke();
+  // 테 — 맨 나중에. 면과 눈금이 테를 넘지 않게 덮는다.
+  c.strokeStyle = A(HUDLINE, 0.34); c.lineWidth = 1;
+  c.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+}
+
+/// 받침 — **기르는 대상을 올려놓는 무대.**
+///
+/// ⭐ 참조가 자동차를 받침 위에 세우는 것과 같은 자리다. 받침이 없으면 도형이
+///   화면에 **떠 있는 장식**으로 읽히고, 있으면 「내놓고 보는 물건」이 된다 —
+///   「사는 곳」과 「기르는 곳」이 갈리는 몫의 절반이 이 한 겹에 있다.
+///
+/// ⚠️⚠️ **앞테는 굵게, 뒷테는 거의 안 그린다.** 첫 판은 타원을 통째로 한 획에
+///   둘렀는데, 그러면 뒷테가 물건을 **가로질러** 지나가 받침이 아니라 **북**으로
+///   읽혔다(실측 캡처에서 그랬다). 원근으로 놓인 판은 앞테가 물건 앞을 지나고
+///   뒷테는 물건에 가린다 — 그 한 겹이 「위에 올려놓았다」의 전부다.
+/// ⚠️ 눈금도 앞쪽(아래) 반원에만 세운다 — 한 바퀴 다 세우면 받침이 아니라
+///   또 하나의 고리가 되어 배경의 세그먼트 고리와 안 갈린다.
+function hudPedestal(c, cx, y, w, opt) {
+  if (!(w > 0)) return;
+  const o = opt || {};
+  const rx = w / 2, ry = Math.max(3, w * (o.flat == null ? 0.12 : o.flat));
+  const a = o.alpha == null ? 0.55 : o.alpha;
+  // 판의 면 — 위가 밝고 아래로 사라진다. 면이 있어야 「선」이 아니라 「판」이다.
+  const g = c.createLinearGradient(0, y - ry, 0, y + ry);
+  g.addColorStop(0, A(HUDLINE, a * 0.22));
+  g.addColorStop(1, A(HUDLINE, a * 0.03));
+  c.fillStyle = g;
+  c.beginPath(); c.ellipse(cx, y, rx, ry, 0, 0, TAU); c.fill();
+  if (o.pool !== false) gHalo(c, cx, y - ry * 0.35, rx * 0.50, HUDK, 0.13);
+  c.save();
+  // 뒷테 — 물건 뒤로 지나가므로 점선에 아주 옅게.
+  c.setLineDash([2, 4]); c.strokeStyle = A(HUDLINE, a * 0.26); c.lineWidth = 1;
+  c.beginPath(); c.ellipse(cx, y, rx, ry, 0, Math.PI, TAU); c.stroke();
+  c.restore();
+  // 앞테 — 굵게. 이 한 획이 물건의 **밑동 앞**을 지난다.
+  c.strokeStyle = A(HUDLINE, a * 0.95); c.lineWidth = 1.6;
+  c.beginPath(); c.ellipse(cx, y, rx, ry, 0, 0, Math.PI); c.stroke();
+  const n = o.ticks || 16;
+  for (let i = 0; i <= n; i++) {
+    const ang = Math.PI * (i / n);
+    const tx = cx + Math.cos(ang) * rx, ty = y + Math.sin(ang) * ry;
+    const big = i % 4 === 0;
+    c.strokeStyle = A(HUDLINE, a * (big ? 0.85 : 0.34)); c.lineWidth = 1;
+    c.beginPath(); c.moveTo(tx, ty); c.lineTo(tx, ty + (big ? 4 : 2)); c.stroke();
+  }
+  // 양끝 두 획 — 「올려놓았다」를 못박는다.
+  [-1, 1].forEach((s) => {
+    const ex = cx + s * rx;
+    celStroke(c, [[ex - s * 11, y], [ex, y], [ex, y + ry * 0.95]], 1.6, HUDK, a * 0.9);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ⑪ 챙겨 가는 화면의 부품 — 자리 한 줄 · 캐릭터 줄               (DOM+canvas)
+// ══════════════════════════════════════════════════════════════════════════
+// ⑨ 는 「고른다」의 부품, ⑩ 은 「채운다」의 부품이고 이 절은 **「들고 나간다」**
+// 의 부품이다. 편성표 화면과 출격준비 화면이 정확히 같은 한 줄을 그리는데(일반 1 ┃
+// 스킬 5 ┃ 채굴 1   성좌 3), 그 줄은 **엔진 상수 셋이 정한 길이**라 어느 한
+// 장이 제 손으로 다시 세면 조용히 갈라진다:
+//   `kSlotCapMax`=6(일반 1 + 스킬 5) · 채굴 1 · `kConstellationSlots`=3.
+//
+// ⚠️ 이 절의 그림에는 되풀이가 없다 — 자리는 **정지 상태**이고, 자리마다의
+//   문양은 부르는 쪽이 넘긴 그리기 함수가 그대로 진다.
+
+/// 자리 하나. `it` = {nm, sub, glyph, state, px}
+///   state: ""(찬 것) · "void"(비어 있음) · "lock"(잠김) · "buy"(살 수 있음) · "on"(고른 것)
+///   `nm` 을 안 주면 문양만 선다 — 편성표 목록의 좁은 줄이 그 쪽이다.
+/// opt: {size 자리의 한 변, art 문양의 지름, name 이름을 적나, h 이름칸의 세로}
+/// ⚠️ 이름을 적는 자리는 **세로를 여기서 못박는다.** 이름이 한 줄인 칸과 두 줄인
+///   칸이 섞이면 밑선이 어긋나 한 묶음이 계단으로 읽힌다.
+function hudSlot(it, opt) {
+  const o = opt || {}, S = o.size || 26, A2 = o.art || Math.round(S * 0.62);
+  const d = document.createElement("div");
+  d.className = "hudslot" + (it.state ? " " + it.state : "");
+  d.style.width = S + "px";
+  d.style.height = (o.name ? (o.h || Math.round(S * 1.33)) : S) + "px";
+  if (it.state === "void") {
+    d.insertAdjacentHTML("beforeend", `<div class="pl">+</div>`);
+  } else if (it.state === "lock") {
+    d.insertAdjacentHTML("beforeend", `<div class="lk">잠김</div>`);
+  } else {
+    // ⚠️ 갓 만든 노드에 `querySelector` 를 안 쓴다 — 스모크 스텁의 가짜 DOM 이
+    //   그것을 null 로 돌려줘 장 전체가 「LOAD FAIL」로 죽는다(상점 장이 겪었다).
+    if (it.glyph) {
+      const cv = document.createElement("canvas");
+      cv.style.width = A2 + "px"; cv.style.height = A2 + "px";
+      d.appendChild(cv);
+      mk(cv, [A2 * 2, A2 * 2], function hudSlotGlyph(c, t, dt, W) { it.glyph(c, W); }, { clear: true });
+    }
+    if (it.state === "buy") d.insertAdjacentHTML("beforeend",
+      `<div class="lk">연다</div><div class="px">${it.px || ""}</div>`);
+  }
+  if (o.name && it.nm) d.insertAdjacentHTML("beforeend",
+    `<div class="n">${it.nm}${it.sub ? `<i>${it.sub}</i>` : ""}</div>`);
+  return d;
+}
+
+/// 「일반 1 ┃ 스킬 5 ┃ 채굴 1   성좌 3」 한 줄을 통째로 짓는다.
+/// groups: [{lb 묶음 이름, ct 이름 곁의 잔글(판을 켠 장에서만 선다),
+///           items:[…], sep 앞에 세로획을 세우나, right 오른쪽으로 미나,
+///           tone "lead"(기둥) · "aux"(안 싸우는 것), size·art·h 이 묶음만의 치수}]
+/// opt: [hudSlot] 의 것 + {pane 묶음을 판으로 감싸나}
+/// ⚠️ 묶음마다 치수를 달리 줄 수 있는 것이 **균일 격자를 깨는 손잡이**다 —
+///   개수가 다른 목록이 아니라 **성격이 다른 물건** 다섯이므로, 다 같은 크기로
+///   서면 「도감 한 쪽」이 된다.
+function hudSlotRow(host, groups, opt) {
+  if (!host) return;
+  const o = opt || {};
+  const row = document.createElement("div");
+  row.className = "hudslots" + (o.pane ? " pane" : "");
+  groups.forEach((g) => {
+    if (g.sep) { const s = document.createElement("div"); s.className = "sep"; row.appendChild(s); }
+    const gp = document.createElement("div");
+    gp.className = "gp" + (g.right ? " rt" : "") + (g.tone ? " " + g.tone : "");
+    const go = g.size
+      ? { ...o, size: g.size, art: g.art || Math.round(g.size * 0.62), h: g.h || o.h }
+      : o;
+    const inn = document.createElement("div"); inn.className = "in";
+    g.items.forEach((it) => inn.appendChild(hudSlot(it, go)));
+    gp.appendChild(inn);
+    gp.insertAdjacentHTML("beforeend",
+      `<div class="gl">${g.lb || "&nbsp;"}${g.ct ? `<i>${g.ct}</i>` : ""}</div>`);
+    row.appendChild(gp);
+  });
+  host.appendChild(row);
+  return row;
+}
+
+/// 캐릭터 줄 — 로스터 한 벌. `list` 의 한 칸은 {key, nm, own, art, draw}
+/// (`draw` 는 `ELEM.*` 같은 몸 그리기 함수, 없으면 「그림 대기」 칸이 선다).
+/// `onPick` 을 주면 보유한 칸이 눌린다 — 누른 값을 그대로 돌려준다.
+function hudChars(host, list, cur, opt, onPick) {
+  if (!host) return;
+  const o = opt || {}, S = o.size || 34;
+  list.forEach((r) => {
+    const b = document.createElement("div");
+    b.className = "hudchar" + (r.own === false ? " lock" : "") + (r.key === cur ? " on" : "");
+    b.dataset.key = r.key;
+    let cv = null;
+    if (!r.draw) {
+      const q = document.createElement("div");
+      q.className = "noart";
+      q.style.width = S + "px"; q.style.height = S + "px";
+      q.textContent = r.own === false ? "잠김" : "그림";
+      b.appendChild(q);
+    } else {
+      cv = document.createElement("canvas");
+      cv.style.width = S + "px"; cv.style.height = S + "px";
+      b.appendChild(cv);
+    }
+    b.insertAdjacentHTML("beforeend", `<div class="nm">${r.nm}</div>`);
+    host.appendChild(b);
+    if (cv) mk(cv, [S * 2.4, S * 2.4], function hudCharGlyph(c, t, dt, W, H, st) {
+      c.save(); if (r.own === false) c.globalAlpha = 0.42;
+      r.draw(c, t, dt, W, H, st); c.restore();
+    }, { clear: true });
+    if (onPick && r.own !== false) b.addEventListener("click", () => {
+      host.querySelectorAll(".hudchar").forEach((x) => x.classList.toggle("on", x.dataset.key === r.key));
+      onPick(r);
+    });
+  });
+}
+
+/// 채굴 도구 셋의 자리표 — 빔은 이어진 한 줄, 포는 낱알 하나, 탄은 폭심과
+/// 여섯 가닥. `kind`: "beam" · "cannon" · "bomb".
+///
+/// ⚠️ **여기 있는 이유** — 이 셋만 `ICON` 에 자리가 없다. 편성표와 출격준비 두
+///   화면이 같은 자리에 같은 것을 세워야 하는데, 한쪽에서 자리표를 지어내면
+///   두 화면이 다른 얼굴을 낸다.
+/// ⚠️ **문양의 정본이 아니다** — 도감 시안이 진짜 문양을 내는 날 이 함수는
+///   걷힌다. 지금 이것이 셋을 가르는 유일한 축(줄 · 낱알 · 터짐)이라
+///   모양을 바꾸지 마라: 세 자리표가 서로 안 갈리면 고르는 자리가 죽는다.
+function hudMineGlyph(c, W, kind) {
+  const cx = W / 2, cy = W / 2;
+  c.save();
+  c.strokeStyle = HUDLINE; c.fillStyle = HUDLINE;
+  c.lineWidth = Math.max(1.4, W * 0.085); c.lineCap = "round";
+  if (kind === "cannon") {
+    c.beginPath(); c.arc(cx, cy, W * 0.18, 0, TAU); c.fill();
+  } else if (kind === "bomb") {
+    c.beginPath(); c.arc(cx, cy, W * 0.11, 0, TAU); c.fill();
+    for (let i = 0; i < 6; i++) {
+      const a = i * Math.PI / 3 + Math.PI / 12;
+      c.beginPath();
+      c.moveTo(cx + Math.cos(a) * W * 0.20, cy + Math.sin(a) * W * 0.20);
+      c.lineTo(cx + Math.cos(a) * W * 0.38, cy + Math.sin(a) * W * 0.38);
+      c.stroke();
+    }
+  } else {
+    c.beginPath(); c.moveTo(W * 0.10, cy); c.lineTo(W * 0.90, cy); c.stroke();
+  }
   c.restore();
 }

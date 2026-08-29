@@ -180,98 +180,62 @@ function rkLabel(c, s, x, y, col) {
 
 
 /// ⑥ 맞는 자리 — 각도가 돌면 부위가 따라 돈다
+/// 3-1 **맞는 자리** — 여덟 방향에서 동시에 쏴 부위가 전부 다름을 보인다.
+///
+/// ⚠️⚠️ **「플레이어가 돌며 빔을 쏜다」 칸은 여기 없다 — 4-1 의 몫이다.**
+///   그 칸(운석 하나 + 도는 플레이어 + 찬 빔 + 명중)은 `rkMinePanel` 의 빔
+///   기둥과 **같은 그림**이었다. 같은 장면을 두 절이 각자 그리면 「3 과 4 가
+///   똑같다」로 읽힌다. 잃는 것은 없다 — 도는 궤도도(`t*0.55`) 미끄러지는
+///   타격점도([rkStoneHit]) 4-1 이 같은 식으로 그린다.
+/// ⇒ 여기 남은 것은 **4-1 이 안 그리는 것 하나**다: 각도가 달라지면 타격점이
+///   어디로 가나. 한 각도로는 못 보이므로 여덟을 한 번에 세운다.
 function rkHitPanel(cv, t) {
   const [c, W, H] = rkFit(cv);
   rkSky(c, W, H, t);
-
-  // 왼쪽 — 플레이어가 운석 둘레를 돈다. 맞는 자리가 표면을 따라 미끄러진다.
-  {
-    const cx = W * 0.27, cy = H * 0.46, R = 46;
-    const pa = t * 0.55;                       // 플레이어가 도는 각
-    const px = cx + Math.cos(pa) * 118, py = cy + Math.sin(pa) * 82;
-    rkStone(c, cx, cy, R, 3.1, t, 'ember', false);
-    // 빔이 오는 방향 = 플레이어 → 운석. 맞는 자리는 그 **반대편 실루엣**이다.
-    const th = Math.atan2(py - cy, px - cx);
+  // 칸을 통째로 쓰므로 반쪽이던 때보다 크게 — 타격점이 실루엣의 **어느
+  // 굴곡**에 앉는지가 이 그림의 전부라, 다각형이 읽힐 만큼 커야 한다.
+  const cx = W * 0.5, cy = H * 0.44, R = 62;
+  rkStone(c, cx, cy, R, 3.1, t, 'ember', false);
+  for (let i = 0; i < 8; i++) {
+    const th = (i / 8) * Math.PI * 2 + t * 0.12;
     const [hx, hy] = rkStoneHit(cx, cy, R, 3.1, t, th);
-    // 빔 — 찬 색. 안 터진다(어제 확정한 채굴 문법).
     c.save();
     c.globalCompositeOperation = 'lighter';
-    for (const [w, al] of [[5, 0.14], [2.4, 0.34], [1, 0.85]]) {
-      c.strokeStyle = A('#5FD9FF', al);
-      c.lineWidth = w;
-      c.beginPath();
-      c.moveTo(px, py);
-      c.lineTo(hx, hy);
-      c.stroke();
-    }
+    c.strokeStyle = A('#5FD9FF', 0.28);
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(cx + Math.cos(th) * 142, cy + Math.sin(th) * 142);
+    c.lineTo(hx, hy);
+    c.stroke();
     c.restore();
     const nl = Math.hypot(hx - cx, hy - cy) || 1;
-    rkImpact(c, hx, hy, (hx - cx) / nl, (hy - cy) / nl, 4, 'frost', t, 1.7);
-    // 플레이어
-    c.fillStyle = '#FFF3D6';
-    c.beginPath();
-    c.arc(px, py, 7, 0, Math.PI * 2);
-    c.fill();
-    rkLabel(c, '플레이어가 돈다 — 맞는 자리가 표면을 따라 미끄러진다',
-      cx, H - 34, '#9C9CAC');
+    rkImpact(c, hx, hy, (hx - cx) / nl, (hy - cy) / nl, 3, 'frost',
+      t, i * 2.3 + 1);
   }
-
-  // 오른쪽 — 여덟 방향에서 동시에. 부위가 다 다르다는 증거.
-  {
-    const cx = W * 0.72, cy = H * 0.46, R = 46;
-    rkStone(c, cx, cy, R, 3.1, t, 'ember', false);
-    for (let i = 0; i < 8; i++) {
-      const th = (i / 8) * Math.PI * 2 + t * 0.12;
-      const [hx, hy] = rkStoneHit(cx, cy, R, 3.1, t, th);
-      c.save();
-      c.globalCompositeOperation = 'lighter';
-      c.strokeStyle = A('#5FD9FF', 0.28);
-      c.lineWidth = 1;
-      c.beginPath();
-      c.moveTo(cx + Math.cos(th) * 108, cy + Math.sin(th) * 108);
-      c.lineTo(hx, hy);
-      c.stroke();
-      c.restore();
-      const nl = Math.hypot(hx - cx, hy - cy) || 1;
-      rkImpact(c, hx, hy, (hx - cx) / nl, (hy - cy) / nl, 3, 'frost',
-        t, i * 2.3 + 1);
-    }
-    rkLabel(c, '여덟 방향 — 맞는 부위가 전부 다르다', cx, H - 34, '#9C9CAC');
-  }
+  rkLabel(c, '여덟 방향 — 맞는 부위가 전부 다르다', cx, H - 34, '#9C9CAC');
   rkLabel(c, '중심에서 터지면 스티커, 실루엣 위에서 터져야 덩어리 — 실제 다각형과 광선을 교차시킨다',
     W / 2, H - 12, '#5A5A68');
 }
 
-/// ⑦ 얼음운석 — **깨기 전 ↔ 깨고 나서**를 나란히
+/// ⑦ 얼음운석 — **깨기 전.** 속이 창 너머로 비친다.
+///
+/// ⚠️ **「깨고 나서」 칸은 없다.** 떨구던 물건 넷(자석·신발·망원경·확성기)이
+///   게임 무드와 안 맞아 폐기됐고, 대신 들어갈 **보석 하나**의 시안이 아직
+///   없다 — 없는 것을 자리만 잡아 두면 그 빈칸이 곧 「버려진 시안」이 된다.
+///   창 너머 힌트([rkItem])는 그 보석이 설 때까지 자리를 지키는 대역이다.
 function rkIcePair(cv, t) {
   const [c, W, H] = rkFit(cv);
   rkSky(c, W, H, t);
-  const half = W / 2;
-  // 왼쪽 — 깨기 전. **속의 물건이 창 너머로 보인다**(스폰 때 정해진다,
-  // 판정 2026-08-21) — 「무엇을 하러 가나」를 지도에서 미리 고른다.
+  // 셋을 판 가운데로 — 한쪽으로 몰면 지운 자리가 빈칸으로 읽힌다. 간격은
+  // 반쪽을 쓰던 때와 **같은 W 비율**(0.125)이라 좁은 폭에서도 안 겹친다.
   for (let i = 0; i < 3; i++) {
-    const x = half * 0.25 + (half * 0.5 * i) / 2;
+    const x = W * (0.375 + 0.125 * i);
     rkIceRock(c, x, H * 0.42, 34, i * 4.3 + 2, t + i * 1.1,
       (cc, ix, iy, ir) => rkItem(cc, ix, iy, ir, RK_ITEM[i % 4][0], t));
   }
-  rkLabel(c, '깨기 전 — 얼음운석', half * 0.5, H * 0.42 + 62, '#E8E8F0');
+  rkLabel(c, '깨기 전 — 얼음운석', W / 2, H * 0.42 + 62, '#E8E8F0');
   rkLabel(c, '속의 물건이 창 너머로 보인다 — 무엇을 하러 가나를 미리 고른다',
-    half * 0.5, H * 0.42 + 78, '#6A6A78');
-  // 오른쪽 — 깨고 나서. 물건이 드러나고 껍질은 옅게 감싼다.
-  for (let i = 0; i < 3; i++) {
-    const x = half + half * 0.25 + (half * 0.5 * i) / 2;
-    rkDropItem(c, x, H * 0.42, 34, i * 3.3 + 5, t + i * 0.8,
-      (cc, ix, iy, ir) => rkItem(cc, ix, iy, ir, RK_ITEM[i % 4][0], t));
-  }
-  rkLabel(c, '깨고 나서 — 드랍된 아이템', half * 1.5, H * 0.42 + 62, '#E8C879');
-  rkLabel(c, '물건이 드러나고 껍질은 옅게 감싼다', half * 1.5, H * 0.42 + 78, '#6A6A78');
-  // 칸막이
-  c.strokeStyle = 'rgba(180,180,200,.12)';
-  c.lineWidth = 1;
-  c.beginPath();
-  c.moveTo(half, 16);
-  c.lineTo(half, H - 16);
-  c.stroke();
+    W / 2, H * 0.42 + 78, '#6A6A78');
 }
 
 
@@ -1361,11 +1325,15 @@ function rkBreakPanel(cv, t) {
      비례라 저절로 따라오지만, **혹**은 정점 자체를 잡아 빼는 것이라 큰 덩이일수록
      실루엣이 더 크게 울퉁불퉁해진다 — 그게 「덩치가 있다」로 읽힌다.        */
 
+/// 크기 다섯 — 이름 · 반지름 · 꼴. 랜드마크 둘만 기암 꼴을 쓴다.
+/// ⚠️ 반지름은 **서로의 비율**이 뜻이다(크기 = HP) — 칸에 맞춰 통째로 곱하되
+///   비율은 안 건드린다.
 const RK_SIZE = [
-  ['거대형', 116, RK_CRAG_FORM],
-  ['대형', 74, null],
-  ['중형', 50, null],
-  ['소형', 32, null],
+  ['특거대형', 86, RK_CRAG_FORM],
+  ['거대형 · 기암', 59, RK_CRAG_FORM],
+  ['대형', 38, null],
+  ['중형', 25, null],
+  ['소형', 16, null],
 ];
 
 /* ── 등급 셋 — 일반 · 색 · 유니크 ────────────────────────────────────────
@@ -1391,31 +1359,26 @@ const RK_PLAIN = 'gold';
 /// 유니크 재화 — **황금빛.** 운석으로는 없고 색 운석에서 아주 드물게 나온다.
 const RK_UNIQUE = RK_TONE_EXTRA.unique;
 
-/// 1-1 운석의 종류 — 일반(무채) · 색(넷) · 유니크 재화(황금)
+/// 1-1 등급 — 무채 · 색 · 황금. **한 등급에 하나씩만** 그린다.
+///
+/// ⚠️ 크기 축은 1-2, 색 넷의 몸은 2(균열) 가 정본이다 — 여기서 또 그리면
+///   같은 운석이 한 장에 세 번 나온다.
 function rkGradePanel(cv, t) {
   const [c, W, H] = rkFit(cv);
   rkSky(c, W, H, t);
   const third = W / 3;
 
-  // 초급 — 색이 없다. 셋을 크기별로.
-  [[46, '대형'], [32, '중형'], [21, '소형']].forEach(([r0, nm], i) => {
-    const x = third * 0.5 + (i - 1) * third * 0.28;
-    rkStone(c, x, H * 0.42, r0, i * 4.3 + 9, t + i * 0.8, RK_PLAIN, false);
-    rkLabel(c, nm, x, H * 0.42 + r0 + 20, '#8A8A98');
-  });
-  rkLabel(c, '일반 운석 — 색이 없다', third * 0.5, H * 0.42 + 74, '#E8E8F0');
+  // 일반 — 색이 없다.
+  rkStone(c, third * 0.5, H * 0.40, 58, 9, t, RK_PLAIN, false);
+  rkLabel(c, '일반 운석 — 색이 없다', third * 0.5, H * 0.40 + 92, '#E8E8F0');
   rkLabel(c, '일반 강화석(Lv1~20) 보통 · 색 재화 10% 미만 · 유니크 0.1% 미만',
-    third * 0.5, H * 0.42 + 90, '#6A6A78');
+    third * 0.5, H * 0.40 + 108, '#6A6A78');
 
-  // 희귀 — 색 넷.
-  RK_KIND.forEach((K, i) => {
-    const x = third * 1.5 + (i - 1.5) * third * 0.22;
-    rkStone(c, x, H * 0.42, 30, i * 5.1 + 2, t + i * 1.3, K.tone, true);
-    rkLabel(c, K.nm, x, H * 0.42 + 50, '#8A8A98');
-  });
-  rkLabel(c, '색 운석 — 색이 있다', third * 1.5, H * 0.42 + 74, '#E8C879');
+  // 희귀 — 색. 넷 중 **대표 하나**만.
+  rkStone(c, third * 1.5, H * 0.40, 58, 2, t + 1.3, RK_KIND[0].tone, true);
+  rkLabel(c, '색 운석 — 색이 있다(넷 · 몸은 2)', third * 1.5, H * 0.40 + 92, '#E8C879');
   rkLabel(c, '같은 색 강화석(Lv21~99) 보통 · 유니크 5% 미만',
-    third * 1.5, H * 0.42 + 90, '#6A6A78');
+    third * 1.5, H * 0.40 + 108, '#6A6A78');
 
   // 유니크 — **장면으로** 보여 준다. 재화는 **운석 곁에** 있어야 「저기서
   //   나온 것」으로 읽힌다.
@@ -1424,12 +1387,15 @@ function rkGradePanel(cv, t) {
   // ⚠️⚠️ **궤도를 돌면 안 된다** — 운석이 사라지면 돌 기준이 없어진다.
   //   조각은 **떨어진 자리**에 있고 거기서 **제자리로만** 흔들린다.
   const ux = third * 2.5;
-  rkStone(c, ux, H * 0.36, 28, 21, t, RK_KIND[1].tone, true);
+  rkStone(c, ux, H * 0.36, 40, 21, t, RK_KIND[1].tone, true);
+  rkLabel(c, '유니크 — 황금', ux, H * 0.40 + 92, '#E8C879');
+  rkLabel(c, '재화로만 있다 — 운석으로는 안 뜬다',
+    ux, H * 0.40 + 108, '#6A6A78');
   const GRADE = ['gold', RK_KIND[1].tone, 'unique'];
   for (let i = 0; i < 6; i++) {
     // 떨어진 자리 — 씨앗이 정하고 **안 움직인다.**
     const a0 = hash(i * 3.1) * Math.PI * 2;
-    const d0 = 44 + 22 * hash(i * 5.7);
+    const d0 = 56 + 24 * hash(i * 5.7);
     const dx = ux + Math.cos(a0) * d0;
     const dy = H * 0.36 + Math.sin(a0) * d0 * 0.46;
     // 제자리 부유 — 아주 작게, 주기가 서로 다르게(같이 흔들리면 한 덩어리로 보인다)
@@ -1547,44 +1513,42 @@ function rkUniqueDrop(c, x, y, r, seed, t) {
 /// ⚠️ 한 줄에 넷을 밀어 넣었더니 **초거대가 옆 칸을 밟았다.** 초거대는 랜드마크라
 ///   크기가 곧 전부인데 줄이면 뜻이 죽으므로, 줄을 나눈다 — 위는 초거대,
 ///   아래는 큰·중간·작은.
+/// 1-2 크기 다섯 — **무채 한 벌로만** 잰다.
+///
+/// ⚠️ 색을 같이 돌리면 1-1 이 그린 색 넷을 크기마다 또 그리게 된다 — 한 장에
+///   같은 운석이 열여섯 번 나오고, 정작 보라는 것(크기 차)이 안 보인다.
 function rkSizePanel(cv, t) {
   const [c, W, H] = rkFit(cv);
   rkSky(c, W, H, t);
-  const colW = W / RK_KIND.length;
-  RK_KIND.forEach((K, ci) => {
-    const cx0 = colW * (ci + 0.5);
-    rkLabel(c, K.nm, cx0, 16, '#E8E8F0');
-    // 위 — 초거대(기암)
-    rkStone(c, cx0, H * 0.36, 52, ci * 7.3 + 2, t + ci * 1.1, K.tone, false,
-      { form: RK_CRAG_FORM });
-    rkLabel(c, '거대형 · 기암', cx0, H * 0.36 + 76, '#E8C879');
-    // 아래 — 큰 · 중간 · 작은
-    [['대형', 34], ['중형', 23], ['소형', 15]].forEach(([snm, sr], si) => {
-      const px = cx0 + (si - 1) * colW * 0.28;
-      rkStone(c, px, H * 0.76, sr, ci * 7.3 + si * 3.1 + 5,
-        t + ci * 1.1 + si * 0.7, K.tone, false);
-      rkLabel(c, snm, px, H * 0.76 + sr + 20, '#8A8A98');
-    });
+  const colW = W / RK_SIZE.length;
+  // 칸에 맞춰 통째로 줄인다 — 비율이 뜻이라 낱개로는 안 건드린다.
+  const s = Math.min(1, colW / 200, (H * 0.38) / 86);
+  // ⚠️ 이름은 **한 밑줄**에 모은다 — 기암 꼴은 반지름 밖으로 크게 뻗어서
+  //   덩이마다 「r 아래」에 적으면 이름이 몸 위에 얹힌다.
+  RK_SIZE.forEach(([nm, r0, form], i) => {
+    const x = colW * (i + 0.5);
+    rkStone(c, x, H * 0.40, r0 * s, i * 7.3 + 2, t + i * 1.1, RK_PLAIN, false,
+      form ? { form } : undefined);
+    rkLabel(c, nm, x, H - 36, i < 2 ? '#E8C879' : '#8A8A98');
   });
-  rkLabel(c, '크기 = HP(얼마나 오래 캐나) · 색 = 무엇을 올리나 — 두 뜻이 안 겹친다',
+  rkLabel(c, '크기 = HP(얼마나 오래 캐나) · 색 = 무엇을 올리나(1-1) — 두 뜻이 안 겹친다',
     W / 2, H - 10, '#5A5A68');
 }
 
 /// 페이지 차례와 **같은 순서**로 둔다 — 읽는 사람이 대조한다.
 const RK_PANELS = [
-  ['r-grade', rkGradePanel],       // 1-1 운석 셋
-  ['r-size', rkSizePanel],         // 1-2 크기 다섯
-  ['r-icepair', rkIcePair],        // 1-3 얼음 운석
-  ['r-iceform', rkIceFormPanel],   // 1-3-1 얼음 꼴 여덟
-  ['r-ice', rkIcePanel],           // 1-3-2 속 아이템 넷
-  ['r-icelit', rkIceLitPanel],     // 1-3-3 밝기 판정 — 사다리 셋
-  ['r-stones', rkStonesPanel],     // 2-1 강화석 셋
-  ['r-hit', rkHitPanel],           // 3-1 때릴 때
-  ['r-break', rkBreakPanel],       // 3-2 부서지는 순간 · 드롭
-  ['r-mine', rkMinePanel],         // 4-1 채굴 무기 셋
-  ['r-buff', rkBuffPanel],         // 4-2 순간 버프 넷
-  ['r-mob', rkDropPanel],          // 5-1 적이 남기는 것 셋
-  ['r-zoom', rkZoomPanel],         // 5-2 확대 — 실물 ↔ 굽는 크기
+  ['r-grade', rkGradePanel],       // 운석 1-1 등급
+  ['r-size', rkSizePanel],         // 운석 1-2 크기 다섯
+  ['r-icepair', rkIcePair],        // 운석 1-3 얼음 운석
+  ['r-iceform', rkIceFormPanel],   // 운석 1-3-1 얼음 꼴 여덟
+  ['r-icelit', rkIceLitPanel],     // 운석 1-3-2 밝기 판정 — 사다리 셋
+  ['r-hit', rkHitPanel],           // 운석 3-1 때릴 때
+  ['r-break', rkBreakPanel],       // 운석 3-2 부서지는 순간 · 드롭
+  ['r-mine', rkMinePanel],         // 운석 4 채굴 무기 셋
+  ['r-ice', rkIcePanel],           // 재화 — 얼음운석 속
+  ['r-stones', rkStonesPanel],     // 재화 — 강화석 셋
+  ['r-mob', rkDropPanel],          // 재화 — 적이 남기는 것 셋
+  ['r-zoom', rkZoomPanel],         // 재화 — 확대(실물 ↔ 굽는 크기)
 ];
 let rkT0 = 0;
 /// ⚠️⚠️ **보이는 판만 그린다.** 여덟을 다 그리면 한 프레임에 **11.9ms** 가 들어
@@ -2314,10 +2278,9 @@ function rkSolidFaces(r, seed, spin, tx, tz, form) {
 ///     · **흰 앞날** — 광원 쪽 실루엣만 굵고 밝게(반대쪽까지 두르면 날붙이다)
 /// 얼음 운석의 **여섯 단** — 엔진 `ice_paint.dart` 의 `kIceTones` 와 짝이다.
 ///
-/// ⭐⭐ **2026-08-24 두 번째 판정 — 밝기는 「위」가 아니라 「아래」의 일이다.**
-///   사용자가 두 번 「좀 더 밝게」라고 했고, 첫 시도는 **꼭대기 셋**
-///   (#2F94BE·#71C9E4·#D3F3FF)을 밝혔다가 빙 마법 FX 와 ΔE 3.8 까지 붙어
-///   되돌렸다. 그런데 화면을 재 보니 그 되돌림이 지킨 것이 거의 없었다:
+/// ⭐⭐ **밝기는 「위」가 아니라 「아래」의 일이다.** 꼭대기 셋
+///   (#2F94BE·#71C9E4·#D3F3FF)만 밝히는 안은 빙 마법 FX 와 ΔE 3.8 까지
+///   붙는데, 화면을 재 보면 그 대가로 지키는 것도 거의 없다:
 ///
 ///   | 단 | 화면 점유(실측) | 빙 FX 까지 최단 ΔE |
 ///   |---|---|---|
@@ -2355,7 +2318,7 @@ const RK_ICE_TONE_ALT = [
   ['지금(아래를 듦)', RK_ICE_TONE],
   ['위만 밝힘',
     ['#08202F', '#0F3A52', '#1A6285', '#2F94BE', '#71C9E4', '#D3F3FF']],
-  ['옛 판(08-24 아침)',
+  ['안 밝힌 판',
     ['#08202F', '#0F3A52', '#1A6285', '#2894A8', '#60C4C8', '#C6E7F6']],
 ];
 function rkIceRock(c, x, y, r, seed, t, hint, form, tone) {
@@ -2762,7 +2725,7 @@ function rkIceLitPanel(cv, t) {
 const RK_ICE_LIT_NOTE = [
   '몸 광도 89.6(+26%) · 이웃 최소 ΔE 11.3 · 골이 0단에서 3.1 → 10.9 로 살아난다',
   '몸 광도 71.6(+0.7%) · 빙FX 최단 3.8 — 비용만 치르고 안 밝아진다',
-  '몸 광도 71.1 · 빙FX 최단 6.2 — 사용자가 두 번 「더 밝게」라 한 판',
+  '몸 광도 71.1 · 빙FX 최단 6.2 — 「어둡다」로 반려된 판',
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -4431,213 +4394,5 @@ function rkMinePanel(cv, t) {
     c.stroke();
   });
   rkLabel(c, '셋 다 적을 안 때린다 — 강제 슬롯 하나가 전투력을 안 준다 · 자동 조준이라 겉돌면서 캔다',
-    W / 2, H - 10, '#5A5A68');
-}
-
-/* ── 4-2 순간 버프 넷 — 같은 그릇 · 테두리 색 · 속 문양 ──────────────────
-   ⭐ **재화가 아니다** — 재화는 벌러 가고 이건 **지금 살려고** 줍는다.
-   ⭐ 넷은 **같은 그릇**이다 — 안은 안 칠한다(색 덩어리가 넷 늘면 적·운석·
-     암흑물질과 싸운다). 가르는 것은 **테두리 색**과 **속 문양** 둘뿐이다.
-   ⭐ 문양은 축을 둘 쓴다 — **면↔선 · 가로↔사선.** 화살표는 안 쓴다(34px
-     에서 방향이 안 읽힌다). UI 아이콘(햄버거·빨리감기·톱니)으로 읽히면 실패.
-
-   | | 축 | 문양 |
-   |---|---|---|
-   | 자석 | **면 · 가로** | 가운데 큰 알 + 양옆 작은 알 — 모여 있다 |
-   | 이속 | **선 · 사선** | 길이가 다른 사선 셋 — 흘러간 자국 |
-   | 사거리 | **선 · 가로** | 긴 가로 한 줄 + 눈금 + 끝점 — 여기서 저기까지 |
-   | 범위 | **면 · 사선** | 가운데 알 + 대각 네 조각 — 퍼져 나간다 |
-
-   ⚠️ 테두리 색은 임자 있는 색(채굴빔 시안 · 재화 금빛 · 적 진홍 · 색 운석
-     넷)을 피해 골랐다. 그래도 이속의 민트는 독(#57D96B)과, 범위의 살구는
-     공격 주황(#FF6A1E)과 이웃이다 — 실기에서 나란히 놓고 봐야 한다.
-   ⚠️⚠️ 이름 충돌은 **끝났다** — 「중력」은 색 운석의 **중력석**(재화) 하나만
-     가리키고 버프 쪽은 **「자석」**이다(설계 용어 표 ⚠️⚠️, 사용자 판정
-     2026-08-21). 둘 다 「끌어당김」이라 뜻은 통하지만 화면에서는 다른
-     물건이라, 한 이름이 둘을 가리키면 무엇이 떨어졌는지 말로 못 가른다.*/
-const RK_BUFF = [
-  ['magnet', '자석', '#E8F0FF', '떨어진 것이 다 끌려온다'],
-  ['haste', '이속', '#4ADEB4', '잠깐 빨라진다'],
-  ['reach', '사거리', '#8F86FF', '잠깐 멀리 닿는다'],
-  ['burst', '범위', '#FFAC7A', '잠깐 넓게 터진다'],
-];
-
-/// 문양의 강철빛 — 얼음운석 속 아이템(RK_IT)과 같은 계열 **한 색**.
-/// 문양까지 색을 갈면 테두리와 두 번 말하는 셈이라 34px 에서 오히려 흐려진다.
-const RK_BUFF_INK = '#C6D2F0';
-
-/// 그릇 하나. [i] 는 RK_BUFF 색인 · [r] 은 그릇 반지름(34px 검증줄은 r 17).
-function rkBuffOrb(c, x, y, r, i, t) {
-  const ink = RK_BUFF[i][2];
-  const bob = Math.sin(t * 0.8 + i * 1.9) * r * 0.06;
-  const up = 0.5 + 0.5 * Math.sin(t * 0.8 + i * 1.9);
-  const yy = y + bob;
-  const pulse = 0.5 + 0.5 * Math.sin(t * 1.6 + i * 2.3);
-
-  // 그림자 — 어두운 속 + **밝은 테**(그림 규약. 검은 바탕에 검은 그림자는
-  // 안 보인다). 테는 제 테두리 색을 아주 옅게 쓴다.
-  const sh = r * (0.6 - up * 0.14);
-  c.save();
-  c.globalAlpha = 0.55 - up * 0.16;
-  c.beginPath();
-  c.ellipse(x, y + r * 1.24, sh, sh * 0.26, 0, 0, Math.PI * 2);
-  c.fillStyle = '#04040A';
-  c.fill();
-  c.restore();
-  c.strokeStyle = A(ink, 0.14 - up * 0.05);
-  c.lineWidth = Math.max(1, r * 0.05);
-  c.beginPath();
-  c.ellipse(x, y + r * 1.24, sh, sh * 0.26, 0, 0, Math.PI * 2);
-  c.stroke();
-
-  // 후광 — 줍는 것은 빛을 **낸다**(재화와 같은 축 — 운석은 받는다).
-  c.save();
-  c.globalCompositeOperation = 'lighter';
-  const g = c.createRadialGradient(x, yy, r * 0.7, x, yy, r * 1.6);
-  g.addColorStop(0, A(ink, 0.10 + 0.06 * pulse));
-  g.addColorStop(1, A(ink, 0));
-  c.fillStyle = g;
-  c.beginPath();
-  c.arc(x, yy, r * 1.6, 0, Math.PI * 2);
-  c.fill();
-  c.restore();
-
-  // 그릇 속 — **안을 칠하지 않는다**: 바탕보다 살짝 든 어둠 한 장 + 광원
-  // 쪽 윗볕 한 뼘. 이 어둠이 있어야 문양이 배경 별과 안 섞인다.
-  c.fillStyle = A('#0D1020', 0.92);
-  c.beginPath();
-  c.arc(x, yy, r, 0, Math.PI * 2);
-  c.fill();
-  c.save();
-  c.beginPath();
-  c.arc(x, yy, r, 0, Math.PI * 2);
-  c.clip();
-  c.fillStyle = A('#FFFFFF', 0.05);
-  c.beginPath();
-  c.arc(x - r * 0.3, yy - r * 0.34, r * 0.62, 0, Math.PI * 2);
-  c.fill();
-  c.restore();
-
-  // 테두리 — 넷을 가르는 첫 축. 몸선 하나 + 가산 번짐 한 겹.
-  c.strokeStyle = A(ink, 0.9);
-  c.lineWidth = Math.max(1.4, r * 0.13);
-  c.beginPath();
-  c.arc(x, yy, r * 0.94, 0, Math.PI * 2);
-  c.stroke();
-  c.save();
-  c.globalCompositeOperation = 'lighter';
-  c.strokeStyle = A(ink, 0.2 + 0.12 * pulse);
-  c.lineWidth = Math.max(2.4, r * 0.24);
-  c.beginPath();
-  c.arc(x, yy, r * 0.94, 0, Math.PI * 2);
-  c.stroke();
-  c.restore();
-
-  rkBuffGlyph(c, x, yy, r * 0.94, i);
-}
-
-/// 속 문양 — 축 둘(면↔선 · 가로↔사선), 강철빛 한 색.
-function rkBuffGlyph(c, x, y, r, i) {
-  const ink = RK_BUFF_INK;
-  c.save();
-  c.translate(x, y);
-  if (i === 0) {
-    // 자석 — **면 · 가로.** 가운데로 모인 알 셋: 큰 알 하나에 작은 알
-    // 둘이 붙어 있다. 셋이 같은 크기면 줄임표(…)라 가운데를 눌러 키운다.
-    c.fillStyle = A(ink, 1);
-    c.beginPath();
-    c.arc(0, 0, r * 0.30, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = A(ink, 0.85);
-    for (const s of [-1, 1]) {
-      c.beginPath();
-      c.arc(s * r * 0.55, 0, r * 0.15, 0, Math.PI * 2);
-      c.fill();
-    }
-  } else if (i === 1) {
-    // 이속 — **선 · 사선.** 길이가 다른 사선 셋 — 같은 길이면 햄버거를
-    // 기울인 것이 된다. 화살촉은 없다 — 흘러간 **자국**이다.
-    c.rotate(-0.62);
-    c.strokeStyle = A(ink, 1);
-    c.lineCap = 'round';
-    c.lineWidth = Math.max(1.2, r * 0.14);
-    for (const [oy, l0, l1] of
-         [[-0.34, -0.52, 0.30], [0, -0.30, 0.55], [0.34, -0.44, 0.10]]) {
-      c.beginPath();
-      c.moveTo(r * l0, r * oy);
-      c.lineTo(r * l1, r * oy);
-      c.stroke();
-    }
-  } else if (i === 2) {
-    // 사거리 — **선 · 가로.** 긴 한 줄 + 시작 눈금 + 끝 점 — 「여기서
-    // 저기까지」. 화살촉을 달면 34px 에서 방향이 안 읽힌다(4-2 표).
-    c.strokeStyle = A(ink, 1);
-    c.lineCap = 'round';
-    c.lineWidth = Math.max(1.2, r * 0.12);
-    c.beginPath();
-    c.moveTo(-r * 0.58, 0);
-    c.lineTo(r * 0.44, 0);
-    c.stroke();
-    c.beginPath();
-    c.moveTo(-r * 0.58, -r * 0.2);
-    c.lineTo(-r * 0.58, r * 0.2);
-    c.stroke();
-    c.fillStyle = A(ink, 1);
-    c.beginPath();
-    c.arc(r * 0.58, 0, r * 0.14, 0, Math.PI * 2);
-    c.fill();
-  } else {
-    // 범위 — **면 · 사선.** 가운데 알에서 대각 네 조각이 퍼져 나간다.
-    // 조각을 고리로 이으면 톱니(기어)가 되므로 **넷만**, 사이를 띄운다.
-    c.fillStyle = A(ink, 1);
-    c.beginPath();
-    c.arc(0, 0, r * 0.16, 0, Math.PI * 2);
-    c.fill();
-    for (let k = 0; k < 4; k++) {
-      const a = Math.PI / 4 + k * Math.PI / 2;
-      const ca = Math.cos(a), sa = Math.sin(a);
-      const nx = -sa, ny = ca;
-      const i0 = r * 0.32, o0 = r * 0.62;
-      const wi = r * 0.10, wo = r * 0.20;
-      fillPoly(c, [
-        [ca * i0 + nx * wi, sa * i0 + ny * wi],
-        [ca * i0 - nx * wi, sa * i0 - ny * wi],
-        [ca * o0 - nx * wo, sa * o0 - ny * wo],
-        [ca * o0 + nx * wo, sa * o0 + ny * wo],
-      ], A(ink, 0.95));
-    }
-  }
-  c.restore();
-}
-
-/// 4-2 순간 버프 넷 — 큰 그릇 넷 + **34px 검증줄**(합격선).
-function rkBuffPanel(cv, t) {
-  const [c, W, H] = rkFit(cv);
-  rkSky(c, W, H, t);
-  const col = W / 4;
-  RK_BUFF.forEach(([, nm, , what], i) => {
-    const x = col * (i + 0.5);
-    rkBuffOrb(c, x, H * 0.30, 27, i, t);
-    rkLabel(c, nm, x, H * 0.30 + 58, '#E8E8F0');
-    rkLabel(c, what, x, H * 0.30 + 74, '#6A6A78');
-    // 34px 검증줄 — 실기 크기 그대로. 여기서 넷이 안 갈리면 문양을 다시 판다.
-    rkBuffOrb(c, x, H * 0.70, 17, i, t);
-  });
-  // 34px 자 — 검증줄이 눈대중이 아님을 말한다.
-  const bx = col * 0.5 - 17, by = H * 0.70 + 32;
-  c.strokeStyle = 'rgba(180,180,200,.35)';
-  c.lineWidth = 1;
-  c.beginPath();
-  c.moveTo(bx, by);
-  c.lineTo(bx + 34, by);
-  c.moveTo(bx, by - 3);
-  c.lineTo(bx, by + 3);
-  c.moveTo(bx + 34, by - 3);
-  c.lineTo(bx + 34, by + 3);
-  c.stroke();
-  rkLabel(c, '34px', col * 0.5, by + 14, '#5A5A68');
-  rkLabel(c, '합격선 — 34px 에서 넷이 서로 갈리는가 · 화살표 없음 · 안은 안 칠한다',
-    W / 2, H - 26, '#9C9CAC');
-  rkLabel(c, '재화가 아니다 — 재화는 벌러 가고 이건 지금 살려고 줍는다',
     W / 2, H - 10, '#5A5A68');
 }

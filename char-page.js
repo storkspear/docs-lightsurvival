@@ -68,7 +68,13 @@ function charWard(key) {
   if (typeof WLTBL === "undefined" || typeof WLtxt === "undefined") return null;
   const R = WLTBL.find((x) => x.key === key);
   if (!R) { console.warn("결계 — WLTBL 에 없는 키:", key); return null; }
-  return [key, R.nm, charRk("방어", "變 변주"), WLtxt(R)];
+  // ⚠️ 「방어」였다 — 2026-08-29 판정으로 **그 계열이 어휘에서 없어졌다**
+  //   (사용자: 「마법 = 보조·방어·마법으로 나누지 않는다. 전부 다 마법」.
+  //   엔진은 `SkillTag.guard` 를 enum 에서 통째로 지웠다). 여기 찍히는 것은
+  //   **계열이 아니라 이 줄이 서는 장**이라, 그 장의 새 이름(「막는 것」)을
+  //   쓴다 — `vfx.js` 의 [LVW]·[LVHOSTS]·[ICONHOSTS] 와 같은 낱말이라야
+  //   [charLvw] 가 같은 페이지에 찍는 부제와 안 갈린다.
+  return [key, R.nm, charRk("막는 것", "變 변주"), WLtxt(R)];
 }
 
 /// **원본 성장표(`LVW`)에 이미 선 스킬 한 줄** — 이름 · 계열 · 다섯 줄을 전부
@@ -89,9 +95,10 @@ function charLvw(key, rank, cap) {
 ///
 /// ⚠️ [lvTable] 은 `reg[key]` 가 없으면 그 줄을 **조용히 건너뛴다** — 이 레포가
 ///   그렇게 빈 칸을 낸 적이 있다. 예외가 아니라 **침묵**이라 눈으로는 못 본다.
-/// ⚠️ **칸 키가 엔진 id 와 다른 것이 많다**(빙에서 다섯: 서릿발 `SDspineD` ·
-///   서리결정 `SCspine` · 결빙 `POportal` · 빙벽 `WLwall1/2/4`, 무속성에서
-///   하나: 공명 `mgNovaChime`). 지어내면 그 줄이 통째로 사라진다.
+/// ⚠️ **칸 키가 엔진 id 와 다른 것이 많다**(빙에서 넷: 서릿발 `SDspineD` ·
+///   결빙 `POportal` · 빙벽 `WLwall1/2/4`, 무속성에서 하나: 파동정지
+///   `waveHalt` — 엔진은 `wavehalt`, **대문자 H**). 지어내면 그 줄이 통째로
+///   사라진다.
 ///
 /// ⭐ `dec` 는 **「시안이 아직 안 그렸다」고 선언한 키**의 지도다(키 → 왜).
 ///   선언한 것은 사고가 아니므로 경고에서 빼되, **거꾸로도 본다**: 선언해 뒀는데
@@ -113,8 +120,8 @@ function charMISS(label, reg, dec, ...tables) {
 ///
 /// ⭐ 그림은 하나도 새로 안 그린다. 정본은 「속성 · 몸」(`mockup.html`)이고
 ///   여기서는 **같은 함수**(`ELEM.*`)를 그대로 부른다.
-/// ⚠️ 없는 키는 **조용히 넘어가지 않는다** — 짝(발현 전 · 발현)이 없는 속성이
-///   있을 수 있고, 그때 빈 격자만 뜨면 「왜 안 나오나」로 시간이 간다.
+/// ⚠️ 없는 키는 **조용히 넘어가지 않는다** — `ELEMS` 에 자리가 없는 키를
+///   넘기는 일이 있고, 그때 빈 격자만 뜨면 「왜 안 나오나」로 시간이 간다.
 function charBody(host, keys) {
   const H = (typeof host === "string") ? document.getElementById(host) : host;
   if (!H || typeof ELEMS === "undefined") return 0;

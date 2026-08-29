@@ -27,6 +27,26 @@ const HISEGS = [
 // u=0·u=1 양끝이 전부 0(암전)이라 되풀이해도 이음매가 없다.
 const HIENV = { o0: 0.02, oDur: 0.18, hold: 0.90, cDur: 0.07 };
 
+// ── 무대 크기 ────────────────────────────────────────────────────────────
+// ⭐ **구도는 폭 [HIW0] 하나에서만 정의한다.** 엔진이 실제로 그리는 폭이
+//   이것이라(가로 폰 한 화면), 로고 크기·간격·여백이 전부 이 폭 기준으로
+//   검산돼 있다. 무대를 크게 띄울 때 좌표를 다시 잡으면 그 검산이 무효가
+//   되므로, **버퍼만 키우고 배율 하나로 확대한다** — 큰 무대와 작은 갈무리가
+//   같은 그림인 이유가 이것이다.
+const HIW0 = 788, HIH0 = 364;
+/// 실시간 무대의 버퍼 — 구도 폭의 1.5배. HTML 이 잡아 주는 표시 폭
+/// (1,182px)과 같아 확대로 흐려지지 않고, 1.5 가 두 변 모두 정수라 가로세로
+/// 비도 [HIW0]:[HIH0] 그대로다.
+const HISTAGEK = 1.5;
+const HISTAGE = [HIW0 * HISTAGEK, HIH0 * HISTAGEK];
+
+/// 그림자 흐림은 **변환의 영향을 안 받는다**(캔버스 규약) — 확대해 그리면
+/// 후광만 상대적으로 좁아진다. 지금 배율을 읽어 되돌린다.
+function hiBlur(c, px) {
+  const m = c.getTransform ? c.getTransform().a : 1;
+  return px * (m || 1);
+}
+
 // ══════════════════════════════════════════════════════════════════════════
 // 타이틀 로고 — 재료를 직접 깎는다(폰트를 안 쓴다)
 //
@@ -166,7 +186,7 @@ function hiDrawLetter(c, ch, x0, y0, unit, mat, glow, ext) {
   // ① 후광
   if (glow > 0.02) {
     c.save();
-    c.shadowColor = A(T[1], Math.min(1, glow)); c.shadowBlur = unit * 1.1 * glow;
+    c.shadowColor = A(T[1], Math.min(1, glow)); c.shadowBlur = hiBlur(c, unit * 1.1 * glow);
     hiFillPolys(c, full, A(T[1], 0.5 * glow));
     c.restore();
   }
@@ -252,7 +272,7 @@ function hiEmblem(c, cx, cy, r, tAbs, crack, lit, flash) {
   // 균열 — 결정을 가로지르는 지그재그, 갈라질수록 밝다.
   const cpts = hiCrackPts(cx - r * 0.46, cy - r * 0.08, cx + r * 0.46, cy + r * 0.12, 4.4, 5);
   const seg = hiCrackReveal(cpts, Math.max(crack, flash));
-  if (seg) { c.save(); c.shadowColor = A(T[2], 1); c.shadowBlur = r * (0.3 + flash * 1.6); hiStrokePts(c, seg, Math.max(1, r * 0.05), A("#FFFFFF", Math.min(1, 0.6 + flash))); c.restore(); }
+  if (seg) { c.save(); c.shadowColor = A(T[2], 1); c.shadowBlur = hiBlur(c, r * (0.3 + flash * 1.6)); hiStrokePts(c, seg, Math.max(1, r * 0.05), A("#FFFFFF", Math.min(1, 0.6 + flash))); c.restore(); }
   if (lit > 0.05 || flash > 0.02) { c.save(); c.globalCompositeOperation = "lighter"; gHalo(c, cx, cy, r * (0.55 + flash * 1.3), "white", Math.min(1, lit * 0.7 + flash)); c.restore(); }
 }
 
@@ -385,9 +405,16 @@ function hiPaintBoot(c, tAbs, W, H) {
 
 {
   const bg = $("hi-boot-bg");
-  // ⚠️ 로고 전체(엠블럼 · 균열 · 「LIGHT SURVIVAL」)가 이제 캔버스 하나에서
-  //   다 그려진다 — 폰트를 안 쓰므로 opacity 를 맞출 DOM 워드마크가 없다.
-  if (bg) mk(bg, [788, 364], function hiBoot(c, t, dt, W, H) { hiPaintBoot(c, t, W, H); }, { clear: true });
+  // ⚠️ 로고 전체(엠블럼 · 균열 · 「LIGHT SURVIVAL」)가 캔버스 하나에서 다
+  //   그려진다 — 폰트를 안 쓰므로 opacity 를 맞출 DOM 워드마크가 없다.
+  // ⭐ 그리기는 [HIW0] 좌표계에서만 한다. 버퍼가 커진 만큼 배율을 걸 뿐이라
+  //   아래 고정 갈무리와 같은 그림이다([HISTAGE] 머리 참조).
+  if (bg) mk(bg, HISTAGE, function hiBoot(c, t, dt, W, H) {
+    const k = W / HIW0;
+    c.save(); c.scale(k, k);
+    hiPaintBoot(c, t, W / k, H / k);
+    c.restore();
+  }, { clear: true });
 }
 
 /// 고정 갈무리 — 같은 [hiPaintBoot] 를 다른 절대시각으로 불러 정지 화면을 뜬다.

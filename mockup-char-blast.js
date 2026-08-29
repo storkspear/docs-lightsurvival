@@ -41,8 +41,12 @@ const CZ_CAP = (p) => {
   const H = document.getElementById("czbody");
   if (H && typeof FVNAME !== "undefined" && typeof FVSET !== "undefined" && FVSET.blast) {
     const nm = FVNAME.blast.split(" ·")[0];          // "섬화 · 염+뇌" → "섬화"
-    tile(H, CZ_BODY, "blastBase", nm + " · 발현 전", "BLAST", CZ_CAP("base"), S);
-    tile(H, CZ_BODY, "blastMani", nm + " · 발현", "BLAST", CZ_CAP("mani"), S);
+    // ⚠️ 둘째 칸은 **몸이 아니라 보관된 그림**이다 — 몸을 두 벌로 가르던 것이
+    //   폐기돼 서는 것은 첫째 칸 하나뿐이고, 엔진 대조표도 이 칸을 「영구
+    //   미제작」으로 적어 뒀다(`docs/design/시안-엔진-대조.md`). **지울 그림이
+    //   아니라 안 쓰는 그림**이고, 이 장 자체가 보관소라 그대로 띄운다.
+    tile(H, CZ_BODY, "blastBase", nm + " · 몸", "BLAST", CZ_CAP("base"), S);
+    tile(H, CZ_BODY, "blastMani", nm + " · 안 쓰는 그림", "BLAST", CZ_CAP("mani"), S);
   } else console.warn("플라즈마 — FVNAME/FVSET.blast 를 못 읽었다");
 }
 

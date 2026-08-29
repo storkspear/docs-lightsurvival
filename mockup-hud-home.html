@@ -42,29 +42,57 @@
    `.hh-stage` 박스의 flexbox 가운데(`align-items:center` ·
    `justify-content:center`)와 같은 값이어야 한다 — 레일 폭(58) · 아래
    로스터 높이(74) 둘 다 자바스크립트 쪽 상수와 여기 CSS 값이 같다. */
-.hh-mid{flex:1 1 auto;display:flex;align-items:stretch;min-height:0}
-#hh-rail{width:58px;flex:0 0 58px;justify-content:center;padding:0 0 0 2px}
+.hh-mid{flex:1 1 auto;display:flex;align-items:stretch;min-height:0;padding-left:58px}
+/* ⚠️⚠️ **레일은 다섯 화면과 같은 상자에 선다** — `.hudrail.side`(폭 58 ·
+   `justify-content:center`)를 그대로 쓰고 자리만 화면 **아래 끝까지**로 편다.
+   흐름에 두면(`.hh-mid` 의 칸) 홈에서만 로스터 높이의 절반(37px)만큼 올라앉아
+   같은 레일이 화면마다 다른 자리에 서고, 첫 칸이 창틀 글줄에 깔린다(788×364
+   에서 실측 10px · 실기 판정 2026-08-27). 그 자리를 로스터가 이미 비워 뒀다 —
+   `.hh-bottom` 의 왼쪽 64px 는 레일 몫이다. 그래서 `.hh-mid` 는 레일이 빠진
+   만큼을 padding 으로 도로 든다(`.hh-stage` 의 왼쪽 모서리 = `hhLayout()` 의
+   `cx` 수식이 쓰는 `HH_RAILW` 와 같은 값이어야 한다). */
+#hh-rail{position:absolute;left:0;top:0;bottom:0}
 .hh-stage{flex:1 1 auto;min-width:0;position:relative;display:flex;align-items:center;justify-content:center}
-#hh-hero-wrap{position:relative;width:210px;height:210px}
+/* ⚠️⚠️ **`mockup-hud-home.js` 의 `HH_HEROPX` 와 한 벌이다.** 몸의 코어 반지름은
+   `상자 폭 × .30` 이라 156 이면 46.8 — 허브 고리(`HH_HUBR 52`)의 0.90 이고, 그
+   비가 「주인공이 고리를 뚫고 나온다」를 만든다. 한쪽만 고치지 마라. */
+#hh-hero-wrap{position:relative;width:156px;height:156px}
 #hh-hero-wrap canvas{width:100%;height:100%;display:block}
-.hh-heroname{position:absolute;left:0;right:0;bottom:-19px;text-align:center;
+/* ⚠️ **이름표 아래에는 판이 없다** — 여섯 판이 전부 좌우로 물러나 극이 비었고
+   (`HHPOS`), 아래 극에 남는 것은 극 눈금(중심에서 `52×1.82 = 94.6`, 캔버스
+   y 239.6)뿐이다. `bottom` 은 **글자의 아랫변**을 내리는 값이고 상자 아래
+   모서리가 `HH_HEROPX/2 = 78`(캔버스 y 223)이라 −42 면 글자가 y 247~265 에
+   앉는다 — 눈금 아래로 7px, 로스터 띠(290)까지 25px 이 남아 몸과 로스터
+   사이에 고르게 선다. */
+.hh-heroname{position:absolute;left:0;right:0;bottom:-42px;text-align:center;
   font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#D8F2FF;
   text-shadow:0 0 10px rgba(79,195,247,.6)}
 .hh-bottom{flex:0 0 74px;display:flex;align-items:center;gap:10px;padding:0 10px 6px 64px}
 /* 로스터는 가운데 정렬 — 옛 기본값(왼쪽 packing)이 오른쪽에 큰 빈 공간을
    남겼다(사용자 지적: 「화면 전체가 왼쪽으로 쏠려서 오른쪽에 빈 공간」). */
-#hh-roster{flex:1 1 auto;display:flex;justify-content:center;gap:6px;overflow:hidden}
+/* ⚠️⚠️ **열여덟은 어느 폭에서도 한 줄에 안 들어간다**(칸 52 × 18 = 936).
+   ⇒ 가로로 굴린다. 굴릴 자리는 안쪽 띠(`#hh-rosrow`)가 만들고, 바깥
+   (`#hh-roster`)이 창이다. `margin:auto` 로 **좁으면 밀고 넓으면 가운데** —
+   `justify-content:center` 만으로는 넘칠 때 왼쪽이 잘려 첫 칸을 못 본다.
+   ⚠️ 양끝 페이드는 **「더 있다」는 유일한 말**이다 — 없으면 잘린 칸이 결함으로
+   읽힌다(엔진도 같은 장치를 쓴다: `home_roster.dart` 의 `_edgeFade`). */
+#hh-roster{flex:1 1 auto;min-width:0;display:flex;overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%)}
+#hh-roster::-webkit-scrollbar{display:none}
+/* ⚠️ 위 9 는 「메인」 꼬리표 자리다 — 칸 밖으로 8px 나가 앉는데
+   창이 잘라 버리면 라벨이 반만 보인다. */
+#hh-rosrow{display:flex;gap:6px;margin:auto;padding:9px 4px 0}
 .hh-ros{position:relative;flex:0 0 46px;width:46px;display:flex;flex-direction:column;
   align-items:center;gap:2px;cursor:pointer;padding:3px 2px;border:1px solid transparent}
-.hh-ros canvas,.hh-rosart{width:36px;height:36px;display:block}
-.hh-rosart.lockonly{display:flex;align-items:center;justify-content:center;
-  font-size:7.5px;color:#3A5468;border:1px dashed #3A5468;box-sizing:border-box}
+.hh-ros canvas{width:36px;height:36px;display:block}
 .hh-ros .nm{font-size:7px;color:#6E93AD;letter-spacing:.02em;white-space:nowrap}
 .hh-ros.sel{border-color:#FFD27A55;background:#FFD27A14}
 .hh-ros.sel .nm{color:#FFD27A}
 .hh-ros.sel::after{content:"메인";position:absolute;top:-8px;left:50%;transform:translateX(-50%);
   font-size:6.5px;letter-spacing:.06em;color:#241505;background:#FFD27A;padding:1px 4px}
-.hh-ros.lock{opacity:.55;cursor:default}
+.hh-ros.lock{opacity:.42;cursor:default}  /* 엔진 `home_roster.dart` 의 `dim` 과 같은 값 */
 .hh-actions{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .hh-actions .hudbtn{height:30px;font-size:10.5px;padding:0 12px}
 </style>
@@ -76,47 +104,73 @@
 </nav>
 <header>
   <p class="kicker">Light Survival · SF HUD 홈</p>
-  <h1>인트로 다음 화면 — 캐릭터가 서고 HUD 가 두른다</h1>
-  <p class="lede">세 번째 판. 앞선 두 판은 사용자에게 「촌스럽다」 판정을
-  받았고, 원인은 색이나 기법이 아니라 <b>요소의 개수</b>였다 — 참조 이미지엔
+  <h1>인트로 다음 화면 — 캐릭터가 서고 HUD 가 두릅니다</h1>
+  <p class="lede">세 번째 판입니다. 앞선 두 판은 사용자에게 「촌스럽다」 판정을
+  받았고, 원인은 색이나 기법이 아니라 <b>요소의 개수</b>였습니다 — 참조 이미지엔
   화면 하나에 동심원 고리가 대여섯 겹, 회로형 연결선이 예닐곱 가닥, 귀퉁이
-  마다 다른 판독값 블록이 있는데 지난 판은 원 하나에 패널 여섯뿐이었다.
-  이 판은 그 개수를 맞춰 <b>백지에서 다시 짰다</b>(기존 로비의 규약은
-  근거로 안 썼다). <b>보유 캐릭터 중 메인을 실제로 골라 세우는 것</b>도
-  그대로 된다 — 아래 로스터를 클릭해 보면 캐릭터가 바뀐다.</p>
+  마다 다른 판독값 블록이 있는데 지난 판은 원 하나에 패널 여섯뿐이었습니다.
+  이 판은 그 개수를 맞춰 <b>백지에서 다시 짰습니다</b>(기존 로비의 규약은
+  근거로 쓰지 않았습니다). <b>보유 캐릭터 중 메인을 실제로 골라 세우는 것</b>도
+  그대로 됩니다 — 아래 로스터를 눌러 보시면 캐릭터가 바뀝니다.</p>
+  <p class="lede"><b>2026-08-27 판정 — 스탯 판 여섯을 캐릭터 쪽으로 당겼습니다.</b>
+  「능력치를 캐릭터 주변으로 땡기라고 했잖아. 지금은 화면의 끝에 다 가 있는데」.
+  판까지의 거리를 재던 자가 <b>창틀</b>이었던 것이 원인입니다 — 그 식
+  (<code>(cx − 레일) − 판폭/2 − 여백</code>)은 「들어가는 데까지 민다」와 같은 말이라
+  788 폭에서 <b>양쪽 판이 창틀에서 6~8px</b> 떨어진 자리에 섰습니다. 이제 자는
+  <b>캐릭터</b>입니다 — 가로 <b>몸의 1.30배</b>, 세로 <b>몸의 0.68배</b>이고 창틀은
+  넘침을 막는 <b>상한</b>으로만 씁니다. 같은 두 수를 엔진
+  (<code>lib/ui/home_deco.dart</code>)과 <a href="mockup-hud-roster.html#s-a">캐릭터
+  고르기 안 A</a> 가 함께 씁니다.</p>
 </header>
 
 <h2 id="s-home">홈</h2>
 <table class="st">
 <tr><th>요구</th><th>이 화면에서</th></tr>
-<tr><td>캐릭터가 크게 서고 HUD 가 둘레를 두른다 — 밀도가 판정 기준</td>
-<td>중앙 캐릭터(<code>ELEM.*</code> 그대로) 뒤로 동심원 고리 아홉 겹(구조
-넷 + 눈금 셋 + 궤도 둘) · 십자 레티클 · 부챗살 세그먼트 고리가 돈다.
-그 바깥으로 회로형 인출선 아홉 가닥(패널 여섯 + 귀퉁이 둘 + 대각선 하나,
-전부 꺾이고 끝에 접속 노드가 박힌다) · 귀퉁이 데이터 블록 넷 · 미세
-판독값 라벨 열넷 · 뷰파인더 브래킷 · 별 입자를 흩었다(<code>hh-bg</code>).
-장식은 전부 낮은 알파로 죽여 캐릭터·스탯·버튼보다 어둡다</td></tr>
-<tr><td>보유 캐릭터 중 메인을 고를 수 있다</td>
-<td>아래 로스터 10칸(보유 6 · 미보유 2 · 잠김 2) — 클릭하면 <code>HHMAIN</code>
-이 바뀌고 중앙 캐릭터가 그 자리에서 다시 그려진다. 그림이 아직 없는 마·
-플라즈마는 지어내지 않고 「잠김」만 그린다</td></tr>
-<tr><td>스킬 편성 페이지로 진입 가능</td>
-<td>우하단 <b>스킬 편성 ›</b> 버튼 — 정본은 여전히
+<tr><td>캐릭터가 크게 서고 HUD 가 둘레를 두릅니다 — 밀도가 판정 기준입니다</td>
+<td>중앙 캐릭터(<code>ELEM.*</code> 그대로) 뒤로 동심원 고리 일곱 겹(구조
+셋 + 눈금 둘 + 궤도 둘) · 극 눈금 한 쌍 · 부챗살 세그먼트 고리가 돕니다.
+그 바깥으로 회로형 인출선 열한 가닥(패널 여섯 + 귀퉁이 넷 + 대각선 하나,
+수평 직선과 45° 사선을 한 가닥 안에서 섞고 끝에 접속 노드가 박힙니다) ·
+귀퉁이 데이터 블록 넷 · 미세 판독값 라벨 열넷 · 뷰파인더 브래킷 · 별
+입자를 흩었습니다(<code>hh-bg</code>).
+장식은 전부 낮은 알파로 죽여 캐릭터·스탯·버튼보다 어둡습니다</td></tr>
+<tr><td>스탯 여섯이 <b>캐릭터를 두릅니다</b> — 화면 끝이 아닙니다</td>
+<td>판 여섯이 앉는 타원의 반지름을 <b>몸 크기의 배수</b>로 잡습니다
+(가로 1.30배 = 203px · 세로 0.68배 = 106px). 판의 안쪽 모서리가 중심에서
+<b>159</b>, 허브 고리(52)에서 <b>107px</b>, 몸 상자 모서리(78)에서 <b>81px</b>
+떨어진 자리입니다. 옛 값은 313px 이라 판이 창틀에 붙어 있었습니다.
+⚠️ 하한을 정하는 것은 눈이 아니라 <b>연결선</b>입니다 — 45° 사선이 세로를 다
+먹으려면 가로도 그만큼 있어야 해서, 1.016배 아래로 당기면 사선과 직선 사이에
+<b>수직 직선 한 토막</b>이 끼어들어 여섯 가닥이 딴 문장을 씁니다</td></tr>
+<tr><td>보유 캐릭터 중 메인을 고를 수 있습니다</td>
+<td>아래 로스터 <b>18칸</b>(기본 6 = 보유 · 특수 12 = 미보유) — 엔진의 도감
+(<code>kCharacterDefs</code>)과 <b>같은 열여덟, 같은 차례</b>입니다. 누르면
+<code>HHMAIN</code> 이 바뀌고 중앙 캐릭터가 그 자리에서 다시 그려집니다.
+한 줄에 안 들어가므로 <b>가로로 굴리고</b> 양끝을 페이드해 「더 있다」를 말합니다.
+⚠️ 「그림이 없는 칸」이 없습니다 — 열여덟이 전부 <b>같은 몸에 톤만 다른 것</b>이라
+그릴 수 없는 칸이 안 생깁니다.
+⚠️ 이 줄 자체를 어떻게 할지는 <a href="mockup-hud-roster.html#s-a">캐릭터 고르기
+안 A</a> 로 확정했습니다 — 줄을 걷고 몸 양옆에 <b>‹ ›</b> 를 답니다</td></tr>
+<tr><td>스킬 편성 페이지로 갈 수 있습니다</td>
+<td>우하단 <b>스킬 편성 ›</b> 버튼입니다 — 정본은 여전히
 <a href="mockup-chapter.html#s-loadout">관측소의 「출격 전 편성」</a>이라
-그 절로 연결한다(편성 화면 자체를 다시 그리는 것은 이 작업 범위 밖이다)</td></tr>
+그 절로 잇습니다(편성 화면 자체를 다시 그리는 것은 이 작업 범위 밖입니다)</td></tr>
 </table>
 <div class="rack land">
  <div class="col">
-  <div class="cap">홈 — 캐릭터 선택 + 스탯 6줄 + 편성 진입</div>
+  <div class="cap">홈 — 캐릭터 선택 + 스탯 6줄 + 편성 진입. 아래 로스터를 눌러 보십시오</div>
   <div class="phone land"><div class="screen hh-screen">
     <canvas class="bg" id="hh-bg"></canvas>
     <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
     <div class="scrim"></div>
-    <div class="topbar"><span><b>COMMAND DECK</b></span><span class="setico" id="hh-set" title="설정"></span></div>
+    <!-- ⚠️ 창틀 이름은 **레일 칸과 같은 「홈」**이다 — 여섯 화면이 같은 창틀을
+         쓰는데(강화·상점·도감·일지 전부 제 이름 한 낱말) 홈만 다른 말을 세우면
+         같은 테마에서 홈의 머리줄만 딴 화면이 된다. -->
+    <div class="topbar"><span><b>홈</b></span><span class="setico" id="hh-set" title="설정"></span></div>
     <div class="thumb"></div>
     <div class="hh-ui">
       <div class="hh-mid">
-        <div class="hudrail" id="hh-rail"></div>
+        <div class="hudrail side" id="hh-rail"></div>
         <div class="hh-stage">
           <div id="hh-hero-wrap">
             <canvas id="hh-hero"></canvas>
@@ -142,29 +196,73 @@
 <h2 id="s-notes">설계 메모</h2>
 <table class="st">
 <tr><th>결정</th><th>왜</th></tr>
-<tr><td>재화(암흑물질·빛의 결정)를 안 건다</td>
-<td>이 화면은 보는 곳이지 쓰는 곳이 아니다 — 눌러도 아무 일이 안 일어나는
-화면에 잔액을 띄우면 그 숫자는 정보가 아니라 장식이 된다</td></tr>
-<tr><td>스탯 6줄의 <b>값</b>은 <code>HSTAT</code> 을 그대로 읽는다(자리·
-장식은 이번에 전부 새로 짰다)</td>
-<td>수치의 정본이 이미 있다 — 여기서 값을 다시 베끼면 둘이 갈라질 자리가
-생긴다. 값만 정본에서 읽고, 그 값을 어떻게 배치·장식할지는 이 화면이
-스스로 정한다(60° 여섯 자리·꺾인 인출선·귀퉁이 대비 전부 새 결정이다)</td></tr>
-<tr><td>캐릭터 몸은 <code>ELEM.*</code> 를 그대로 부른다 — 로스터 썸네일도
-같은 함수를 작게 그린 것</td>
+<tr><td><b>판까지의 거리를 재는 자가 캐릭터입니다</b> — 창틀은 상한으로만 씁니다
+(<code>HH_RXF</code> 몸의 1.30배 · <code>HH_RYF</code> 몸의 0.68배)</td>
+<td>옛 식은 <code>(cx − 레일) − 판폭/2 − 여백</code> 이었는데, 그것은 「들어가는
+데까지 민다」의 다른 이름입니다 — 788 폭에서 <b>313</b> 이 나오고 판 폭이 88 이라
+왼쪽 판이 <code>66~154</code>, 오른쪽 판이 <code>692~780</code> 으로 <b>양쪽 다
+창틀에서 6~8px</b> 이었습니다. 자를 몸으로 바꾸면 <b>몸이 커지면 판도 같이
+물러나고</b> 창 크기가 바뀌어도 비가 안 흔들립니다. 세로도 같이 당겼습니다 —
+옛 값(몸의 0.778배)은 제일 위 판의 윗변이 <code>y 34</code> 라 톱바(26)에서 8px,
+즉 <b>세로로도 화면 끝</b>이었습니다. 0.68 이면 20px 이 뜹니다.
+⚠️ 실기(약 1029×480)에서도 몸이 156 이라 <b>판이 같은 자리에 섭니다</b> — 넓어진
+몫은 전부 창틀 쪽 여백으로 갑니다</td></tr>
+<tr><td>스탯 여섯을 <b>왼쪽 셋 · 오른쪽 셋</b>으로 두고 위아래 극은 비웁니다</td>
+<td>위아래에 판을 세우면 캐릭터가 위아래로 눌려 화면이 답답해지고, 세로로
+벌릴 자리도 그 둘이 먼저 먹습니다. 극을 비우니 남은 여섯이 세로를 고르게
+나눠 씁니다(가운데 판이 제일 바깥, 위·아래 넷은 <code>cos</code> 만큼
+안으로 들어와 부채꼴로 섭니다). 한쪽 셋은 <code>0°</code> 를 사이에 둔 위아래
+대칭이고 반대쪽은 그 셋을 세로축에 비춘 것이라 <b>좌우가 정확한 거울</b>입니다.
+⚠️ 벌림각의 하한은 <b>한쪽 세 판이 세로로 안 겹치는 자리</b>(약 20°)입니다 —
+50° 면 판 사이에 45px 이 남습니다</td></tr>
+<tr><td>귀퉁이 인출선을 <b>둘에서 넷</b>으로 늘렸습니다</td>
+<td>판을 캐릭터 쪽으로 당기니 판과 귀퉁이 블록 사이가 크게 비었는데, 그 띠가
+제일 넓은 실기(1029×480)에서 두 가닥만 있으니 <b>한쪽 대각만 이어진 화면</b>으로
+읽혔습니다 — 나머지 두 블록이 허브와 아무 관계 없이 떠 있었습니다. 넷이면 그
+띠가 회로로 차고 귀퉁이 계기 넷이 전부 허브에 매입니다.
+⚠️ 이 갈래가 <b>어디서 꺾이나</b>는 이제 상수가 아니라 <b>판 자리의 함수</b>입니다
+(<code>hhCornerRunf</code>). 옛 상수 0.86 은 판이 화면 끝에 있을 때만 맞는 답이라,
+판을 당기자 허브 높이의 직선이 <b>가운데 판을 뚫고 지나갔습니다</b></td></tr>
+<tr><td>레일과 창틀은 <b>다섯 화면이 쓰는 그것</b>을 그대로 씁니다 —
+레일은 <code>.hudrail.side</code> 를 화면 아래 끝까지 펴고, 창틀 이름은
+레일 칸과 같은 <b>「홈」</b>입니다</td>
+<td>홈만 레일을 로스터 띠 위에서 멈추면 <b>같은 레일이 화면마다 다른 자리</b>에
+섭니다(로스터 높이의 절반 = 37px 만큼 올라앉아 첫 칸이 창틀 글줄에 깔립니다 —
+실기에서 사용자가 잡았습니다, 2026-08-27). 레일이 설 자리는 로스터가 이미
+비워 뒀습니다(<code>.hh-bottom{padding-left:64px}</code>). 창틀도 같은 자리입니다 —
+홈만 「COMMAND DECK」을 세우면 같은 테마의 여섯 장 중 홈의 머리줄만 딴 말을 합니다</td></tr>
+<tr><td>이름에서 <b>한자를 걷어냈습니다</b></td>
+<td>사용자 확정이 「게임 내에서 한문 절대 금지」입니다. 로스터 열여덟 중
+<b>일곱 칸</b>(빙 · 염 · 뇌 · 독 · 풍 · 암 · 백광)이 이름 뒤에 한자를 달고
+있었는데, 기본 여섯의 이름은 엔진 <code>SkillElement.label</code> 그대로이고
+<b>거기에 한자가 없습니다</b> — 시안만 달고 있었습니다.
+<a href="mockup-hud-roster.html">캐릭터 고르기</a> 장과도 글자가 같아집니다</td></tr>
+<tr><td>재화(암흑물질·빛의 결정)를 걸지 않습니다</td>
+<td>이 화면은 보는 곳이지 쓰는 곳이 아닙니다 — 눌러도 아무 일이 안 일어나는
+화면에 잔액을 띄우면 그 숫자는 정보가 아니라 장식이 됩니다</td></tr>
+<tr><td>스탯 6줄의 <b>값</b>은 <code>HSTAT</code> 을 그대로 읽습니다(자리·
+장식은 이번에 전부 새로 짰습니다)</td>
+<td>수치의 정본이 이미 있습니다 — 여기서 값을 다시 베끼면 둘이 갈라질 자리가
+생깁니다. 값만 정본에서 읽고, 그 값을 어떻게 배치·장식할지는 이 화면이
+스스로 정합니다(<b>왼쪽 셋 · 오른쪽 셋</b>의 부채꼴 자리·꺾인 인출선·귀퉁이
+대비가 그것입니다). 여섯의 차례도 <code>HSTAT</code> 의 <code>side</code>·
+<code>y</code> 를 그대로 따릅니다 — 오른쪽 위→아래가 공격력·마법력·치명타,
+왼쪽 위→아래가 체력·방어력·덱 칸입니다</td></tr>
+<tr><td>캐릭터 몸은 <code>ELEM.*</code> 를 그대로 부릅니다 — 로스터 썸네일도
+같은 함수를 작게 그린 것입니다</td>
 <td>아이콘을 따로 그리면 「캐릭터 페이지의 몸」과 「홈의 아이콘」 둘이
-생겨 반드시 어긋난다. 이미 그려져 있는 자산을 안 쓰는 것도 화면이
-빈약해지는 원인이라 적극 가져다 썼다</td></tr>
+생겨 반드시 어긋납니다. 이미 그려져 있는 자산을 안 쓰는 것도 화면이
+빈약해지는 원인이라 적극 가져다 썼습니다</td></tr>
 <tr><td>장식 요소(귀퉁이 블록·틈새 라벨·궤도·대각선)는 전부 낮은 알파,
-HSTAT 여섯 줄과 캐릭터·버튼은 알파 1</td>
-<td>요소를 늘리라는 게 소음을 늘리라는 뜻이 아니다 — 읽어야 할 것이
-장식에 묻히면 밀도가 오히려 화면을 망친다. 그림 순서 자체로 위계를
-강제한다(장식을 먼저 깔고 읽을 것을 맨 나중에 덮어 그린다)</td></tr>
+HSTAT 여섯 줄과 캐릭터·버튼은 알파 1 입니다</td>
+<td>요소를 늘리라는 것이 소음을 늘리라는 뜻은 아닙니다 — 읽어야 할 것이
+장식에 묻히면 밀도가 오히려 화면을 망칩니다. 그림 순서 자체로 위계를
+강제합니다(장식을 먼저 깔고 읽을 것을 맨 나중에 덮어 그립니다)</td></tr>
 <tr><td>패널 여섯·귀퉁이 인출선은 되풀이 없이 흐르거나(<code>hudPolyPoint</code>
-로 꺾인 선을 따라 흐르는 빛) 연속 회전만 한다</td>
-<td>홈은 「머무는 화면」이다 — 부팅 화면처럼 되풀이해서 여닫으면 계기판이
-계속 깜빡이는 고장난 기계로 읽힌다. 연속 회전·선형 흐름은 원래 이음매가
-없어 되풀이해도 안전하다</td></tr>
+로 꺾인 선을 따라 흐르는 빛) 연속 회전만 합니다</td>
+<td>홈은 「머무는 화면」입니다 — 부팅 화면처럼 되풀이해서 여닫으면 계기판이
+계속 깜빡이는 고장난 기계로 읽힙니다. 연속 회전·선형 흐름은 원래 이음매가
+없어 되풀이해도 안전합니다</td></tr>
 </table>
 
 </div>

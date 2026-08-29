@@ -8,7 +8,7 @@
 <!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
      한 번도 안 걸려 반응형이 통째로 죽는다. -->
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Light Survival — 보조 공격</title>
+<title>Light Survival — 총구 밖</title>
 <!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
      2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
 <script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
@@ -17,18 +17,31 @@
 <div class="wrap">
 <nav class="toc">
   <div class="nav1"></div>
-  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-support">보조 공격 8종</a><a href="#s-tintable">속성 입힘 가능</a><a href="#s-levelss">레벨 성장표</a><a href="#s-iconss">아이콘</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-support">총구 밖 8종</a><a href="#s-tintable">속성 입힘 가능</a><a href="#s-levelss">레벨 성장표</a><a href="#s-iconss">아이콘</a><a href="#" id="bare" class="bare">설명 접기</a></div>
 </nav>
 <header>
-  <p class="kicker">Light Survival · 보조 공격</p>
+  <p class="kicker">Light Survival · 총구 밖</p>
   <h1>총구를 안 쓰는 것</h1>
   <p class="def">일반 공격은 <b>전부 한 구멍에서 나간다.</b> 쌓일수록 이펙트가
   한쪽에 몰려 화면 전체 그림이 망가진다 — 그래서 일반은 <b>한 개만</b> 든다.
-  보조는 다르다: <b>몸에서 떨어져 스스로 친다.</b> 총구를 안 쓰니 여럿이어도
-  안 몰리고, 그것이 이 계열이 따로 선 이유다.</p>
+  여기 여덟은 다르다: <b>몸에서 떨어져 스스로 친다.</b> 총구를 안 쓰니 여럿이어도
+  안 몰리고, 그것이 이 여덟을 <b>한자리에서 봐야 하는 이유</b>다.<br>
+  ⚠️⚠️ <b>이 장은 더 이상 계열이 아니다</b>(2026-08-29). 사용자 판정
+  「속성별 <b>일반만 정해 주면 나머지는 다 마법</b>임. <b>마법 = 보조·방어·마법으로
+  나누지 않는다. 전부 다 마법</b>임」으로 <b>「보조」가 어휘에서 없어졌다</b> —
+  엔진에는 <code>SkillTag.support</code> 도 <code>guard</code> 도 없다
+  (<code>lib/data/skill_tag.dart</code> 는 <b>일반 · 마법 · 버프</b> 셋뿐이다).
+  ⇒ 아래 칸들의 칩은 <b>한 계열로 안 모인다</b>: 유도탄 · 빛폭탄 · 바람원반은
+  <b>일반</b>이고 공전 · 뇌광은 <b>마법</b>이다.<br>
+  ⭐ <b>장은 남는다. 축이 계열에서 동사로 바뀌었을 뿐이다</b> — 제목이 이미 그
+  동사였다(「총구를 안 쓰는 것」). 「총구가 하나라 쌓이면 이펙트가 몰린다」는
+  관찰은 <code>skill_tag.dart</code> 가 그대로 안고 있고, 그것을 <b>정원으로
+  집행하지 않게</b> 됐을 뿐이다(6칸 단일). 계열이 아니라 <b>그림 문법</b>이라
+  이 장이 선다 — 「저주」가 없어진 2026-08-13 에
+  <a href="mockup-curse.html">「빼앗는 것과 되돌리는 것」</a>이 남은 것과 같다.</p>
 </header>
 
-<h2 id="s-support">보조 공격 8종</h2>
+<h2 id="s-support">총구 밖 8종</h2>
 <div class="grid" id="support"></div>
 
 <h2 id="s-tintable">속성 입힘 가능</h2>

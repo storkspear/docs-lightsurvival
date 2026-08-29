@@ -8,7 +8,7 @@
 <!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
      한 번도 안 걸려 반응형이 통째로 죽는다(16장 전부 빠져 있었다). -->
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Light Survival — 기본 공격·발현</title>
+<title>Light Survival — 기본 공격</title>
 <!-- ⚠️ `vfx.css` 도 **쿼리로 캐시를 깬다.** `vfx.js` 만 깨고 css 는 안 깼더니
      2026-08-18 에 여백 수정이 안 실려 「안 고쳐졌다」로 두 번 읽혔다. -->
 <script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
@@ -17,11 +17,11 @@
 <div class="wrap">
 <nav class="toc">
   <div class="nav1"></div>
-  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-basic">기본 공격</a><a href="#s-basicelem">속성 공격</a><a href="#s-basicelemf">특수 속성 공격</a><a href="#s-basicmani">발현</a><a href="#s-skillelem">캐릭터별 스킬 배분</a><a href="#s-gap">엔진과 어긋난 자리</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-basic">기본 공격</a><a href="#s-basicelem">속성 공격</a><a href="#s-basicelemf">특수 속성 공격</a><a href="#s-skillelem">캐릭터별 스킬 배분</a><a href="#s-gap">엔진과 어긋난 자리</a><a href="#" id="bare" class="bare">설명 접기</a></div>
 </nav>
 <header>
-  <p class="kicker">Light Survival · 기본 · 발현(폐기 2026-08-25)</p>
-  <h1>슬롯을 안 먹는 셋</h1>
+  <p class="kicker">Light Survival · 기본 공격</p>
+  <h1>슬롯을 안 먹는 기본 공격</h1>
   
 </header>
 
@@ -61,36 +61,8 @@
 </table>
 <div class="grid" id="basicelemf"></div>
 
-<h2 id="s-basicmani">발현 — ⚠️⚠️ 폐기(2026-08-25)</h2>
-<p class="def"><b>발현이란 지금 쥔 속성이 몸에 드러나는 것</b>이다 — 기본 속성이든 특수 속성이든 같다. 평상시 몸은 코어만 물들고(<b>발현 전</b>), 발현하면 둘레에 그 속성의 모티프가 선다.<br>게이지는 <b>적 처치</b>로 찬다(일반 1 · 특수 10). 100 이 차면 <b>즉시 자동 발동</b>해 <b>15초</b> 유지되고, 끝나면 <b>60초</b> 잠겼다가 다시 찬다 — 이 게임엔 누를 버튼이 없다(조준·발사 전부 자동).<br>발현 효과는 <b>발현하는 시점에 지니고 있던 속성 상태</b>를 따른다.</p>
-
-<p class="def">⚠️⚠️ <b>이 절 전체가 2026-08-25 사용자 확정으로 폐기됐다</b> — 게이지 · 15초 유지 · 60초 잠금 · 「발현 전/발현」 몸 두 벌 구분을 전부 걷는다. 사용자 원문: 「'발현' 시스템은 전면 폐기하고」.</p>
-<p class="def">⚠️ <b>왜 결계가 아니라 발현이 나갔나.</b> 결계 계열 6종(<code>ward</code> + 속성 결계 다섯 <code>wardember</code>·<code>wardfrost</code>·<code>wardvolt</code>·<code>wardtoxin</code>·<code>wardgale</code>)이 몸을 두르고 도는 자리와 발현 모티프의 도달 반경(2.86~3.06×bodyR)이 결계 대역(1.47~3.59×bodyR)에 완전히 감싸이고, 둘 다 몸 중심으로 돈다. 이 겹침은 우연이 아니다 — <b>element-lock 설계상 기본 상태</b>다: 속성 결계는 정의상 그 속성 캐릭터만 장착하므로 「같은 색 · 같은 공간 · 같은 회전」이 항상 성립한다. 실측(바이트 단위): <code>wardember</code> 의 팔레트가 몸의 염 색 <code>kToneEmber</code>(<code>0xFF5E1A06/FF6A1E/FFE7CC</code>)와 <b>완전히 같고</b>, <code>wardvolt</code>↔<code>kToneVolt</code>·<code>wardtoxin</code>↔<code>kToneToxin</code>·<code>wardgale</code>↔<code>kToneGale</code> 도 전부 같다(<code>lib/render/cel_tones.dart</code>). <code>wardfrost</code> 만 <code>kToneFrost</code>보다 <b>한 단 밝다</b>(<code>0xFF16405F</code> vs <code>0xFF123A5E</code> 등). 그리고 <b>폐기 비용이 압도적으로 싸다</b> — 발현은 <code>lib/sim/combat/manifest.dart</code>(126줄) + 시뮬 훅 셋 + <code>body.dart</code>의 <code>bare</code> 분기 하나뿐이고, 그 파일 자체 머리말이 「밸런스는 한 톨도 안 움직인다」고 적어 뒀다(순수 시각 토글). 결계 쪽을 손대는 비용이 훨씬 크다.</p>
-
-<p class="def">⭐⭐ <b>몸 그림 고정 확정(2026-08-25) — 백광만 예외.</b> 발현이 없어지면 몸은 이제 늘 <b>한 벌</b>만 그린다: <b>백광을 뺀 전부는 「발현 전」(코어만 물듦)으로 통일</b>하고, <b>백광만 「발현 후」</b>(다섯을 다 거친 「조였다 팡」 쪽)를 쓴다.<br>
-⚠️ <b>특수 조합 10종(<code>body_fuse.dart</code>)은 이미 이 결정과 일치한다 — 바꿀 게 없다.</b> 시안이 조합마다 <code>.base</code>(발현 전)·<code>.mani</code>(발현) 두 벌을 확정해 뒀지만 엔진엔 <code>.mani</code> 열 벌이 아예 안 들어와 있어(<code>body_fuse.dart</code> 머리말), 지금도 항상 <code>.base</code> 하나만 그린다.<br>
-실제로 바뀌는 것은 둘이다 — ① <b>기본 6종의 <code>bare</code> 토글을 「항상 발현 전」으로 고정</b>한다(지금은 <code>body.dart:213</code> 의 <code>bare: !g.manifest.manifesting(...)</code> 이 게이지를 따라 갈아 끼운다 — 발현이 없어지면 이 식이 항상 <code>true</code>가 되게 굳힌다). ② <b>백광(<code>body_white.dart</code>)은 지금 「발현 전」 한 벌뿐이다</b>(시안 <code>FVFIX.white={base:1,mani:2}</code> 중 <code>base</code>만 이식) — 「발현 후」를 기본 모습으로 쓰려면 <code>.mani</code>(「조였다 팡」, <code>wMani</code>·<code>wPulse</code>·<code>wSplit</code>·<code>wBurst</code>) 그림을 <b>새로 그려 넣어야 한다.</b> 시행(코드 변경)은 이 문서화 작업 범위 밖이다.</p>
-
-<p class="def">⭐⭐ <b>모티프 존치 갈림(2026-08-25) — 염 · 빙 · 뇌 · 독 넷은 폐기, 풍 · 암 둘은 남긴다.</b><br>
-<b>폐기 넷의 근거는 위와 같은 색 겹침</b>이다 — <code>wardember</code>·<code>wardvolt</code>·<code>wardtoxin</code>이 몸 색과 바이트 단위로 같고 <code>wardfrost</code>도 한 단 차이뿐이라, 「발현 후」 둘레 모티프를 캐릭터 스킬로 되살려도 이미 장착 중인 같은 속성 결계와 다시 겹친다. 이 넷의 「발현 후」 디자인은 캐릭터 스킬 후보에서도 뺀다.<br>
-<b>풍은 남기되 거래가 반대다</b> — <b>결계 · 풍(<code>wardgale</code>)을 빼고 대신 풍의 발현 모티프를 살린다.</b> 근거: <code>motifGale</code>(<code>lib/game/fx/body_motifs.dart:217~219</code>)의 확정 그림은 「고리가 <b>기울어</b> 떠나는 것 — <b>눕는 각도가 <code>u</code> 를 따라 변해 공간으로 읽힌다</b>」로, 구현은 2D(<code>celHoop</code>의 압착 계수 <code>sq</code>로 기울기를 흉내낸다)지만 <b>화면에서는 3D 로 읽힌다</b>. ⚠️ <b>구현이 2D 인가와 화면에서 3D 로 읽히는가는 다른 축이다</b> — 「몸 모티프 6종이 전부 2D」는 구현 기준으로는 여전히 맞지만, 읽히는 방식은 모티프마다 다르므로 이 한 줄을 「전부 2D 니 전부 폐기」로 오독하면 안 된다. 풍이 결계를 내줄 수 있는 것은 <b>풍의 고유 풀에 방어가 셋</b>(<code>windwall</code>·<code>backwind</code>·<code>wardgale</code>)이라 하나가 빠져도 0 이 안 되기 때문이다 — 독처럼 <code>wardtoxin</code> 하나가 유일한 방어인 속성은 뺄 수 없다.<br>
-<b>암은 그대로 남긴다</b>(근거는 이 배치에서 따로 안 왔다 — 추측해 적지 않는다).<br>
-⚠️ <b>시행 대기.</b> <code>wardgale</code>은 <code>lib/data/skill_element.dart</code>(풍 목록) · <code>lib/data/skill_rank.dart:140</code> · <code>lib/data/magic_guard_elem.dart:116</code> · <code>lib/data/fx_plane.dart:87</code> · <code>lib/game/fx/registry.dart:77</code> · <code>lib/sim/combat/magic/wardelem.dart</code>의 <code>WardGaleWeapon</code> 등 10여 곳에 코드로 살아 있다 — <b>지금은 결정만이고 코드는 하나도 안 지웠다.</b> 풍의 발현 모티프가 정확히 어떤 형태의 스킬로 대신 서는지도 <b>미정</b>이다.</p>
-
-<p class="def">⭐ <b>이름 정정 — 「플라즈마」는 캐릭터가 아니다.</b> <code>#s-skillelem</code> 표의 「결계:플라즈마」는 <b>섬화(염+뇌)가 쓰는 결계의 이름</b>이지 캐릭터 이름이 아니다. 캐릭터(속성)는 암 影·백광 白光 둘뿐이고, 특수 조합 10종의 이름은 정수·섬화·매연·화풍·극섬·역병·설풍·폭마·뢰명·독무다.<br>
-<b>시안 결계는 9종</b>이다 — 원본(무속성) 1 + 기본 다섯(염·빙·뇌·독·풍) + 특수 셋(암·백광·플라즈마, 아직 시안 예고뿐 · 미이식). 지금 엔진엔 이 중 여섯(원본 + 기본 다섯)만 배선돼 있다. <code>wardgale</code>이 빠지면 9 → 8, 엔진 배선은 6 → 5 가 된다.</p>
-
-<p class="def">⭐ <b>반경 축소 방향 확정(2026-08-25) — 특수 4종.</b> 정수(<code>fuseAqua</code>, <code>body_fuse_water.dart</code>) · 섬화(<code>fuseBlast</code>, 〃) · 설풍(<code>fuseSnow</code>, <code>body_fuse_ice.dart</code>) · 역병(<code>fusePlague</code>, 〃) 넷의 몸 그림 반경을 <b>캐릭터에 더 가깝게 축소</b>한다. ⚠️ <b>구체 수치는 미정이다</b> — 방향만 확정하고 값은 안 짓는다.</p>
-
-<p class="def">⚠️⚠️ <b>미정 — 백광 · 섬화의 결계 ↔ 발현 겹침.</b> 백광은 결계 · 백광과 백광의 발현(위 결정대로 백광은 「발현 후」를 기본으로 쓰기로 했으니 특히 더 겹친다)이 부딪히고, 섬화는 결계 · 플라즈마와 섬화의 발현이 부딪힌다. 사용자는 <b>둘 다 남기고 싶어 한다</b>(손이 많이 든 시안이라서다) — 반경을 갈라 공존시키는 방향을 검토 중이나 <b>아직 결정되지 않았다.</b> 참고로 섬화는 위 반경 축소 대상이라 그쪽으로 절반은 풀릴 수 있다. <b>이 문서는 결론을 내리지 않는다.</b></p>
-
-<p class="def">⚠️ <b>층 구분.</b> 발현 게이지를 실제로 읽어 몸을 갈라 그리던 것은 엔진 <code>Element</code> 7종(무속성 제외 6종: 염·빙·뇌·독·풍·암, <code>body_elements.dart</code>의 <code>drawElem</code> <code>bare</code> 분기) 뿐이다. 이 6은 <b>캐릭터/속성 개수(18 = 기본 6 + 특수 12)나 아래 §스킬 배분의 풀 목표(20)와는 다른 축</b>이니 섞지 않는다. <b>특수 속성(조합 열 · 백광)은 애초에 발현 게이지를 안 읽는다</b>(<code>body_fuse.dart</code>·<code>body_white.dart</code>에 <code>bare</code> 분기 자체가 없다) — 이번 폐기가 그쪽 그림엔 영향이 없다. 게다가 특수 속성은 지금 애초에 엔진에 안 배선돼 있다 — <a href="mockup-char-blast.html">섬화</a>·<a href="mockup-char-numb.html">폭마</a>·<a href="mockup-char-white.html">백광</a> 페이지가 이미 「보관소」로 못 박아 뒀다(암 影만 예외로 배선돼 있다). ⇒ 위 「백광만 예외」 결정으로 이 물음(미착수 특수 속성이 나중에 두 벌을 만들지)은 이미 닫혔다 — <b>백광 말고는 전부 발현 전 한 벌만 쓴다.</b></p>
-
-<p class="def">⚠️ <b>「버프」 말 충돌.</b> 모티프(풍·암)를 캐릭터 고유 「버프스킬」로 가져오자는 제안이 있는데, 이 도감의 <code>SkillTag.buff</code>는 <b>상태이상 해제(cleanse) 전용</b>이다(<code>lib/data/skill_tag.dart</code> — 회복과 갈라 둔 이유까지 적혀 있다: 회복은 조건 없이 HP를 주고 해제는 안 걸리면 값이 0이라 한 칸에 두면 회복이 늘 이긴다). 모티프가 뜻하는 「버프」가 일반적 강화 효과라면 <b>그 칸이 아니다.</b> 물음으로 남긴다 — ① 기존 <code>버프</code>(cleanse) 계열에 넣나 ② <code>aura</code> 계열(몸에서 퍼지거나 두른다 — 모티프의 그림과 결이 맞는다)로 가나 ③ 새 계열이 필요한가. ⚠️ <code>aura</code> 자체도 규칙이 비어 있다 — 태그 주석 원문: 「몸에서 퍼지거나 몸을 두른다. <b>겹치면 서로를 덮는다(규칙은 나중)</b>」. 이 미해결 규칙이 이번 충돌의 일반형이다 — <code>aura</code>로 가면 그 규칙부터 세워야 한다. <b>이 문서는 정하지 않는다.</b></p>
-
-<div class="grid" id="basicmani"></div>
-
 <h2 id="s-skillelem">캐릭터별 스킬 배분</h2>
+<p class="def">⭐ <b>이름 정정 — 「플라즈마」는 캐릭터가 아니다.</b> <code>#s-skillelem</code> 표의 「결계:플라즈마」는 <b>섬화(염+뇌)가 쓰는 결계의 이름</b>이지 캐릭터 이름이 아니다. 캐릭터(속성)는 암 影·백광 白光 둘뿐이고, 특수 조합 10종의 이름은 정수·섬화·매연·화풍·극섬·역병·설풍·폭마·뢰명·독무다.<br>
 <p class="def">⭐⭐ <b>2026-08-25 사용자 확정 — 고유 스킬 풀 목표 12 → 20.</b> 원문: 「상점에서 구매 가능한 스킬의 상한은 일단 12로 했는데, 사실상 상한 제한이 필요가 없는 구간 같다. 일단은 20으로 늘려」. 같은 판정에서 <b>기본 6(즉시 지급)은 필수 스킬</b>로 못 박았다 — 아래 구성의 「필수」·「구매 가능분」 구분이 그것이다. ⚠️ 이 12→20은 <b>캐릭터 한 명의 고유 스킬 풀 크기</b>다 — 위 「캐릭터 18 = 기본 6 + 특수 12」의 특수 12(캐릭터/속성 개수)와는 <b>다른 축</b>이니 섞지 않는다. 산식 전개는 <code>docs/design/캐릭터-속성-배분.md</code> §1.</p>
 <p class="def"><b>속성 하나가 곧 캐릭터 하나</b>다 — <b>캐릭터 18종 = 기본 6 + 특수 12</b>. 캐릭터마다 <b>고유 스킬 20종</b>(<b>필수 6종</b> — 사면 즉시 · <b>구매 가능 14종</b> — 추가 구매 또는 숙련도 해금)을 갖고, 그 밖에 속성을 안 타는 <b>공유 8종</b>(목표 13종)을 모두가 같이 쓴다.</p>
 <p class="def"><b>덱 = 공유 13 + 내 속성 20 = 33종</b>, 그중 <b>6종</b>을 골라 판에 들어간다. ⚠️ <b>내 속성이 3종 이상</b>이어야 나갈 수 있다 — 공유만 여섯을 채우면 어느 캐릭터로 들어가든 같은 판이 되기 때문이다.</p>
@@ -100,7 +72,7 @@
 <tr><th>속성</th><th>일반</th><th>보조</th><th>마법</th><th>방어</th><th>합</th></tr>
 <tr><td><b>무속성</b> · 기본</td><td>빛파동</td><td>공전 · 유도탄</td><td>개안</td><td>결계 · 사슬 · 파동정지</td><td><b>7</b></td></tr>
 <tr><td><b>빙 氷</b> · 기본</td><td>서릿발 · 서리결정</td><td>—</td><td>결빙 · 파문</td><td>빙벽 <b>셋</b>(기본 · 바늘 숲 · 모자이크 석벽) · <b>결계:빙</b></td><td><b>8</b></td></tr>
-<tr><td><b>염 炎</b> · 기본</td><td>화염방사 · 순포</td><td>빛폭탄</td><td>불자취 · 회염 · 화염회오리</td><td><b>결계:염</b></td><td><b>7</b></td></tr>
+<tr><td><b>염 炎</b> · 기본</td><td>화염방사 · 순포 · 불창 · 불바퀴</td><td>빛폭탄 · 화로</td><td>화염회오리 · 불비 · 불밭</td><td><b>결계:염</b></td><td><b>10</b></td></tr>
 <tr><td><b>뇌 雷</b> · 기본</td><td>빛따발총</td><td>뇌광</td><td>낙광 · 광주</td><td><b>결계:뇌</b>(접지·코일)</td><td><b>5</b></td></tr>
 <tr><td><b>독 毒</b> · 기본</td><td>—</td><td>기생 · 분열 · 단전</td><td>극독 · 감염</td><td><b>결계:독</b></td><td><b>6</b></td></tr>
 <tr><td><b>풍 風</b> · 기본</td><td><b>바람산탄총</b></td><td>부양 · <b>바람원반</b></td><td>성역 · <b>공명</b></td><td>풍벽 · 역풍 · <b>결계:풍</b> ⚠️<sup>1</sup></td><td><b>8</b> ⚠️<sup>1</sup></td></tr>
@@ -110,12 +82,12 @@
 <tr><td><b>섬화</b> · <b>특수</b>(염+뇌)</td><td>—</td><td>—</td><td>—</td><td><b>결계:플라즈마</b>(방패)</td><td>1</td></tr>
 <tr><td><b>공유</b> — 층 밖</td><td colspan="5"><b>버프 3</b>(축복 · 성전 · 은총) + <b>회복 5</b>(맥박 · 저금 · 공물 · 수확 · 잔향) + <b>다섯 축 5</b>(이동 · 시야 · 재화 · 부활 · 시간 — <b>아직 0종</b>) = <b>13</b><br>⚠️ 버프 셋의 색은 <b>없앨 것의 색</b>이라(축복=연소 · 성전=서리 · 은총=그림자) 제 속성을 하나 주면 그 규약이 깨진다. ⚠️ <b>공유는 일반 · 보조 · 방어를 한 칸도 안 준다</b> — 그 셋은 내 속성 20칸에서만 나온다</td></tr>
 </table>
-<p class="def">⚠️<sup>1</sup> <b>2026-08-25 결정 — <code>결계:풍</code>(<code>wardgale</code>)은 폐기 대상이다</b>(<a href="#s-basicmani">발현 절</a> 참고, 대신 풍의 발현 모티프를 살린다). 이 표는 그 결정 <b>이전</b>(2026-08-22)의 「다음 상태」라 아직 <code>결계:풍</code>과 <b>8</b>을 그대로 두었다 — 결정이 시행되면 이 행은 <b>7</b>로, 방어는 <b>풍벽 · 역풍</b> 둘로 줄어야 한다.</p>
+<p class="def">⚠️<sup>1</sup> <b>2026-08-25 결정 — <code>결계:풍</code>(<code>wardgale</code>)은 폐기 대상이다</b>(원장은 <code>docs/1차-개발.md</code> 「<code>wardgale</code>(결계 · 풍) — 폐기」 — 대신 풍의 둘레 모티프를 살린다). 이 표는 그 결정 <b>이전</b>(2026-08-22)의 「다음 상태」라 아직 <code>결계:풍</code>과 <b>8</b>을 그대로 두었다 — 결정이 시행되면 이 행은 <b>7</b>로, 방어는 <b>풍벽 · 역풍</b> 둘로 줄어야 한다.</p>
 <h3>20종까지 무엇이 몇 개 모자란가</h3>
 <p class="def">⚠️⚠️ <b>이 절은 2026-08-25 에 <code>docs/design/캐릭터-속성-배분.md</code> §3·§4 실측(2026-08-23 코드 기준)으로 다시 맞췄다</b> — 옛 표(합 41 · 독 6 등)는 방어 여섯 신설 · 독침 신설 · 칼 둘 제거 이전 스냅샷이라 코드와 어긋나 있었다. 그 문서가 정본이다.</p>
 <p class="def">기본 여섯 합 <b>43</b>(무속성 7 · 빙 8 · 염 7 · 뇌 5 · 독 8 · 풍 8) · 공유 <b>8</b>(목표 13). 캐릭터마다 <b>20</b>을 채우려면 기본 여섯에 <b>+77</b>, 공유에 <b>+5</b>(다섯 축)가 더 있어야 한다.<br>
 ⚠️ <b>모자란 것은 수가 아니라 자리다.</b> 계열로 세면 구멍이 보인다 — <b>빙은 보조 0</b>, <b>뇌는 보조 0</b>. 공유 열셋이 <b>공격·보조·방어를 한 칸도 안 주므로</b> 그 셋은 내 속성 20칸에서만 나온다.<br>
-⚠️ <b>풍의 「지금 8」은 <code>wardgale</code> 이 아직 안 빠진 값이다.</b> 위 <a href="#s-basicmani">발현 절</a>의 결정대로 <code>wardgale</code>(결계·풍)이 실제로 빠지면 풍은 7이 되고 → 20 델타는 +12 에서 +13 으로 늘어난다 — 코드를 아직 안 고쳤으므로 이 표는 지금 값(8)으로 둔다.</p>
+⚠️ <b>풍의 「지금 8」은 <code>wardgale</code> 이 아직 안 빠진 값이다.</b> 그 결정대로 <code>wardgale</code>(결계·풍)이 실제로 빠지면 풍은 7이 되고 → 20 델타는 +12 에서 +13 으로 늘어난다 — 코드를 아직 안 고쳤으므로 이 표는 지금 값(8)으로 둔다.</p>
 <table class="st">
 <tr><th>캐릭터</th><th>지금</th><th>→ 20</th><th>공격<br>(일반+마법)</th><th>보조</th><th>방어</th><th>회복</th><th>연계</th><th>⚠️ 반드시 채울 것</th></tr>
 <tr><td><b>무속성</b></td><td>7</td><td><b>+13</b></td><td>3</td><td>1</td><td>3</td><td>0</td><td>0</td><td>넷이 다 섰다. <b>공격 3 이 여섯 중 최저</b> — 우선순위는 공격 쪽이 자연스럽지만 구체 배분은 안 정한다</td></tr>
@@ -129,29 +101,22 @@
 <p class="def">⚠️ <b>회복이 여섯 다 0 인 것은 결손이 아니다</b> — 회복 다섯은 공유로 갔다(<code>skill_element.dart</code>의 <code>SkillElement.shared</code> 머리말). <b>「기초」가 아니라 「연계」 열이다</b> — 기초/변주/연계 세 등급은 2026-08-22 에 폐기됐고 남은 것은 연계 있음/없음 하나뿐이다(<code>lib/data/skill_link.dart</code>).</p>
 <p class="def"><b>바닥은 둘뿐이다</b> — ① <b>공격 · 보조 · 방어 · 회복 각 1 이상</b>(공유 여덟은 그 넷을 한 칸도 안 주므로, 20 안에 없으면 그 캐릭터는 영영 못 든다) · ② <b>기초 등급 3 이상</b>(내 속성 셋만 들고 나가는 사람이 있는데, 셋이 전부 「짝이 서야 사는 것」이면 그 판은 시작부터 죽는다). <b>그 위의 비율은 안 정한다</b> — 정하면 폐기된 계열 정원표가 이름만 바꿔 돌아온다.</p>
 <h3>공유 8종 — 버프 3 + 신설 5</h3>
-<p class="def">가르는 자는 하나다 — <b>적에게 안 닿는 것.</b> 적을 때리는 물건은 색을 하나 골라야 하고, 고르는 순간 공유가 아니게 된다. 신설 다섯의 <b>성격</b> 제안: <b>이동</b>(조준·발사가 전부 자동이라 손이 하는 유일한 일인데 그 축에 값을 주는 칸이 0) · <b>시야·정보</b>(다음 물결 · 엘리트 · 운석 자리 — 이동과 짝이다) · <b>재화·파밍</b>(엔진이 이미 「경제라 속성 시스템 밖」이라 적어 뒀다) · <b>부활</b>(HP 를 안 주고 「그 순간을 안 겪는다」라 해제 셋과 같은 문법) · <b>시간</b>(이 예시가 들던 발현 15초/60초는 폐기됐다 — <a href="#s-basicmani">위 발현 절</a>. 쿨다운·레벨업 등 남은 시계를 만지는 칸은 여전히 0).</p>
+<p class="def">가르는 자는 하나다 — <b>적에게 안 닿는 것.</b> 적을 때리는 물건은 색을 하나 골라야 하고, 고르는 순간 공유가 아니게 된다. 신설 다섯의 <b>성격</b> 제안: <b>이동</b>(조준·발사가 전부 자동이라 손이 하는 유일한 일인데 그 축에 값을 주는 칸이 0) · <b>시야·정보</b>(다음 물결 · 엘리트 · 운석 자리 — 이동과 짝이다) · <b>재화·파밍</b>(엔진이 이미 「경제라 속성 시스템 밖」이라 적어 뒀다) · <b>부활</b>(HP 를 안 주고 「그 순간을 안 겪는다」라 해제 셋과 같은 문법) · <b>시간</b>(이 예시가 들던 15초 유지 · 60초 잠금은 그 시스템째 폐기됐다. 쿨다운·레벨업 등 남은 시계를 만지는 칸은 여전히 0).</p>
 <p class="def">⚠️ <b>「후보가 둘이었던 여섯」은 절반이 뒤집혔다</b>(2026-08-22). 그때 <b>바람원반=빙</b>·<b>개안=풍</b>·<b>잔향=풍</b>으로 갈랐는데, 지금은 <b>바람원반=풍</b>(개명하며 이적) · <b>개안=무속성</b> · <b>잔향=공유</b>(회복 다섯이 공유로 갔다)다. 남은 것만 그대로다 — <b>낙광=뇌</b>(예고 링 → 기둥이 낙뢰의 그림) · <b>성역=풍</b>(팔레트 <code>#3FD1B0</code> 이 바람색이고 L3 가 둔화) · <b>모자이크 석벽=빙</b>(팔레트가 석빙).<br>
 ⚠️ <b>개안이 무속성으로 간 것은 적어 둔 근거 하나를 뒤집는다</b> — 「순백은 <b>백광의 자리</b>라 무속성으로 못 간다」였다. 색을 옮길지 「순백=백광」 규약을 풀지 <b>판정이 남아 있다</b>.</p>
 
-<h2 id="s-gap">엔진과 어긋난 자리 — 발현 폐기가 시키는 일</h2>
-<p class="def">⚠️ 아래는 <b>실측</b>이다(2026-08-25, 코드를 읽고 적었다). 위 <a href="#s-basicmani">발현</a> 절의 폐기 · 몸 그림 고정 · <code>wardgale</code> 반대거래 결정을 엔진이 아직 못 따라간 자리다 — <b>문서가 먼저고 코드 제거는 나중이다.</b></p>
+<h2 id="s-gap">엔진과 어긋난 자리 — <b>남은 것만</b> 적는다</h2>
+<p class="def">⚠️ 아래는 <b>실측</b>이다(2026-08-25 에 적고 2026-08-27 에 다시 셌다). <b>끝난 줄은 안 남긴다</b> — 몸을 한 벌로 굳히는 일(게이지 · 유지 · 잠금 · 몸 두 벌)은 시안도 엔진도 <b>다 걷혔고</b>, 다 걷힌 것을 「어긋난 자리」 표에 두면 무엇이 남았는지가 안 보인다. 여기 서 있는 것은 <b>아직 안 끝난 자리뿐</b>이다.</p>
 <table class="st">
 <tr><th>이 장</th><th>지금 엔진</th><th>자리</th></tr>
-<tr><td>발현 시스템 — <b>폐기</b>(게이지 · 15초 유지 · 60초 잠금 · 몸 두 벌)</td>
-    <td style="color:#FFD27A"><b>아직 살아 있다.</b> <code>ManifestGauge</code>가 그대로 돌고 몸이 여전히 게이지를 따라 「발현 전/발현」 두 벌을 갈아 그린다 — 이 폐기 자체가 순수 시각 토글이라 지워도 밸런스는 안 움직인다(그 파일 머리말)</td>
-    <td><code>lib/sim/combat/manifest.dart</code>(126줄, 클래스 전체) · 훅 3곳:
-    <code>lib/sim/world.dart:178</code> · <code>lib/sim/world_step_kill.dart:88</code> ·
-    <code>lib/sim/world_step.dart:353</code> · <code>lib/game/fx/body.dart:213</code>(<code>bare</code> 분기)</td></tr>
-<tr><td>몸 그림 고정 — 백광 제외 전부 「발현 전」</td>
-    <td style="color:#FFD27A"><b>기본 6종은 아직 게이지를 따라 토글한다.</b> 「항상 발현 전」으로 굳히려면 <code>bare</code> 를 상수 <code>true</code>로 고정해야 한다</td>
-    <td><code>lib/game/fx/body.dart</code>의 <code>steady()</code> · <code>lib/game/fx/body_elements.dart</code>의 <code>drawElem</code></td></tr>
-<tr><td>백광 — 「발현 후」를 기본으로</td>
-    <td style="color:#FF6A6A"><b>없다.</b> <code>.mani</code>(「조였다 팡」) 그림 자체가 엔진에 안 들어와 있다 — 지금은 「발현 전」(가시 철사 그물) 한 벌뿐</td>
-    <td><code>lib/game/fx/body_white.dart</code></td></tr>
-<tr><td>모티프 6종 중 풍·암 — 편입 후보로 보존</td>
-    <td style="color:#7CFFB0"><b>그대로 있다.</b> 그림 자체는 지울 게 없다</td>
-    <td><code>lib/game/fx/body_motifs.dart</code>(<code>motifGale</code> · 암 모티프)</td></tr>
-<tr><td><code>wardgale</code>(결계·풍) — <b>폐기 결정</b>, 풍의 발현 모티프로 대체</td>
+<tr><td>개안의 충전원 — 게이지가 없어져 <b>빈다</b></td>
+    <td style="color:#FFD27A"><b>미정.</b> 엔진은 게이지를 안 읽고 <b>쿨다운</b>으로 돈다(<code>kFlarePeriod</code> 60s · L2 45s · 하한 30s)라 개안이 멈추지는 않는다. 다만 그것이 시안이 반려해 뒀던 갈래라 판정이 다시 열려 있다</td>
+    <td><code>lib/sim/combat/magic/flare.dart</code> · <code>lib/sim/combat/magic/tuning.dart</code></td></tr>
+<tr><td>둘레 모티프 여섯 중 풍·암 — 편입 후보로 보존</td>
+    <td style="color:#FFD27A"><b>그림은 그대로, 앉을 칸은 미정.</b> 몸이 안 쓸 뿐이라 지울 게 없다 — 다만 어느 계열로 들어갈지가 안 정해졌다(<code>buff</code> 안의 새 얹는 태그 · <code>aura</code> · 새 대분류 셋 중)</td>
+    <td><code>lib/game/fx/body_motifs.dart</code>(<code>motifGale</code> · 암 모티프) · 판정은
+    <code>docs/1차-개발.md</code> 「살아남은 모티프(풍 · 암)가 앉을 칸」</td></tr>
+<tr><td><code>wardgale</code>(결계·풍) — <b>폐기 결정</b>, 풍의 둘레 모티프로 대체</td>
     <td style="color:#FFD27A"><b>아직 안 지웠다.</b> 결정만 섰고 코드는 그대로다 — 대체할 스킬의 형태도 미정</td>
     <td><code>lib/data/skill_element.dart</code>(풍 목록) · <code>lib/data/skill_rank.dart:140</code> ·
     <code>lib/data/magic_guard_elem.dart:116</code> · <code>lib/data/fx_plane.dart:87</code> ·

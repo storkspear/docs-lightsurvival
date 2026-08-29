@@ -1,0 +1,177 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — SF HUD 상점</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<!-- 이 장 전용 배치만 여기 둔다 — 뼈(`.hudstage`·`.hudcell`·`.hudhead`)는
+     `hud.js` ⑨절이 든다. -->
+<style>
+.hs-screen{background:#050B14}
+.phone.land .screen.hs-screen .scrim{background:
+  linear-gradient(180deg,rgba(8,8,12,.42) 0%,rgba(8,8,12,.06) 22%,rgba(8,8,12,.06) 74%,rgba(8,8,12,.30) 100%)}
+/* ── 1층 — 갈래 넷. 카드가 세로로 길게 서서 「방 넷」으로 읽힌다 ── */
+.hs-tier{flex:1 1 auto;min-height:0;display:flex;gap:10px}
+.hs-tier .t{flex:1 1 0;min-width:0;display:flex;flex-direction:column;cursor:pointer}
+.hs-tier .t>.bd{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;padding:10px 8px 14px}
+.hs-tier .t canvas{width:70px;height:70px;display:block}
+.hs-tier .tn{font-size:14px;letter-spacing:.1em;color:#D8F2FF}
+.hs-tier .td{font-size:9px;line-height:1.6;color:#6E93AD;text-align:center}
+.hs-tier .t.on .tn{color:#FFD27A}
+/* ── 2층 — 탭 한 줄(1층 넷 + 속성 필터) + 등급 띠 격자 ── */
+.hs-bar{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-bottom:5px}
+.hs-bar .hudtab{padding:2px 9px 4px;font-size:10.5px}
+.hs-filt{margin-left:auto;display:flex;gap:4px}
+.hs-filt .f{font-size:9px;letter-spacing:.06em;color:#6E93AD;padding:2px 7px;
+  border:1px solid #3A546855;cursor:pointer}
+.hs-filt .f.on{color:#E8F8FF;border-color:#4FC3F7;background:#4FC3F71A}
+/* ⚠️ 띠 넷이 **한 화면에 다 서야** 「사다리」가 보인다 — 아래가 잘리면
+   유니크가 안 보여 격자가 세 등급짜리로 읽힌다. 그래서 칸은 한 줄짜리
+   가로형이고(문양 24 · 글 두 줄) 머리줄은 여백을 최소로 든다. */
+.hs-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);
+  gap:4px;align-content:start}
+/* ⚠️ 머리줄 넷 · 칸 줄 넷 · 사이 일곱이 **256px 안에** 들어야 유니크 띠가
+   안 잘린다(실측: 머리줄 16 × 4 + 칸 줄 37·37·37·46 + 틈 4 × 7 = 249). */
+.hs-grid .hudhead{margin-top:0;padding-bottom:1px;line-height:1.1}
+.hs-grid .hudhead b{font-size:9.5px}
+.hs-grid .hudcell.own{opacity:.62}
+.hs-grid .hudcell{flex-direction:row;align-items:center;gap:7px;padding:4px 8px}
+.hs-grid .hudcell canvas.ic{width:24px;height:24px;flex:0 0 24px}
+.hs-grid .tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px;align-items:flex-start}
+.hs-grid .hudcell .n{font-size:9.5px;text-align:left}
+.hs-grid .hudcell .v{font-size:9px}
+.hs-grid .hudcell .why{text-align:left;font-size:6.5px}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-1f">1층 — 갈래 넷</a><a href="#s-2f">2층 — 등급 띠</a><a href="#s-notes">설계 메모</a><a href="#s-gap">어긋난 자리</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · SF HUD 상점</p>
+  <h1>판 밖에서 사는 곳 — 두 층</h1>
+  <p class="lede">내용은 <a href="mockup-shop.html">옛 상점 장</a>이 이미 다
+  정했다 — <b>1층은 넷</b>(2026-08-25 재편 확정) · 2층은 <b>등급 띠 넷 + 연계
+  배지</b> · <b>누르면 미리보기</b>. 이 장은 그것을 SF HUD 창에 옮긴 것이고,
+  값·차례·개수는 <code>vfx.js</code> 의 <code>SSKILL</code>·<code>SRANK</code> 를
+  그대로 읽는다.</p>
+</header>
+
+<h2 id="s-1f">상점 1층 — 갈래 넷</h2>
+<table class="st">
+<tr><th>탭</th><th>이 화면에서 한 줄로</th></tr>
+<tr><td><b>캐릭터</b></td><td>특수 열둘을 판다 — 갈래 자체는 그대로 유지</td></tr>
+<tr><td><b>일반</b></td><td>일반공격 전종 · <b>속성 필터</b>가 여섯을 가른다(승격하며 새로 생긴 축)</td></tr>
+<tr><td><b>마법</b></td><td>마법 · 방어 · 버프 전종, 안에 <b>궁극</b> 하위탭</td></tr>
+<tr><td><b>기타</b></td><td>기본 채굴도구 셋은 무료 전종 개방 · <b>유료 추가는 자리만</b></td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">1층 — 넷. 금빛인 칸이 <b>지금 손이 얹힌 갈래</b>이고, 아래 2층이 그 칸을 연 화면이다</div>
+  <div class="phone land"><div class="screen hs-screen">
+    <canvas class="bg" id="hs1-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="scrim"></div>
+    <div class="topbar"><span><b>상점</b></span><span class="cur" id="hs1-cur"></span></div>
+    <div class="hudui">
+      <div class="hudmid">
+        <div class="hudrail side" id="hs1-rail"></div>
+        <div class="hudstage">
+          <div class="hs-tier" id="hs1-tier"></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-2f">상점 2층 — 등급 띠 넷 · 연계 배지 · 누르면 미리보기</h2>
+<table class="st">
+<tr><th>옛 시안이 정한 것</th><th>이 화면에서</th></tr>
+<tr><td><b>등급은 세기가 아니라 값 · 차례 · 화려함</b>이고 <b>색으로 말하지 않는다</b>
+— 자리 · 한 글자 문양 · 무채 글씨</td>
+<td>띠 넷이 격자를 가르고 머리줄에 <code>SRANK</code> 의 한 글자 문양과 이름 ·
+분수가 선다. 띠에 색을 안 준다 — 값이 저절로 오름차순이다</td></tr>
+<tr><td><b>연계는 등급이 아니다</b> — 있음/없음 하나뿐인 다른 축, 칸의 배지로 선다</td>
+<td>표본 여덟 중 <b>화염방사 하나</b>가 연계다(정본 <code>lib/data/skill_link.dart</code>
+의 일반 계열 셋 중 이 표본에 든 것). 배지는 칸 오른쪽 위 한 자리</td></tr>
+<tr><td><b>잠긴 칸은 값을 안 적는다</b> — 「잠김」 + 무엇을 사면 열리나</td>
+<td>빛폭탄 · 화염방사 둘. <b>모자란 칸</b>(바람원반)은 값을 붉은끼로 적는다 —
+모으면 되는 것과 다른 것을 먼저 사야 하는 것은 다른 사건이다</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">2층 · 일반 — 등급 띠 넷 · 속성 필터 여섯. <b>칸을 누르면 미리보기</b>(잠긴 칸만 예외)</div>
+  <div class="phone land"><div class="screen hs-screen" id="hs2-screen">
+    <canvas class="bg" id="hs2-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="scrim"></div>
+    <div class="topbar">
+      <span><a class="hudback" href="#s-1f">‹ 상점</a>&nbsp;&nbsp;<b>일반</b></span>
+      <span class="cur" id="hs2-cur"></span></div>
+    <div class="hudui">
+      <div class="hudmid">
+        <div class="hudrail side" id="hs2-rail"></div>
+        <div class="hudstage">
+          <div class="hs-bar">
+            <div class="hudtabs" id="hs2-tabs"></div>
+            <div class="hs-filt" id="hs2-filt"></div>
+          </div>
+          <div class="hs-grid" id="hs2-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-notes">설계 메모</h2>
+<table class="st">
+<tr><th>결정</th><th>왜</th></tr>
+<tr><td>1층 넷을 <b>2층의 탭 줄로도 다시 세운다</b></td>
+<td>2층은 깊이가 한 칸 들어간 자리라 「어느 갈래 안인지」가 화면에 남아야
+한다 — 창틀의 <code>‹ 상점 · 일반</code> 하나로는 나머지 셋이 어디 있는지
+안 보인다. 탭이 서면 갈래 사이 이동이 한 번에 된다</td></tr>
+<tr><td>속성 필터는 <b>냉광</b>, 금빛이 아니다</td>
+<td>필터는 「지금 보고 있는 자리」지 「지금 누를 수 있는 단 하나」가 아니다.
+이 트랙에서 금빛은 뒤엣것 전용이라, 상점에서 금빛이 서는 자리는
+<b>미리보기의 「산다」 하나</b>다</td></tr>
+<tr><td>칸의 문양은 <code>ICON</code> 을 그대로 부른다</td>
+<td>여덟 중 넷(<code>smg</code>·<code>shotgun</code>·<code>bolt</code>·<code>arc</code>)이
+이미 그려져 있다. 나머지 넷은 옛 상점과 <b>같은 자리표</b>(<code>FLWGLYPH.codex</code>)로
+떨어진다 — 새 문양을 지어내면 어느 날 진짜 문양이 왔을 때 둘이 된다</td></tr>
+</table>
+
+<h2 id="s-gap">어긋난 자리 — 고치지 않고 적어만 둔다</h2>
+<table class="st">
+<tr><th>자리</th><th>어긋남</th></tr>
+<tr><td>옛 상점 장의 <b>그려진 화면</b>과 <b>재편 표</b>가 서로 다르다</td>
+<td><code>#s-shop</code> 의 두 층 표와 <code>lb-tier</code> 격자는 아직
+<b>일반 · 스킬 · 프리미엄 셋</b>인데 <code>#s-retab</code> 이 <b>넷</b>으로
+확정했다. 이 장은 <b>확정 쪽</b>을 그렸다 — 옛 장의 그림이 재편 전에 그려진 것이다</td></tr>
+<tr><td>미리보기에서 <b>실제로 도는 그림이 0칸</b>이다</td>
+<td>옛 상점 팝업은 <code>WEAP[k]</code> 를 부르는데 <code>vfx.js</code> 에
+<code>WEAP</code> 이라는 이름이 <b>없다</b> — 그래서 여덟 칸 전부 정지 문양만
+떴다. 이 장은 확정본 FX 로 이름이 잡히는 것(<code>PKflameC4</code> = 화염방사)에
+길을 열어 뒀지만, <b>그 칸이 표본에서 잠김</b>이라 잠긴 칸은 안 열린다는
+규칙에 걸려 끝내 안 돈다. 실제로 도는 것을 보려면
+<a href="mockup-hud-codex.html">도감</a>의 오른쪽 창을 봐야 한다</td></tr>
+<tr><td>등급 문양이 한자다</td>
+<td><code>SRANK</code> 의 一 · 高 · 稀 · 唯 는 옛 시안의 정본이고 「등급은
+색이 아니라 <b>한 글자 문양</b>으로 말한다」가 그 규칙이라 그대로 뒀다 —
+한자를 걷으려면 그 규칙부터 바꿔야 하므로 이 장이 혼자 정할 자리가 아니다</td></tr>
+</table>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"hud.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-hud-shop.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

@@ -45,8 +45,12 @@ const CM_CAP=(p)=>{
 {const H=document.getElementById("cmbody");
  if(H&&typeof FVNAME!=="undefined"&&typeof FVSET!=="undefined"&&FVSET.numb){
    const nm=FVNAME.numb.split(" ·")[0];            // "폭마 · 뇌+독" → "폭마"
-   tile(H,CM_BODY,"numbBase",nm+" · 발현 전","NUMB",CM_CAP("base"),S);
-   tile(H,CM_BODY,"numbMani",nm+" · 발현","NUMB",CM_CAP("mani"),S);
+   // ⚠️ 둘째 칸은 **몸이 아니라 보관된 그림**이다 — 몸을 두 벌로 가르던 것이
+   //   폐기돼 서는 것은 첫째 칸 하나뿐이고, 엔진 대조표도 이 칸을 「영구
+   //   미제작」으로 적어 뒀다(`docs/design/시안-엔진-대조.md`). **지울 그림이
+   //   아니라 안 쓰는 그림**이고, 이 장 자체가 보관소라 그대로 띄운다.
+   tile(H,CM_BODY,"numbBase",nm+" · 몸","NUMB",CM_CAP("base"),S);
+   tile(H,CM_BODY,"numbMani",nm+" · 안 쓰는 그림","NUMB",CM_CAP("mani"),S);
  }else console.warn("마 — FVNAME/FVSET.numb 를 못 읽었다");}
 
 // ── 정체 한 줄 · 시너지 — **표에서 읽어 온다** ────────────────────────────

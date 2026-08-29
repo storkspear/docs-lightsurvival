@@ -1,0 +1,147 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — SF HUD 출격일지</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<!-- 이 장 전용 배치만 여기 둔다 — 뼈(`.hudstage`·`.hudside`)는 `hud.js` ⑨절. -->
+<style>
+.hl-screen{background:#050B14}
+.phone.land .screen.hl-screen .scrim{background:
+  linear-gradient(180deg,rgba(8,8,12,.42) 0%,rgba(8,8,12,.06) 22%,rgba(8,8,12,.06) 74%,rgba(8,8,12,.30) 100%)}
+/* ⚠️⚠️ **클래스를 두 개 겹쳐 쓴다**(`.hudside.hl-story`). `hud.js` 는 제
+   CSS 를 `<head>` 끝에 심으므로, 이 페이지의 `<style>` 이 먼저 오고 키트가
+   나중이다 — 클래스 하나짜리로 적으면 같은 명시도에서 **뒤에 온 키트가
+   이긴다**. 실제로 그래서 첫 판에서 두 칸이 다 176px 로 굳었다. */
+/* 왼쪽 — 스토리. **기획 전이라 자리만** 둔다(지어내지 않는다). */
+/* ⚠️ 스토리 칸만 바탕을 옅게 둔다 — 글이 두 줄뿐이라 뒤의 레이더가 비쳐도
+   안 가리고, 그 비침이 「우주에 떠 있는 창」을 이 화면에서도 말해 준다. */
+.hudside.hl-story{width:206px;flex:0 0 206px;background:#050B14A8}
+.hl-story .mid{flex:1 1 auto;display:flex;align-items:center;justify-content:center;
+  text-align:center;font-size:11px;line-height:1.8;color:#8FB4CC}
+.hl-story .soon{text-align:right;font-size:8.5px;letter-spacing:.16em;color:#3A5468}
+/* 오른쪽 — 클리어 기록. ⚠️ **가로선만 긋는다**(칸을 두르면 표가 된다). */
+.hudside.hl-rec{width:auto;flex:1 1 auto;min-width:0;background:#050B14E8}
+.hl-rec .hd{display:flex;justify-content:space-between;align-items:baseline;flex:0 0 auto}
+.hl-rec .hd .lb{font-size:8.5px;letter-spacing:.2em;color:#6E93AD}
+.hl-rec .hd .ct{font-size:9.5px;color:#6E93AD;font-variant-numeric:tabular-nums}
+.hl-rec .rows{flex:1 1 auto;min-height:0}
+.hl-rec .r{display:flex;align-items:flex-start;padding:9px 0;
+  border-top:1px solid #4FC3F72E}
+.hl-rec .r .no{width:112px;flex:0 0 112px}
+.hl-rec .r .no .k{font-size:8.5px;letter-spacing:.14em;color:#6E93AD}
+.hl-rec .r .no .nm{font-size:12px;color:#D8F2FF;margin-top:2px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.hl-rec .r .mk{flex:1 1 auto;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+.hl-rec .r .mk .one{display:inline-flex;align-items:center;gap:5px}
+.hl-rec .r .mk .dif{font-size:10px;color:#6E93AD}
+.hl-rec .none{flex:1 1 auto;display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:#6E93AD}
+.hl-st{letter-spacing:1px;font-size:11px}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-log">출격일지</a><a href="#s-notes">설계 메모</a><a href="#s-gap">어긋난 자리</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · SF HUD 출격일지</p>
+  <h1>어디까지 갔나</h1>
+  <p class="lede">「얼마나 했나」가 아니라 <b>「어디까지 갔나」</b>에만 답한다 —
+  담기는 것은 <b>스토리</b> + <b>클리어 기록</b> 둘이다. 규칙 셋(접기 · 안 그리기 ·
+  별은 모양)은 <a href="mockup-lobby.html#s-log">옛 로비 장</a>이 정했고,
+  기록 자체는 <code>vfx.js</code> 의 <code>LBCLEAR</code> 를 그대로 읽는다.</p>
+</header>
+
+<h2 id="s-log">출격일지</h2>
+<table class="st">
+<tr><th>옛 시안이 정한 것</th><th>이 화면에서</th></tr>
+<tr><td>같은 난이도는 <b>최고 별 하나</b>만 — 여러 번 깨도 줄이 안 는다</td>
+<td>스테이지 한 줄에 난이도 칸이 서고 칸마다 별 셋. 1장은 쉬움★2 · 보통★3 ·
+어려움★1 한 줄로 접힌다</td></tr>
+<tr><td><b>기록 없는 것은 안 그린다</b> — 안 깬 스테이지는 줄이 없고 안 깬
+난이도는 칸이 없다</td>
+<td>2장이 통째로 없고 「매우어려움」 빈 칸도 없다. 오른쪽 두 번째 화면이
+<b>첫 판</b>(깬 곳 0)이라 그 규칙의 끝을 보여 준다</td></tr>
+<tr><td>별은 <b>숫자가 아니라 모양</b> — 못 딴 별은 지우지 않고 죽인다</td>
+<td>딴 별은 금빛, 못 딴 별은 <b>같은 자리에 어둡게</b> 남는다 — 3 이 만점임이
+보여야 ★2 가 「하나 남았다」로 읽힌다</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">출격일지 — 기록 있음</div>
+  <div class="phone land"><div class="screen hl-screen">
+    <canvas class="bg" id="hl1-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="scrim"></div>
+    <div class="topbar"><span><b>출격일지</b></span><span class="setico" id="hl1-set" title="설정"></span></div>
+    <div class="hudui">
+      <div class="hudmid">
+        <div class="hudrail side" id="hl1-rail"></div>
+        <div class="hudstage">
+          <div class="hudbody" id="hl1-body"></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+ </div>
+ <div class="col">
+  <div class="cap">출격일지 — 첫 판(깬 곳 없음)</div>
+  <div class="phone land"><div class="screen hl-screen">
+    <canvas class="bg" id="hl2-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="scrim"></div>
+    <div class="topbar"><span><b>출격일지</b></span><span class="setico" id="hl2-set" title="설정"></span></div>
+    <div class="hudui">
+      <div class="hudmid">
+        <div class="hudrail side" id="hl2-rail"></div>
+        <div class="hudstage">
+          <div class="hudbody" id="hl2-body"></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-notes">설계 메모</h2>
+<table class="st">
+<tr><th>결정</th><th>왜</th></tr>
+<tr><td>이 화면에는 <b>나가는 문이 없다</b></td>
+<td>일지는 레일의 여섯 자리 중 하나다 — 레일 자체가 문이라 창틀에 또
+「‹」를 달면 나가는 길이 두 개가 된다. ⭐ 2026-08-27 에 <b>강화도 같아졌다</b>
+— 레일에 여섯째 칸이 서면서 그 장의 「‹ 나가기」를 걷었다</td></tr>
+<tr><td>별의 금빛이 이 화면의 <b>유일한 색</b>이다</td>
+<td>일지는 누를 것이 없는 화면이라 금빛이 「지금 누를 수 있는 것」에 안 쓰인다.
+그 자리를 <b>딴 별</b>이 받는다 — 이 화면에서 유일하게 「해냈다」인 것</td></tr>
+<tr><td>스토리 칸은 <b>비워 두되 자리를 지킨다</b></td>
+<td>기획 전이라 지어내지 않는다. 그렇다고 칸을 없애면 스토리가 붙는 날
+화면을 다시 짜야 하고, 지금도 「여기 뭔가 온다」가 안 읽힌다</td></tr>
+</table>
+
+<h2 id="s-gap">어긋난 자리 — 고치지 않고 적어만 둔다</h2>
+<table class="st">
+<tr><th>자리</th><th>어긋남</th></tr>
+<tr><td><s>이름이 셋이다</s> — <b>모였다</b>(2026-08-27)</td>
+<td>옛 시안의 <b>우주일지</b> · 레일 라벨의 <b>일지</b> · 이 트랙의
+<b>출격일지</b> 셋이 돌아다녔다. ⇒ <b>「출격일지」로 모았다</b> — 무엇을 적는
+곳인지가 이름에 있다. 다만 <b>레일 라벨만 「일지」로 남긴다</b>: 여섯 칸이
+서면서 58px 칸이 곧 라벨의 상한이 됐고, 네 글자를 넣으면 8.5px 글씨가 두 줄로
+감겨 그 칸만 높이가 는다. <b>창틀이 전체 이름을 들고 레일은 짧은 이름을 든다</b></td></tr>
+<tr><td>스테이지 이름이 <code>LBCLEAR</code> 에만 있다</td>
+<td>「스며드는 어둠」·「덮쳐오는 어둠」은 이 표가 유일한 출처다 — 관측소
+(<code>chapter.js</code>)의 장 이름과 대조하는 검사가 없다</td></tr>
+</table>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"hud.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-hud-log.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

@@ -17,14 +17,14 @@
 <div class="wrap">
 <nav class="toc">
   <div class="nav1"></div>
-  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-magic">마법 공격 14종</a><a href="#s-levelsm">레벨 성장표</a><a href="#s-iconsm">아이콘</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-magic">마법 공격 12종</a><a href="#s-levelsm">레벨 성장표</a><a href="#s-iconsm">아이콘</a><a href="#" id="bare" class="bare">설명 접기</a></div>
 </nav>
 <header>
   <p class="kicker">Light Survival · 셀 VFX 시안</p>
   <h1>면으로 그리는 이펙트</h1>
   
 </header>
-<h2 id="s-magic">마법 공격 14종</h2>
+<h2 id="s-magic">마법 공격 12종</h2>
 <div class="grid" id="magic"></div>
 
 <h2 id="s-levelsm">레벨 성장표</h2>
@@ -42,3 +42,12 @@
      따로 부른다. 진행판처럼 그릴 칸이 없는 장에도 목차는 있어야 한다. -->
 <script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
 <script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️⚠️ **파문의 새 그림** — `vfx.js` **뒤**라야 한다(`FX`·`TONE`·`LV`·`IB*`·
+     `IC*`·`hash`·`saw`·`hero`·`LX3SQT` 를 그쪽에서 읽는다).
+     ⚠️ 이 파일은 격자 `#izfreeze`·`#icand` 둘만 찾는다 — 이 장에는 없으므로
+       **조용히 건너뛴다.** 여기서 쓰는 것은 `FX.IZpulse` 하나뿐이다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx-ice6.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️⚠️ **갈아 끼우기는 맨 뒤라야 한다** — `vfx.js` 가 칸을 다 만든 **뒤에**
+     그 칸의 그리기 함수만 바꾼다. 앞에 두면 바꿀 칸이 아직 없어 조용히 넘어간다
+     (그 경우 콘솔에 「파문 칸을 못 찾았다」가 뜬다). -->
+<script>document.write(unescape("%3Cscript src=\"vfx-magicice.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

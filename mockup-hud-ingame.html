@@ -1,0 +1,223 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 판 안 HUD</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<style>
+/* ── 글꼴 — **엔진이 싣는 그 파일 그대로** ─────────────────────────────────
+   `pubspec.yaml` 이 assets 로 싣는 두 벌을 시안도 같이 읽는다. 사본을 만들면
+   갈라지므로 경로를 레포 것으로 가리킨다.
+   ⚠️ `docs/vfx` 미러(`tools/mirror/build-mockup-mirror.js`)는 이 폴더만
+     복사하므로 미러에서는 이 파일들이 없다 — 그때는 아래 대체 글꼴로 떨어진다.
+     캔버스 글꼴 문자열이 늘 대체 목록을 달고 있는 것이 그 대비다. */
+@font-face{font-family:"LSChakra";font-weight:400;font-display:swap;
+  src:url("../../assets/fonts/ChakraPetch-Regular.ttf") format("truetype")}
+@font-face{font-family:"LSChakra";font-weight:500;font-display:swap;
+  src:url("../../assets/fonts/ChakraPetch-Medium.ttf") format("truetype")}
+@font-face{font-family:"LSChakra";font-weight:600;font-display:swap;
+  src:url("../../assets/fonts/ChakraPetch-SemiBold.ttf") format("truetype")}
+@font-face{font-family:"LSChakra";font-weight:700;font-display:swap;
+  src:url("../../assets/fonts/ChakraPetch-Bold.ttf") format("truetype")}
+@font-face{font-family:"LSPretendard";font-weight:400;font-display:swap;
+  src:url("../../assets/fonts/Pretendard-Regular.otf") format("opentype")}
+@font-face{font-family:"LSPretendard";font-weight:500;font-display:swap;
+  src:url("../../assets/fonts/Pretendard-Medium.otf") format("opentype")}
+@font-face{font-family:"LSPretendard";font-weight:600;font-display:swap;
+  src:url("../../assets/fonts/Pretendard-SemiBold.otf") format("opentype")}
+
+/* ⚠️ 판은 로비(#050B14)보다 어둡고 푸른끼가 없다 — 냉광은 **HUD 의 색**이라
+   바탕까지 푸르면 HUD 가 바탕에 묻는다. */
+.ig-screen{background:#05050B}
+/* ⚠️ **scrim 을 안 깐다.** 로비의 scrim 은 「글이 앉는 곳을 덮어 대비를
+   보장한다」인데, 판 위에서 그것은 곧 **화면 절반을 매 프레임 칠하는 것**이다
+   (raster p95 18.24ms 의 그 값을 그대로 문다). ⇒ 대비는 요소마다 제 밑에
+   깐 작은 받침과 `lbText` 의 외곽선이 든다. */
+/* ── 부품 견본 — 폰 밖 ──────────────────────────────────────────────────── */
+.ig-samps{display:flex;flex-direction:column;gap:9px;margin:14px 0 6px}
+.ig-samp{display:flex;align-items:center;gap:12px}
+.ig-samp canvas{display:block;flex:0 0 auto;background:#0C0C12}
+.ig-samp .sc{font-size:11px;color:#8B8B99;line-height:1.4}
+.ig-samp .sc b{color:#D8F2FF;font-weight:600}
+/* 안 넷을 세로로 쌓는다 — 816px 짜리 넷을 옆으로 늘어놓으면 한 번에 못 본다. */
+.ig-one{font-size:11px;color:#8B8B99;margin-top:3px}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-now">지금 무엇이 서 있나</a><a href="#s-plans">채택안 D</a><a href="#s-area">가린 면적</a><a href="#s-parts">부품 견본</a><a href="#s-gap">어긋난 자리</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 판 안 HUD</p>
+  <h1>싸우는 화면 위에 얹히는 것 — 경험치 · 시간 · 퀵슬롯</h1>
+  <p class="lede">사용자 판정(2026-08-27)입니다: <b>「인게임 내에서 경험치바, 시간,
+  퀵슬롯 UI 좀 촌스러운데 무드에 맞게 고쳐 줄 수 있나」</b>.
+  이 화면은 시안이 한 장도 없던 자리입니다. 여기는 로비가 아니라 <b>적이 오는 판</b>이라, 로비 키트에서
+  <b>말투만</b> 빌리고 창(레일 · 격자 · 패널)은 안 빌립니다. 판을 덮는 반투명 판은
+  한 장도 없습니다.</p>
+</header>
+
+<h2 id="s-now">지금 무엇이 서 있나</h2>
+<p class="sub">아래 폰은 <b>엔진이 실제로 그리는 그림</b>입니다. 숫자는
+<code>lib/render/atlas/bake_draw.dart</code> 의 7세그먼트를 그 좌표 그대로 옮겼고
+(32×48 칸 · 굵기 5 · 배율 0.5), 칸은 <code>lib/ui/equip_slot.dart</code> 의
+46px · <code>#0C0C12</code> 바탕 · <code>#3A3A46</code> 테 그대로입니다.
+<b>「지금」을 대충 그리면 세 안이 저절로 이겨서 판정이 거짓말이 됩니다.</b></p>
+<table class="st">
+<tr><th>지금</th><th>무엇이 어긋나 있나</th></tr>
+<tr><td><b>숫자가 계산기 글꼴 · 금색</b></td>
+<td>7세그먼트는 <b>다른 계보의 물건</b>입니다. 로비 여덟 장이 전부 냉광 SF HUD 라
+판에 들어가는 순간 색과 글꼴이 통째로 갈립니다. 게다가 엔진은 2026-08-27 에
+글꼴 두 벌(<code>ChakraPetch</code> + <code>Pretendard</code>)을 이미 실었는데
+판 위 숫자만 그것을 안 씁니다</td></tr>
+<tr><td><b>경험치가 선 하나</b></td>
+<td>길이만 있는 획이라 「얼마나 남았나」를 재려면 <b>화면 폭과 견줘야</b> 합니다 —
+이펙트가 덮이면 그 기준선이 사라집니다</td></tr>
+<tr><td><b>체력 바가 경험치 바에 붙어 있다</b></td>
+<td>⚠️ <b>체력 바는 있습니다</b>(<code>game_layers_hud.dart</code>, 경험치 3px
+바로 아래 4px). 갈무리에서 안 보인 까닭은 없어서가 아니라 <b>같은 꼴 · 같은
+자리 · 비슷한 밝기의 가로 획 둘</b>이라 한 덩어리로 뭉쳐 읽히기 때문입니다.
+세 안은 색이 아니라 <b>꼴</b>로 가릅니다 — 경험치는 <b>이어진 띠</b>(차오르는 것),
+체력은 <b>끊어진 칸 열</b>(줄어드는 것)입니다</td></tr>
+<tr><td><b>시간이 <code>8:38</code> 넉 자뿐</b></td>
+<td>판이 20분인데 <b>지난 시간인지 남은 시간인지</b>를 화면이 말하지 않습니다.
+보스가 언제 오는지(<code>bossAtSec</code> 1140 = 남은 1:00)를 말하는 것도
+하나도 없습니다</td></tr>
+<tr><td><b>빈 칸이 점선 네모뿐</b></td>
+<td>속이 비어 있어 <b>「아직 안 만든 자리」</b>로 읽힙니다. 로비는 이미 답을 내
+뒀습니다(<code>hud.js</code> ⑪절) — 비어 있음 = 점선 테 + 가운데 <b>＋</b></td></tr>
+<tr><td><b>「무기 3 / 3」이 글자</b></td>
+<td>칸이 이미 셋 보이는데 수를 또 적으니 같은 말이 두 번이고, 그 두 번째가
+판 위에서 <b>세로를 15px 먹습니다</b>(<code>kEquipLabelH</code> 10 +
+<code>kEquipLabelGap</code> 5). 가로에서 아까운 축이 정확히 세로입니다</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">지금 — 난전 배경 위에 올려 놓았습니다. 왼쪽 위 밝은 불장판이
+  <b>「Lv 12」와 퀵슬롯 밑</b>에 오도록 깔았습니다(어두운 데만 깔면 대비 판정이
+  거짓말이 됩니다)</div>
+  <div class="phone land"><div class="screen ig-screen">
+    <canvas class="bg" id="ig-now"></canvas>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-plans">채택안 — <b>D</b></h2>
+<p class="sub">⚠️ <b>A · B · C 는 2026-08-28 에 걷었습니다.</b> 사용자가 셋을 보고
+D 를 손으로 조립했고(「B 상태에서 C 처럼 퀵슬롯만 아래로」 → 「시간은 12시」 →
+「재화는 우측 상단」), 판정이 끝난 뒤에도 셋을 두면 <b>다음에 읽는 사람이 아직
+안 정해진 줄 안다</b>. 셋이 왜 졌는지와 D 가 무엇을 가져왔는지는
+<code>mockup-hud-ingame.js</code> 의 <code>IGPLAN.d</code> 머리말에 남겼습니다 —
+<b>다시 판정하지 말고 거기를 읽으십시오.</b></p>
+<p class="sub">아래 「지금」과 나란히 놓고 봅니다. 둘이 <b>같은 값</b>을 그립니다
+(Lv 12 · 경험치 62% · 체력 46% · 남은 8:38). 값이 다르면 「어느 쪽이 잘 읽히나」가
+아니라 「어느 값이 읽기 쉽나」를 비교하게 됩니다.</p>
+<div class="rack land">
+ <div class="col">
+  <div class="cap"><b>D · 조립</b> — <b>네 자리가 뜻으로 갈립니다.</b>
+  왼쪽 위는 <b>내 상태</b>(문 · 레벨 · 경험치 · 체력)와 그 밑줄의 <b>편성 둘</b>
+  (일반공격 · 채굴) · <b>버프</b>, 12시는 <b>시간</b>, 오른쪽 위는 <b>번 것</b>
+  (암흑물질 · 빛의 결정 한 칸 + 캔 강화석), 아래는 <b>쓰는 것</b>(스킬 5칸)
+  <div class="ig-one">일반공격과 채굴은 판 안에서 못 바꾸므로 자리 칸(32)보다
+  작은 칸(20)이고, 버프는 그보다 더 작습니다(15) — <b>크기가 곧 급수</b>입니다.
+  버프는 롤 쿨타임처럼 회색이 12시부터 돌아 덮고, 남은 몫이 25% 아래면 칸이
+  깜빡입니다. 아래 자리가 레벨업 3택과 겹치지만, 3택이 열리면 판이 멈춰 누를
+  수도 없으므로 결함이 아닙니다</div></div>
+  <div class="phone land"><div class="screen ig-screen">
+    <canvas class="bg" id="ig-d"></canvas>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-area">가린 면적 — 재서 견줍니다</h2>
+<p class="sub">⚠️ <b>칠한 면적이 곧 성능입니다.</b> 이 레포 실측이 <code>raster</code>
+p95 <b>18.24ms</b> 대 <code>build</code> p95 <b>0.49ms</b>(37배)이고, HUD 는
+<b>매 프레임 전부</b> 그려집니다. 아래 수는 손으로 적은 것이 아니라
+<code>IGPLAN</code> 의 <code>geo()</code> 가 낸 <b>그 사각을 그대로 센 것</b>입니다 —
+그림과 장부가 한 군데에서 나와 갈라질 자리가 없습니다.
+「덮은 것」은 <b>불투명하게 가린 것</b>(띠 · 받침 · 자리 · 문)이고, 받침 없이 글자만
+있는 자리(지금의 <code>Lv 12</code> · 시계)는 글리프가 실제로 먹는 사각을 셌습니다.
+자는 시안 화면 788×364 입니다(실기 852×393 보다 좁으므로 이 값은
+<b>실기보다 크게 잡힌 쪽</b>입니다).</p>
+<table class="st" id="ig-areatbl">
+<tr><th>안</th><th>덮은 픽셀</th><th>화면 대비</th><th>지금 대비</th><th>위에서 먹는 세로</th><th>한 줄</th></tr>
+<tbody id="ig-area"></tbody>
+</table>
+<p class="sub">⭐ <b>「위에서 먹는 세로」가 진짜 값입니다.</b> 가로에서 아까운 축은
+세로이고(<code>lib/ui/equip_hud.dart</code> 가 「화면 세로의 47.3% → 39.9%」를
+겪은 그 축), 전체 면적은 셋 다 비슷하게 나옵니다 — 갈리는 것은
+<b>어디를 가리느냐</b>입니다.</p>
+
+<h2 id="s-parts">부품 견본 — 화면과 같은 함수가 짓습니다</h2>
+<p class="sub">견본이 제 손으로 그리면 「이 상태가 화면에서 어떻게 보이나」를
+거짓으로 말하게 됩니다. 아래 것은 전부 위 폰과 <b>같은 함수</b>가 그립니다.</p>
+<h3>띠 — 경험치 · 체력 · 시간이 한 부품입니다</h3>
+<p class="sub">⭐ <b>경험치와 체력을 색으로만 가르지 않습니다.</b> 밝은 장판 위에서는
+따뜻한 두 색이 같이 뜨고, 그러면 지금과 똑같이 뭉칩니다 — 그래서 <b>꼴</b>로
+가릅니다. 경험치는 <b>이어진 띠</b>(차오르는 것), 체력은 <b>끊어진 칸 열</b>
+(줄어드는 것)입니다. 난전에서 남은 칸을 <b>세는 것</b>이 길이를 재는 것보다
+빠르고, 이펙트가 덮여도 칸의 경계가 남습니다.</p>
+<p class="sub">빈 자리를 <b>거의 검게</b> 둡니다. 안 그러면 찬 면과 대비가 안 서서
+「띠에 눈금이 그어져 있다」로만 읽히고 「얼마나 찼나」가 안 보입니다. 앞머리는
+위아래로 삐져나와 <b>덮여도 끝이 보입니다</b>.
+⚠️ <b>금빛은 사건에만 씁니다</b> — 로비에서 금빛은 「지금 누를 수 있는 단
+하나」라, 판 위에 상시로 두면 그 뜻이 죽습니다.</p>
+<div class="ig-samps" id="ig-bars"></div>
+<h3>자리 — 빈 칸이 「들어올 자리가 있다」로 읽혀야 합니다</h3>
+<p class="sub">레벨을 <b>세는 것</b>으로 바꾼 안(눈 다섯)과 <b>읽는 것</b>으로 둔
+안(숫자 배지)을 나란히 냈습니다. 판 위에서 시선이 머무는 표시는 이 HUD 의
+금기라(엔진이 체력에 숫자를 안 붙이는 근거와 같습니다) 기본은 눈 쪽으로
+잡았습니다. 마지막 줄이 그 답입니다 —
+무기 랙이 하나로 접혀 정원 6이 되어도 아홉 칸이 여전히 한 줄이고,
+이름표가 없어 <b>세로가 안 늡니다</b>.</p>
+<div class="ig-samps" id="ig-slots"></div>
+
+<h2 id="s-gap">어긋난 자리 — 고치지 않고 적어만 둡니다</h2>
+<table class="st">
+<tr><th>자리</th><th>어긋남</th></tr>
+<tr><td><b>문이 34 인가 44 인가</b></td>
+<td>같은 시안(<a href="mockup-ui.html#s-pause">인터페이스</a>)이 두 가지를 못 박고
+있습니다 — 「여는 문은 좌상단 <b>34px</b> · 노치 밖」과 「엄지 자 — 주 버튼 58 ·
+줄 64 · <b>최소 44</b>」. 엔진은 34 를 따릅니다(<code>kDoorSize</code>).
+세 안은 <b>44 로 그렸습니다</b>. 44 로 가면 <code>kDoorLane</code> 이 52 에서
+62 로 밀려 그 오른쪽 줄이 전부 10px 옮겨 갑니다 — <b>판정이 필요합니다</b></td></tr>
+<tr><td><b>체력이 어디 있어야 하나</b></td>
+<td>원래 스펙은 바 없이 「체력 = 빛의 밝기」였고, 그 빛 원이 작동한 적이 없어
+2026-08-08 에 상단 바가 생겼습니다(<code>game_layers_hud.dart</code> 머리말).
+C 안은 그 바를 <b>아래 가장자리</b>로 내려 경험치와 영영 안 뭉치게 하는데,
+그러면 체력이 몸에서 제일 먼 자리로 갑니다. A·B 는 위에 두되 꼴을 갈랐습니다 —
+<b>어느 쪽인지는 실기에서 봐야 압니다</b></td></tr>
+<tr><td><b>무기 정원이 3 에서 6 으로 열린다</b></td>
+<td><code>run.openCap</code> 이 레벨로 열립니다(<code>kSlotCapStart</code> 3 →
+<code>kSlotCapMax</code> 6). 안 열린 칸은 안 그리는 것이 규칙이라
+<b>줄 길이가 판 도중에 자랍니다</b> — A·B 는 왼쪽 고정이라 오른쪽으로 자라고,
+C 는 가운데 정렬이라 <b>양쪽으로 자랍니다</b>. C 의 가운데 정렬이 그때
+어떻게 보이는지는 이 장이 안 그렸습니다</td></tr>
+<tr><td><b>레벨업 3택이 뜰 때</b></td>
+<td>3택 화면이 퀵슬롯 뒤로 깔리던 사고가 있었습니다
+(<code>lib/ui/levelup_layer.dart</code>). C 안은 퀵슬롯이 <b>아래 가운데</b>라
+3택 카드와 정면으로 겹치는 자리입니다 — 이 장은 3택을 안 그렸으므로
+<b>겹침은 판정 대상</b>입니다</td></tr>
+<tr><td><b>암흑물질 계기</b></td>
+<td>지금 그대로 뒀습니다 — 줍는 순간 뜨고 조용해지면 꺼지는 규약
+(<code>_pushHarvest</code>)은 안 건드립니다. 이 장이 바꾼 것은 <b>말투와
+자리</b>뿐입니다</td></tr>
+<tr><td><b>글꼴 파일 경로</b></td>
+<td>이 장은 <code>../../assets/fonts/</code> 의 <b>엔진이 싣는 그 파일</b>을
+읽습니다. <code>docs/vfx</code> 미러는 그 폴더를 안 복사하므로
+<b>미러에서는 대체 글꼴로 떨어집니다</b> — 캔버스 글꼴 문자열이 늘 대체 목록을
+달고 있는 것이 그 대비입니다</td></tr>
+</table>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"hud.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-hud-ingame.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

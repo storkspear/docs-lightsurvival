@@ -1,0 +1,301 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — SF HUD 편성표</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<!-- 이 장 전용 배치만 여기 둔다 — 뼈(`.hudslot`·`.hudslots`·`.hudchar`)는
+     `hud.js` ⑪절이 든다. -->
+<style>
+.hd-screen{background:#050B14}
+.phone.land .screen.hd-screen .scrim{background:
+  linear-gradient(180deg,rgba(8,8,12,.42) 0%,rgba(8,8,12,.06) 22%,rgba(8,8,12,.06) 74%,rgba(8,8,12,.30) 100%)}
+/* ── 편성표 넷이 세로로 쌓인다 ────────────────────────────────────────────────
+   ⚠️ 넷이 **한 화면에 다 서야** 사다리(짜임 → 비어 있음 → 살 수 있음)가
+   보인다. 실측: 무대 286 = 카드 67 × 4 + 틈 6 × 3. 카드를 키우면 넷째가
+   잘리고, 잘리는 순간 「편성표는 셋뿐」으로 읽힌다. */
+.hd-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:6px}
+.hd-card{flex:1 1 0;min-height:0;display:flex;flex-direction:column;
+  padding:3px 8px 4px;background:#050B14B8;border:1px solid #4FC3F72E;
+  clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px))}
+.hd-card.on{border-color:#4FC3F78A;background:#4FC3F70E}
+.hd-card.void{border-style:dashed;border-color:#3A546888;background:#050B1455}
+.hd-card.buy{border-style:dashed;border-color:#FF8A3D77;background:#FF8A3D0A}
+.hd-card.lock{border-color:#3A546866;background:
+  repeating-linear-gradient(135deg,#3A546822 0,#3A546822 1px,transparent 1px,transparent 6px),#050B1488}
+/* 머리줄 — 캐릭터 · 이름 · 단추. 손그림의 첫 줄 그대로. */
+.hd-card .hh{flex:0 0 auto;display:flex;align-items:center;gap:6px;height:20px}
+.hd-card .hh .cv{display:block;flex:0 0 auto}
+.hd-card .hh span.cv{width:22px;height:22px;box-sizing:border-box}
+.hd-card .hh .voidcv{border:1px dashed #3A546888}
+.hd-card .hh .buycv{border:1px dashed #FF8A3D77}
+.hd-card .hh b{font-size:11px;font-weight:600;color:#D8F2FF;letter-spacing:-.01em}
+.hd-card .hh .dn{font-size:8.5px;letter-spacing:.14em;color:#6E93AD}
+.hd-card .hh .bt{margin-left:auto;display:flex;gap:5px}
+.hd-card.void .hh b,.hd-card.lock .hh b{color:#6E93AD}
+/* 몸줄 — 자리 한 줄 + 그 오른쪽에 비워 둔 궁극기 자리.
+   ⚠️ 성좌를 **화면 오른쪽 끝까지 밀지 않는다** — 카드가 700px 인데 자리는
+   440px 라, 오른쪽 끝으로 밀면 채굴도구와 성좌 사이에 275px 짜리 빈 자리가
+   생겨 줄이 「덜 그려진 것」으로 읽힌다. 묶음 이름 둘이 이미 갈라 주므로
+   틈 하나(22px 더)면 충분하다. 출격준비 화면은 자리가 더 커서 그쪽만
+   오른쪽 끝을 쓴다. */
+.hd-card .bb{flex:1 1 auto;min-height:0;display:flex;align-items:flex-start;gap:9px}
+.hd-card .hudslots .rt{margin-left:22px}
+.hd-card .hudslots .gp{gap:1px}
+.hd-card .hudslots .gl{font-size:7px;line-height:1.1}
+.hd-card .buyline{align-self:center;font-size:9px;color:#6E93AD;letter-spacing:.02em}
+/* 궁극기 — **손그림에 없는 칸**이라 자리만 두고 무엇도 안 채운다.
+   점선 · 잿빛 · 「판정 대기」 — 「비어 있음」(＋)과도 다르게 보여야 한다.
+   비어 있음은 「내가 안 채운 것」이고 이것은 **아직 정해지지 않은 것**이다. */
+.hd-card .ultspot{flex:0 0 auto;width:54px;height:30px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0;
+  border:1px dashed #3A546866;font-size:7.5px;line-height:1.15;color:#3A5468}
+.hd-card .ultspot i{font-style:normal;font-size:6.5px;color:#FF8A3D88}
+/* ⚠️ **고르는 창의 CSS 는 여기 없다** — `mockup-hud-loadout.js` 가 제 창과 함께
+   들고 심는다. 그 창이 출격준비에서도 열리므로 배치가 두 벌이면 갈라진다. */
+/* ── 상태 견본 — 폰 밖. 카드와 같은 함수가 짓는다 ────────────────────────── */
+.hd-samps{display:flex;flex-direction:column;gap:10px;margin:14px 0 6px}
+.hd-samp{max-width:720px}
+.hd-samp .hd-card{height:67px;flex:0 0 auto}
+.hd-samp .sc{margin-top:4px;font-size:11px;color:#8B8B99}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-list">편성표 세 벌</a><a href="#s-states">칸 셋이 갈린다</a><a href="#s-edit">편집 팝업</a><a href="#s-rail">레일에 안 세운 이유</a><a href="#s-open">판정이 필요한 자리</a><a href="#s-gap">어긋난 자리</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · SF HUD 편성표</p>
+  <h1>나갈 때마다 다시 안 고르려고 — 미리 짜 두는 한 벌</h1>
+  <p class="lede"><b>편성표 한 벌 = 캐릭터 + 그 캐릭터가 들 수 있는 것 전부</b>다.
+  캐릭터를 빼면 스킬을 고를 근거가 사라진다 — 고유 속성이 캐릭터에 달려 있고,
+  출격 조건(<code>kCharacterOwnMin</code> = 내 속성 3장)이 그 속성으로 재기
+  때문이다. 그래서 카드 머리줄에 캐릭터가 서고 몸줄에 자리가 선다.
+  <b>세 벌이 기본이고 상점에서 늘린다</b>(2026-08-27 사용자 확정 넷 중 셋).
+  줄의 길이는 전부 엔진 상수다 — 일반 1 + 스킬 5 =
+  <code>kSlotCapMax</code> 6 · 채굴 1 · 성좌 <code>kConstellationSlots</code> 3.</p>
+</header>
+
+<h2 id="s-list">편성표 세 벌 — 하나는 짜였고 둘은 비어 있다</h2>
+<table class="st">
+<tr><th>사용자 손그림</th><th>이 화면에서</th></tr>
+<tr><td><code>[캐릭터]　　　　[편집] [삭제]</code></td>
+<td>머리줄 — 왼쪽에 캐릭터 몸(<code>ELEM.*</code> 그대로) + 이름, 오른쪽 끝에
+단추 둘. <b>삭제는 짜인 편성표에만 있다</b> — 빈 편성표에는 지울 것이 없다</td></tr>
+<tr><td><code>[] | [] [] [] [] [] | []　　[] [] []</code></td>
+<td>몸줄 — 일반 1 <b>┃</b> 스킬 5 <b>┃</b> 채굴 1, 그리고 한 틈 건너 성좌 3.
+세로 획이 묶음을 가른다. ⚠️ 성좌를 <b>화면 오른쪽 끝까지 밀지 않는다</b> —
+카드가 700px 인데 자리는 440px 라 끝으로 밀면 275px 짜리 빈 자리가 생겨 줄이
+「덜 그려진 것」으로 읽힌다(실측). 묶음 이름 둘이 이미 갈라 준다</td></tr>
+<tr><td><code>일반　스킬　　채굴도구　성좌</code></td>
+<td>묶음 이름은 <b>묶음마다 하나</b>다 — 자리마다 붙이면 스킬 다섯의 이름
+다섯과 겹쳐 줄이 두 배로 시끄러워진다</td></tr>
+</table>
+<p class="sub">표본 편성표는 <b>무속성</b>이다 — 갓 깐 저장본이 실제로 주는 캐릭터고
+(<code>kDefaultCharacterId</code>), 스킬 다섯 중 <b>공전 · 결계 · 개안</b> 셋이
+무속성이라 출격 조건이 <b>정확히 3 / 3</b> 으로 찬다. 나머지 둘(성역 = 풍 ·
+파문 = 빙)은 속성이 남의 것이다 — 조건이 어떻게 읽히는지가 한 줄에 다 보인다.
+속성 배분의 정본은 <code>lib/data/skill_element.dart</code> 다.</p>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">편성표 — 짜인 것 하나 · 비어 있는 것 둘 · <b>살 수 있는 넷째</b>.
+  카드의 <b>편집 / 편성</b>을 누르면 팝업이 열린다</div>
+  <div class="phone land"><div class="screen hd-screen" id="hd1-screen">
+    <canvas class="bg" id="hd1-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="scrim"></div>
+    <div class="topbar">
+      <span><a class="hudback" href="mockup-hud-home.html">‹ 홈</a>&nbsp;&nbsp;<b>편성표</b></span>
+      <span class="cur" id="hd1-cur"></span></div>
+    <div class="hudui">
+      <div class="hudmid">
+        <div class="hudrail side" id="hd1-rail"></div>
+        <div class="hudstage">
+          <div class="hd-list" id="hd1-list"></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+ </div>
+</div>
+
+<p class="sub">⭐ <b>여기는 넷을 나란히 눕힌다.</b>
+<a href="mockup-hud-sortie.html#s-tabs">출격준비</a>는 같은 편성표를 <b>세로 탭</b>으로
+세우는데, 묻는 것이 다르기 때문이다 — 여기는 <b>「편성표들을 관리한다」</b>라
+<b>넷을 견주는 것</b>이 일이고(어느 것이 짜였나 · 어디가 비었나 · 몇 벌 더 살
+수 있나), 출격준비는 <b>「편성표 하나를 고른다」</b>라 고른 하나의 알맹이가 무대를
+차지해야 한다. 자리 크기도 그래서 다르다 — 여기는 <b>30px 문양만</b>(「셋 중
+어느 벌인가」는 문양 줄로 알아본다), 거기는 <b>72 · 54px 이름까지</b>(나가기 전
+확인이라 이름이 없으면 확인이 안 된다).</p>
+
+<h2 id="s-states">비어 있음 ≠ 살 수 있음 ≠ 잠김</h2>
+<p class="sub">셋을 <b>밝기로만</b> 가르면 「어두운 칸」 하나로 뭉쳐 읽힌다.
+그래서 테가 아니라 <b>속</b>을 다르게 한다 — 견본 셋은 화면의 카드와
+<b>같은 함수</b>가 짓는다(견본이 제 손으로 그리면 「이 상태가 화면에서 어떻게
+보이나」를 거짓으로 말하게 된다).</p>
+<table class="st">
+<tr><th>상태</th><th>속</th><th>말하는 것</th></tr>
+<tr><td><b>비어 있음</b></td><td>점선 테 + 자리마다 <b>＋</b>. 자리 수는 짜인 편성표와 같다</td>
+<td>내 칸인데 <b>안 채웠다</b>. 자리 수가 같아야 「덜 만들어졌다」로 안 읽힌다</td></tr>
+<tr><td><b>살 수 있음</b></td><td>주황 점선 + <b>자리를 안 그린다</b> + 「상점에서 연다 ›」</td>
+<td><b>아직 내 것이 아니다.</b> 없는 것을 그리면 「비어 있다」와 같은 그림이 된다</td></tr>
+<tr><td><b>잠김</b></td><td>실선 옅은 테 + <b>빗금</b> + 「넷째를 연 뒤에」</td>
+<td>돈으로도 <b>지금은</b> 안 열린다</td></tr>
+</table>
+<div class="hd-samps" id="hd-samps"></div>
+
+<h2 id="s-edit">편집 팝업 — 캐릭터가 먼저, 그다음이 자리</h2>
+<p class="sub"><b>차례가 곧 규칙이다.</b> 캐릭터 줄이 맨 위에 있고 그 아래가
+탭이다 — 캐릭터를 안 고르면 어떤 스킬이 「내 속성」인지 정해지지 않아 아래
+격자가 무엇도 못 판정한다. 위에서 아래로 읽으면 그 의존이 저절로 보인다.
+오른쪽 창은 <b>탭이 바뀌어도 안 바뀐다</b> — 지금 무엇을 고르고 있든
+「출격까지 얼마나 남았나」는 계속 보여야 한다(엔진의 같은 기둥과 같은 몫,
+<code>lib/ui/loadout_gate.dart</code> — <b>엔진 쪽은 아직 옛 이름 「고른 것」이다</b>).</p>
+<p class="sub">⭐⭐ <b>이 창은 <a href="mockup-hud-sortie.html#s-pop">출격준비</a>에서도
+같은 것이 열린다</b>(<code>loPicker</code>). 거기서 맨손으로 고를 때 다른 창이
+뜨면 두 화면이 두 문법을 쓰게 된다 — 창도, 캐릭터 표도, 편성표 한 벌도, 후보 표도
+전부 <code>mockup-hud-loadout.js</code> 한 파일에 있고 두 장이 그것을 같이 읽는다.
+<b>다른 것은 낱말 둘뿐</b>이다: 창틀이 「편성 / 고르기」, 마침 단추가
+「편성 / 이대로 나간다」 — 편성표에 저장하는 일과 이번 판에만 쓰는 일이 그 한 줄에서
+갈린다.</p>
+<p class="sub">⚠️ 격자의 <b>금테는 후보 표가 아니라 지금 한 벌에서 읽는다</b> —
+표에 박아 두면 창이 어느 편성표에서 열리든 늘 같은 다섯에 금테가 서서, 오른쪽
+「편성 요약」이 말하는 것과 격자가 말하는 것이 어긋난다.</p>
+<table class="st">
+<tr><th>자리</th><th>무엇</th></tr>
+<tr><td>캐릭터 줄</td><td><b>열 칸 + ＋8.</b> 열여덟 중 몸 그림이 있는 여덟과
+그림이 없는 둘까지가 열이고, 쌍 융합 여덟은 <b>지어내지 않고</b> 마지막 칸이
+자리를 대신 진다 — 지어내면 진짜 그림이 오는 날 둘이 된다</td></tr>
+<tr><td>탭 넷</td><td>일반공격 · 스킬 · 성좌 · 채굴. <b>누르면 실제로 바뀐다</b></td></tr>
+<tr><td>다섯째 자리</td><td><b>궁극기 — 비워 뒀다.</b> 점선 · 잿빛 · 눌러도 아무 일이 없다.
+아래 <a href="#s-open">판정이 필요한 자리</a> ①</td></tr>
+<tr><td>격자</td><td>도감 전부가 뜨고 <b>미보유는 흐림 + 「상점에서」</b> —
+숨는 카드가 없다는 규칙(관측소 장 ⑨)을 그대로 옮겼다</td></tr>
+<tr><td>「편성」</td><td><b>이 두 장의 유일한 금빛.</b> 목록 화면에는 금빛이
+하나도 없다 — 거기서 누를 수 있는 것이 넷(편집·삭제·편성·연다)이라
+「지금 누를 수 있는 단 하나」가 성립하지 않는다</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">편집 팝업 — 「스킬」 탭이 열린 자리. 위 캐릭터 줄, 아래 격자,
+  오른쪽에 <b>편성 요약</b>과 출격 조건</div>
+  <div class="phone land"><div class="screen hd-screen" id="hd2-screen">
+    <canvas class="bg" id="hd2-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="scrim"></div>
+    <div class="topbar">
+      <span><a class="hudback" href="mockup-hud-home.html">‹ 홈</a>&nbsp;&nbsp;<b>편성표</b></span>
+      <span class="cur" id="hd2-cur"></span></div>
+    <div class="hudui">
+      <div class="hudmid">
+        <div class="hudrail side" id="hd2-rail"></div>
+        <div class="hudstage">
+          <div class="hd-list" id="hd2-list"></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-rail">레일에 일곱째 칸을 안 세웠다 — 실측과 계보 둘 다 아니라고 한다</h2>
+<table class="st">
+<tr><th>근거</th><th>재 본 것</th></tr>
+<tr><td><b>실측 — 일곱째가 창틀 밑으로 파고든다</b></td>
+<td>실기 가로(667×375)에서 레일 한 칸은 <b>47.59px</b>다. 여섯이면 285.56 이라
+가운데 정렬했을 때 첫 칸이 <b>y=44.72</b> 에서 시작해 창틀 바닥(34.80)보다
+9.92px 아래다. 일곱이면 333.16 이 되어 첫 칸이 <b>y=20.92</b> — 창틀 글자
+<b>밑으로 13.88px 파고든다</b>. 마지막 칸도 354.08 로 끝나 아래 귀퉁이 판독값
+띠(중심 361, ±8)와 1.08px 겹친다. <b>양끝이 다 닿는다</b></td></tr>
+<tr><td><b>계보 — 편성은 원래 레일 밖이다</b></td>
+<td><code>docs/1차-개발.md</code> 의 화면 표가 <b>방 일곱</b>을 세는데
+(홈 · 관측소 · 편성 · 강화 · 상점 · 도감 · 출격일지) 그중 여섯만
+<code>LobbyTab</code> 이고 <b>편성 하나만 아니다</b>. 레일 여섯 칸은 정확히
+그 여섯이다 — 일곱째를 세우는 것은 칸을 더하는 게 아니라 <b>레일의 정의를
+바꾸는 것</b>이다</td></tr>
+<tr><td><b>뼈 — 고치면 여섯 장이 같이 흔들린다</b></td>
+<td>일곱을 앉히려면 <code>.hudrail.side</code>·<code>.hudui</code> 의 세로
+자리를 바꿔야 하는데, 그 뼈는 이미 선 여섯 장이 같이 쓴다</td></tr>
+</table>
+<p class="sub">⇒ <b>편성표는 홈의 안쪽 방</b>이다. 레일은 <b>홈</b>이 켜지고 창틀
+왼쪽에 <code>‹ 홈</code> 이 선다 — 상점 2층이 <code>‹ 상점 · 일반</code> 으로
+서는 것과 <b>같은 문법</b>이다. 들어오는 문도 이미 있다(홈 우하단의
+「스킬 편성 ›」).</p>
+
+<h2 id="s-open">판정이 필요한 자리 — 지어내지 않고 적어만 둔다</h2>
+<table class="st">
+<tr><th>자리</th><th>지금 어떻게 뒀나</th><th>왜 못 정하나</th></tr>
+<tr><td>① <b>궁극기</b></td>
+<td>편성표 카드 몸줄 오른쪽에 <b>점선 빈 자리</b> 하나, 팝업 탭 줄 끝에 <b>점선 탭</b>
+하나. 둘 다 「판정 대기」라 적고 <b>눌러도 아무 일이 없다</b></td>
+<td>지금 엔진 편성 팝업의 탭은 <b>다섯</b>인데(<code>LoadoutTab</code>:
+일반공격 · <b>덱</b> · 성좌 · 궁극기 · 채굴) <b>사용자 손그림에는 궁극기 칸이 없다.</b>
+빠뜨린 것인지 뺀 것인지 이 장이 알 수 없다 — 넣으면 없는 결정을 지어내는 것이고,
+빼면 있는 기능을 조용히 죽인다</td></tr>
+<tr><td>② <b>홈 로스터와 편성표가 캐릭터를 두 곳에서 고른다</b></td>
+<td><b>그림이 답한다 — 편성표가 이긴다.</b> 편성표는 캐릭터와 스킬이 한 벌이라,
+홈의 메인이 이기면 <b>남의 캐릭터에게 맞춘 스킬 다섯</b>이 남아 출격 조건이
+그 자리에서 깨진다. 그래서 <a href="mockup-hud-sortie.html">출격준비</a>에서
+편성표를 누르면 캐릭터까지 그 편성표의 것으로 갈린다. 홈의 메인은 <b>편성표를 안 쓸 때의
+기본값</b>이다</td>
+<td>어느 쪽이 이기는지 <b>사용자 결정문에는 없다.</b> 위는 이 장이 그림으로 낸
+답이지 확정이 아니다 — 뒤집으려면 「편성표를 눌러도 캐릭터는 홈의 것」이 되고,
+그러면 편성표에 캐릭터를 넣은 근거(「캐릭터를 선택하지 않으면 스킬을 선택할 수
+없잖아」)와 정면으로 부딪힌다</td></tr>
+<tr><td>③ <b>상점의 「편성표 칸」 상품이 어느 갈래인가</b></td>
+<td><b>안 그렸다.</b> 넷째 카드는 「상점에서 연다 ›」 라고만 하고 <b>값도 안
+적는다</b> — 갈래가 안 정해졌으니 값도 안 정해졌다</td>
+<td>상점 갈래 넷은 캐릭터 · 일반 · 마법 · <b>기타</b>인데, 「기타」가 지금
+드는 것은 <b>기본 채굴도구 셋(무료)</b>뿐이고 「유료 추가는 자리만」이다
+(<a href="mockup-hud-shop.html">상점 장</a>). 편성표 칸이 거기 드는지, 아니면
+갈래가 하나 더 서는지는 상점이 정할 일이다</td></tr>
+<tr><td>④ <b>캐릭터 줄의 「그림 대기」 열 칸 + ＋8</b></td>
+<td><b>그대로 뒀다.</b> 마 痲 · 플라즈마 漿 두 칸은 잠김으로 비어 있고, 쌍 융합
+나머지 여덟은 마지막 칸 <b>＋8 · 그림 대기</b>가 자리를 대신 진다</td>
+<td>⚠️ <b>「그림이 없다」가 지금은 사실이 아니다.</b> 쌍 융합 열 종은 <code>vfx.js</code> 의
+<code>FVSET</code>/<code>FVFIX</code> 에 <b>몸이 다 그려져 있고</b>, <a href="mockup-char-numb.html">폭마</a> ·
+<a href="mockup-char-blast.html">섬화</a> 두 장이 이미 그 그림을 <code>fvBody</code> 로 띄운다.
+⇒ 열여덟을 다 세우는 것이 가능한데, 그러면 이 줄이 <b>열에서 열여덟으로</b> 늘어
+팝업 배치가 통째로 달라진다 — <b>줄을 늘릴지, 접을지</b>는 이 장이 혼자 정할 일이
+아니라 적어만 둔다</td></tr>
+</table>
+
+<h2 id="s-gap">어긋난 자리 — 고치지 않고 적어만 둔다</h2>
+<table class="st">
+<tr><th>자리</th><th>어긋남</th></tr>
+<tr><td><b>엔진의 「덱」은 이것이 아니다</b></td>
+<td>이 장의 <b>계정 단위 한 벌</b>은 <b>편성표</b>다(2026-08-27 사용자 확정).
+엔진이 「덱」이라 부르는 것은 <b>편성 팝업의 둘째 탭</b>(<code>LoadoutTab.deck</code>
+= '덱', 판에 들고 가는 <b>마법 여섯 장</b> · <code>kDeckSize</code>)이고,
+2026-08-25 결정문이 그 탭을 <b>「마법」</b>으로 개명하기로 했다
+(<a href="mockup-chapter.html#s-slotsplit">관측소 장</a>). <b>별개 일이라 아직
+엔진에 안 왔다</b> — 그 개명 전까지 두 낱말이 같은 저장소 안에 함께 산다</td></tr>
+<tr><td>채굴 도구 셋의 문양</td>
+<td><code>ICON</code> 에 자리가 없어 <code>hudMineGlyph</code>(줄 · 낱알 ·
+터짐)가 받는다. <b>문양의 정본이 아니다</b> — 도감 시안이 진짜 문양을 내는 날
+걷힌다. 지금 이것이 셋을 가르는 유일한 축이라 모양을 바꾸면 고르는 자리가 죽는다</td></tr>
+<tr><td>격자에 여덟만 선다</td>
+<td>후보는 <b><code>ICON</code> 에 문양이 있는 것만</b> 그렸다 — 자리표를
+지어내면 진짜 문양이 오는 날 둘이 된다. 도감은 <b>53종</b>이고, 격자 아래의
+페이드 한 줄이 그것을 말한다(도감 장이 세운 문법 그대로 — 자르고 끝내지 않는다)</td></tr>
+<tr><td>쌍 융합 여덟의 몸 그림</td>
+<td>캐릭터는 열여덟인데(<code>kCharacterDefs</code>) <code>ELEM</code> 에 몸이
+있는 것은 여덟뿐이다. 팝업의 캐릭터 줄이 <b>「＋8 · 그림 대기」</b> 한 칸으로
+그 여덟의 자리를 진다 — 홈이 마 · 플라즈마에 대해 내린 판정과 같은 규칙이다</td></tr>
+</table>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"hud.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- 편성 살림 — 출격준비 장과 **같은 파일**이다. 캐릭터 표 · 편성표 한 벌 · 후보 표 ·
+     고르는 창이 여기 있고, 두 장이 그것을 같이 읽는다. -->
+<script>document.write(unescape("%3Cscript src=\"mockup-hud-loadout.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-hud-deck.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

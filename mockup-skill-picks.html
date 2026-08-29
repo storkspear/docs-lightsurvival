@@ -1,0 +1,116 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다** — js·css 는 `?t=` 로 깨는데 HTML 만 안 깨서
+     스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML + 새 js」로
+     조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 속성 스킬 후보</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<style>
+@font-face{font-family:"LSChakra";font-weight:600;font-display:swap;
+  src:url("../../assets/fonts/ChakraPetch-SemiBold.ttf") format("truetype")}
+@font-face{font-family:"LSPretendard";font-weight:400;font-display:swap;
+  src:url("../../assets/fonts/Pretendard-Regular.otf") format("opentype")}
+@font-face{font-family:"LSPretendard";font-weight:600;font-display:swap;
+  src:url("../../assets/fonts/Pretendard-SemiBold.otf") format("opentype")}
+
+/* 후보 격자 — 한 줄에 넷까지. 좁으면 저절로 접힌다. */
+.sp-grid{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 24px}
+.sp-card{width:168px;background:#0A0F18;border:1px solid #1E3346;
+  padding:12px 10px 10px;display:flex;flex-direction:column;align-items:center;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.sp-art{display:block;width:72px;height:72px}
+.sp-nm{margin-top:6px;font-size:14px;color:#EAF7FF;font-weight:600;letter-spacing:.06em}
+.sp-tag{margin-top:4px;font-size:9.5px;letter-spacing:.14em;
+  border:1px solid;padding:1px 7px 2px}
+.sp-one{margin-top:7px;font-size:11px;color:#8FB7CE;line-height:1.5;text-align:center}
+.sp-id{margin-top:7px;font-size:9px;color:#3A5468;letter-spacing:.1em}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span>
+    <a href="#s-shade">암</a><a href="#s-bolt">뇌</a><a href="#s-neutral">무속성</a>
+    <a href="#s-fire">염</a><a href="#s-ice">빙</a><a href="#s-poison">독</a>
+    <a href="#s-gale">풍</a>
+    <a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+
+<h1>속성 스킬 <b>후보</b></h1>
+<p class="sub">⚠️ <b>정본이 아니라 고르는 장입니다.</b> 여기 실린 것은 아직 게임에
+없는 것들이고, 고르신 것만 도감(<code>lib/data/skill_element.dart</code>)으로
+들어갑니다. 안 고른 것은 이 장에 그대로 남습니다 — 지우면 다음에 같은 질문이
+처음부터 다시 시작됩니다.</p>
+
+<h2>어디가 비었나 — 실측</h2>
+<p class="sub">칸은 속성마다 <b>열둘</b>입니다
+(<code>data/characters.dart</code> 의 <code>kCharacterSkillSlots</code>).
+아래 「찬 칸」은 <code>data/skill_element.dart</code> 의
+<code>kSkillElementIds</code> 를 <b>일곱 칸 다 직접 세어</b> 적은 것입니다
+(2026-08-28 재검산 — 앞서 적혀 있던 수와 전부 맞았습니다). 절의 차례는
+<b>빈 칸이 많은 순</b>입니다.</p>
+<table class="st">
+<thead><tr><th>속성</th><th>찬 칸</th><th>빈 칸</th><th>이 장의 후보</th><th>상태</th></tr></thead>
+<tbody>
+<tr><td><b>암</b></td><td><b>1 / 12</b></td><td><b>11</b></td><td><b>13</b></td><td style="color:#FF6A6A"><b>사도 못 나갑니다</b> — 부모가 없어 합쳐서 못 채웁니다</td></tr>
+<tr><td><b>뇌</b></td><td><b>5 / 12</b></td><td><b>7</b></td><td><b>8</b></td><td>나갈 수 있지만 <b>고를 여지가 제일 좁습니다</b></td></tr>
+<tr><td>무속성</td><td><b>11 / 12</b></td><td><b>1</b></td><td>—</td><td>🔴 <b>2026-08-29 밤 갱신</b> — 사용자 판정 「<b>낙인하고 누름돌 채택</b>」으로 둘이 「이식 보류」에서 <b>격자 안</b>(추가 여섯 · 상점)으로 올라가 <b>9 / 12 → 11 / 12</b> 가 됐습니다. 계열은 <b>일반 3 · 마법 8</b> 이고(2026-08-29 확정으로 <b>계열이 둘</b>뿐입니다 — 「보조 · 방어」는 없어진 이름입니다), 남은 <b>한 칸</b>은 <b>빗장 폐기</b>가 낸 자리입니다. 정본은 <code>mockup-char-none.html</code> 입니다</td></tr>
+<tr><td>염</td><td>7 / 12</td><td>5</td><td>8</td><td>나갈 수 있지만 <b>방어 하나 · 보조 하나</b>뿐입니다</td></tr>
+<tr><td>빙</td><td>8 / 12</td><td>4</td><td>8</td><td>나갈 수 있지만 <b>넷이 방어</b>로 쏠려 있습니다</td></tr>
+<tr><td>독</td><td>8 / 12</td><td>4</td><td>7</td><td>나갈 수 있지만 <b>지금 때리는 것이 하나</b>뿐입니다</td></tr>
+<tr><td>풍</td><td>8 / 12</td><td>4</td><td>8</td><td>나갈 수 있지만 <b>다섯이 원·호·링</b>이라 서로 붙어 보입니다</td></tr>
+<tr><td>두 속성 열 · 백광</td><td>12 / 12</td><td>0</td><td>—</td><td>⭐ <b>2026-08-28 에 닫혔습니다</b> — 부모 풀에서 번갈아 뽑습니다</td></tr>
+<tr><td>공유</td><td>8 / 13</td><td>5</td><td>—</td><td>속성이 없는 칸이라 <b>이 장의 몫이 아닙니다</b></td></tr>
+</tbody>
+</table>
+<p class="sub">⭐ 두 속성 열 열 종과 백광은 <b>새 스킬 없이</b> 닫혔습니다 —
+「빙 × 염」이 쓰는 것은 빙의 것과 염의 것이라는 게 그 캐릭터의 정의라,
+부모 둘의 칸에서 번갈아 뽑아 열둘을 채웁니다.
+<b>암 하나만</b> 그 수로 못 닫습니다.</p>
+
+<h2>장판 일곱 — 「심심하다」에 대한 답</h2>
+<p class="sub">지금 엔진의 속성 스킬은 실루엣이 <b>셋</b>으로 몰려 있습니다 —
+즉발 부채꼴(서릿발 · 화염방사 · 바람산탄총) · 투사체(독침 · 유도탄 · 서리결정) ·
+몸에 붙는 고리(공전 · 성역 · 결계 여섯). <b>바닥에 깔려 남는 것</b>은 그 셋
+어디에도 없는 네 번째 실루엣이라, 한 종만 서도 격자가 달라집니다.</p>
+<p class="sub">⚠️ 다만 장판만 내면 이번엔 <b>장판끼리</b> 안 갈립니다. 그래서
+속성마다 판이 <b>무엇을 하는가</b>를 하나씩 다르게 줬고, 그 낱말이 한 줄 설명에
+그대로 있습니다:</p>
+<table class="st">
+<thead><tr><th>속성</th><th>후보</th><th>판이 하는 일</th><th>그림에서 갈리는 곳</th></tr></thead>
+<tbody>
+<tr><td>무속성</td><td><code>chalkfield</code> 금</td><td><b>안 움직입니다</b></td><td>일곱 중 <b>유일하게 속이 비었습니다</b>(선만)</td></tr>
+<tr><td>빙</td><td><code>rinkfield</code> 빙판</td><td><b>밖으로 밉니다</b></td><td>화살이 <b>바깥</b>을 봅니다</td></tr>
+<tr><td>염</td><td><code>emberfield</code> 불밭</td><td><b>옮아 번집니다</b></td><td>바깥에 <b>새로 난 작은 판</b>이 둘</td></tr>
+<tr><td>뇌</td><td><code>flickerfield</code> 점멸판</td><td><b>깜빡입니다</b></td><td>테두리가 <b>토막으로 끊겨</b> 있습니다</td></tr>
+<tr><td>독</td><td><code>bogfield</code> 수렁</td><td><b>자국이 남습니다</b></td><td>걷힌 자리에 <b>옅은 테</b>가 한 겹</td></tr>
+<tr><td>풍</td><td><code>driftfield</code> 흐름판</td><td><b>흘러갑니다</b></td><td>판이 <b>셋으로 늘어져</b> 있습니다</td></tr>
+<tr><td>암</td><td><code>gloamfield</code> 어스름</td><td><b>오그라듭니다</b></td><td>화살이 <b>안</b>을 봅니다</td></tr>
+</tbody>
+</table>
+<p class="sub">⚠️ <b>장판으로 칸을 다 채우지 않았습니다</b> — 속성마다 하나씩이고,
+나머지는 창 · 침 · 뿔 · 병 · 깃처럼 서 있는 것들입니다.
+⚠️⚠️ 땅에 깔리는 것은 원이 아니라 <b>타원</b>으로 그렸습니다
+(<code>vfx.js</code> 의 <code>LX3SQT</code> = <code>render/world_fold.dart</code> 의
+<code>kFoldSquashPick</code>) — 세워 그리면 이식하는 날 통째로 다시 그려야 합니다.
+같은 이유로 이미 있던 <b>정전장 · 심연 · 봉화의 바닥 고리</b>도 눕혔습니다
+(이름 · 설명 · <code>id</code> 는 그대로입니다).</p>
+
+<h2>고르는 법</h2>
+<p class="sub">칸마다 <b>이름 · 계열 · 한 줄 · id</b> 가 있습니다.
+<b>id 를 알려 주시면</b> 그것만 도감에 넣겠습니다 — 이름과 한 줄은 바꾸셔도 됩니다.</p>
+<p class="sub">⚠️ <b>피해·주기·반경은 한 줄도 안 적었습니다.</b> 그 수는 엔진이 정하는
+것이고, 시안에 적으면 그것이 곧 사양이 되어 나중에 「어디서 나온 값이냐」를
+못 되짚습니다. 이 장이 정하는 것은 <b>무엇이 있나 · 어떻게 생겼나 ·
+무슨 계열인가</b> 셋뿐입니다.</p>
+
+<div id="sp-body"></div>
+
+</div>
+
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"hud.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-skill-picks.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

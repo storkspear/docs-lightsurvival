@@ -17,14 +17,28 @@
 <div class="wrap">
 <nav class="toc">
   <div class="nav1"></div>
-  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-guard">방어 18종</a><a href="#s-icelife">빙벽 나고 죽는 법</a><a href="#s-levelsg">레벨 성장표</a><a href="#s-aicons">아이콘</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-guard">막는 것 14종</a><a href="#s-icelife">빙벽 나고 죽는 법</a><a href="#s-levelsg">레벨 성장표</a><a href="#s-aicons">아이콘</a><a href="#" id="bare" class="bare">설명 접기</a></div>
 </nav>
 <header>
   <p class="kicker">Light Survival · 셀 VFX 시안</p>
-  <h1>방어 — 안 아픈 법</h1>
-  
+  <h1>막는 것 — 안 아픈 법</h1>
+  <p class="def">⚠️⚠️ <b>이 장은 더 이상 계열이 아니다</b>(2026-08-29). 사용자 판정
+  「속성별 <b>일반만 정해 주면 나머지는 다 마법</b>임. <b>마법 = 보조·방어·마법으로
+  나누지 않는다. 전부 다 마법</b>임」으로 <b>「방어」가 어휘에서 없어졌다</b> —
+  엔진은 <code>SkillTag.guard</code> 를 enum 에서 통째로 지웠다
+  (<code>lib/data/skill_tag.dart</code>). ⇒ 아래 칸들의 칩은 전부 <b>마법</b>이다.<br>
+  ⭐ <b>장은 남는다. 축이 계열에서 동사로 바뀌었을 뿐이다</b> — 「막는다」는 여전히
+  이것들이 <b>하는 일</b>이고, 그 문법(벽의 발자국 · 겹 · 버팀 · 나고 죽는 법)은
+  계열이 없어졌다고 사라지지 않는다. 이 저장소는 <b>같은 일을 이미 한 번 했다</b>:
+  「저주」 계열이 없어진 2026-08-13 에 그 장을 걷지 않고
+  <a href="mockup-curse.html">「빼앗는 것과 되돌리는 것」</a>으로 축을 다시 세웠다.<br>
+  ⚠️ <b>여기 있는 것 대부분은 엔진에 없다</b> — 엔진 도감에 남은 것은 풍벽 ·
+  빙벽 · 파동정지 <b>셋</b>뿐이고, 결계 여섯 · 역풍 · 바늘 숲 · 모자이크 석벽은
+  같은 날 도감에서 걷혔다(<code>magic_guard_elem.dart</code> 는 파일째 없어졌다).
+  그래서 이 장은 시안이자 <b>보관소</b>다 — 캐릭터 장 여덟이 여기의
+  <code>WLTBL</code>·<code>WLtxt</code> 를 정본으로 되읽는다.</p>
 </header>
-<h2 id="s-guard">방어 14종</h2>
+<h2 id="s-guard">막는 것 14종</h2>
 
 <div class="grid" id="guard"></div>
 
@@ -37,7 +51,7 @@
 <div class="grid" id="icelife"></div>
 
 <h2 id="s-tintable">속성 입힘 가능</h2>
-<p class="def">이 계열에서 <b>기본이 「무 無」</b>라 속성을 입힐 수 있는 스킬들이다.
+<p class="def">이 장에서 <b>기본이 「무 無」</b>라 속성을 입힐 수 있는 스킬들이다.
 나머지는 <b>제 속성이 정해져 있어</b> 못 바꾼다 — 화염방사는 늘 염이고 결빙은 늘 빙이다.
 속성을 입히면 <a href="mockup.html#s-affinity">상성</a>이 자동으로 따라온다.</p>
 <div class="grid" id="tintguard"></div>
@@ -67,3 +81,9 @@
      `AWpoly`·`AWroot`)와 그림체(`IB*`)를 **그 함수 그대로** 부른다(사본 금지).
      순서를 섞으면 `ReferenceError` 가 난다. -->
 <script>document.write(unescape("%3Cscript src=\"vfx-icewalllife.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️⚠️ **빙벽 셋의 새 그림** — `vfx.js` **뒤**라야 한다. 이 파일은 격자
+     `#izfreeze`·`#icand` 만 찾으므로 이 장에서는 조용히 건너뛴다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx-ice6.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⚠️⚠️ **갈아 끼우기는 맨 뒤라야 한다** — `vfx.js` 가 칸을 다 만든 **뒤에**
+     그 칸의 그리기 함수만 바꾼다. 앞에 두면 바꿀 칸이 아직 없다. -->
+<script>document.write(unescape("%3Cscript src=\"vfx-guardice.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

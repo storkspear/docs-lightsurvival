@@ -1,0 +1,484 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — 덮는 화면 넷</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<style>
+/* ── 글꼴 — **엔진이 싣는 그 파일 그대로** ─────────────────────────────────
+   `pubspec.yaml` 이 assets 로 싣는 두 벌을 시안도 같이 읽는다. 사본을 만들면
+   갈라지므로 경로를 레포 것으로 가리킨다.
+   ⚠️ `docs/vfx` 미러(`tools/mirror/build-mockup-mirror.js`)는 이 폴더만
+     복사하므로 미러에서는 이 파일들이 없다 — 그때는 대체 글꼴로 떨어진다. */
+@font-face{font-family:"LSChakra";font-weight:400;font-display:swap;
+  src:url("../../assets/fonts/ChakraPetch-Regular.ttf") format("truetype")}
+@font-face{font-family:"LSChakra";font-weight:500;font-display:swap;
+  src:url("../../assets/fonts/ChakraPetch-Medium.ttf") format("truetype")}
+@font-face{font-family:"LSChakra";font-weight:600;font-display:swap;
+  src:url("../../assets/fonts/ChakraPetch-SemiBold.ttf") format("truetype")}
+@font-face{font-family:"LSChakra";font-weight:700;font-display:swap;
+  src:url("../../assets/fonts/ChakraPetch-Bold.ttf") format("truetype")}
+@font-face{font-family:"LSPretendard";font-weight:400;font-display:swap;
+  src:url("../../assets/fonts/Pretendard-Regular.otf") format("opentype")}
+@font-face{font-family:"LSPretendard";font-weight:500;font-display:swap;
+  src:url("../../assets/fonts/Pretendard-Medium.otf") format("opentype")}
+@font-face{font-family:"LSPretendard";font-weight:600;font-display:swap;
+  src:url("../../assets/fonts/Pretendard-SemiBold.otf") format("opentype")}
+
+/* ⚠️⚠️ **덮개(`.ovk`)로 한 겹 더 감싸는 이유.** `hud.js` 는 제 CSS 를 스크립트가
+   실릴 때 `<head>` 끝에 심는다 — 이 <style> **뒤**다. 그래서 `.hudbtn` 처럼
+   같은 무게로 맞서면 이쪽이 진다. `.ovk` 를 앞에 붙여 무게를 한 단 올린다.
+   ⚠️ 여기서 고치는 것은 **자와 배치뿐**이다 — 각·계조·테는 `hud.js` 것 그대로다. */
+
+.ov-screen{background:#050B14}
+.ov-ui{position:absolute;inset:0;z-index:3;color:#D8F2FF;font-size:12px;
+  font-family:"LSPretendard","Pretendard","Apple SD Gothic Neo",sans-serif}
+.ov-num{font-family:"LSChakra","Chakra Petch",ui-monospace,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+.ov-ui.ov-shape-pan{display:flex;align-items:center;justify-content:center}
+
+/* ── 손잡이 — `hud.js` 의 `.hudbtn` 을 그대로 입고 **자만 엄지 자로 올린다** ──
+   ⚠️⚠️ `hud.js` 의 기본은 **38** 이고 이 게임의 엄지 자 하한은 **44** 다
+   (`lib/ui/theme.dart` 의 `kUiBtnLowH`). 로비 여덟 장이 38 을 그대로 쓰고
+   있어 거기서 고치지 않고, 이 장의 자만 올린다 — 어긋남은 아래 표에 적었다. */
+.ovk .hudbtn{height:44px;font-size:12.5px;letter-spacing:.12em;padding:0 16px}
+.ovk .hudbtn.sel{height:52px;font-size:14px;letter-spacing:.16em;padding:0 22px}
+/* 나가는 문 — 일부러 덜 버튼답다. 색을 새로 안 짓고 **보조색을 옅게** 쓴다. */
+/* ⚠️ 면의 두 단은 `hud.js` 의 `.hudbtn.lock` 것 그대로다(#0A1420 → #070E17).
+   그 칸이 이미 「덜 버튼답다」의 계조라 새 색을 지을 까닭이 없다 — 다만 뜻은
+   다르다: `.lock` 은 **못 누르는 것**이고 이건 **누르면 판이 죽는 것**이라,
+   손짓(커서 · 눌림)은 살리고 밝기만 내린다. */
+.ovk .hudbtn.ov-low{height:44px;font-size:11.5px;letter-spacing:.04em;color:#6E93AD;
+  border-color:rgba(110,147,173,.34);
+  background:linear-gradient(180deg,#0A1420 0%,#070E17 100%);box-shadow:none}
+.ovk .hudbtn.ov-low:hover{border-color:rgba(110,147,173,.72);
+  background:linear-gradient(180deg,#12314A 0%,#0B1D2E 100%)}
+/* ⚠️ 안 ㄱ 에서만 절대 자리다(창틀의 오른쪽 위). 안 ㄴ 은 오른쪽 기둥의
+   머리에 앉으므로 `.ov-setrt` 가 자리를 되돌린다.
+   ⚠️ `top:56` 은 `hudChrome` 의 귀퉁이 판독값 띠(y 42 ±10) **아래** 첫 값이다. */
+.ovk .hudbtn.ov-x{position:absolute;right:14px;top:56px;width:44px;height:44px;padding:0}
+.ovk .ov-setrt .hudbtn.ov-x{position:static;margin-top:6px}
+.ovk .hudbtn canvas{display:block}
+
+/* ── 판 — 안 ㄱ 의 뼈. `hud.js` 의 `.hudpanel` 그대로다 ─────────────────── */
+.ovk .hudpanel>.hd{padding:6px 12px 5px 15px}
+.ovk .hudpanel>.hd b{margin-left:auto;letter-spacing:.10em}
+.ovk .hudpanel>.bd{padding:10px 15px 12px 16px;display:flex;flex-direction:column;gap:8px}
+.ov-sheet{width:520px}
+.ov-pause{width:404px}
+.ov-set{width:610px}
+
+/* ── 판정 한 줄 — 배지 + 제목. **제목의 색은 판정과 무관하다** ─────────── */
+.ov-verd{display:flex;align-items:center;gap:10px}
+.ov-verd>b{font-size:23px;font-weight:600;letter-spacing:.10em;color:#E8F8FF;line-height:1.2}
+.ov-badge{position:relative;flex:0 0 auto;width:44px;height:18px}
+.ov-badge canvas{display:block}
+.ov-badge i{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  padding-left:4px;font-style:normal;font-size:8.5px;letter-spacing:.14em}
+.ov-badge.bad i{color:#FF2D55}
+.ov-badge.ok i{color:#4FC3F7}
+
+/* ── 별 셋 ─────────────────────────────────────────────────────────────── */
+.ov-stars{display:flex;gap:8px}
+.ov-stars canvas{display:block}
+
+/* ── 값 칸 셋 — `hud.js` 의 `.hudcell` 그대로. 누르는 것이 아니라 읽는 것이다 */
+.ov-statrow{display:flex;gap:8px}
+.ovk .hudcell.ov-stat{width:150px;cursor:default;padding:7px 4px 6px;gap:1px}
+.ovk .hudcell.ov-stat:hover{border-color:rgba(79,195,247,.18)}
+.ov-stat .num{font-size:19px;font-weight:600;color:#D8F2FF;line-height:1.1;
+  font-family:"LSChakra","Chakra Petch",ui-monospace,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+.ov-stat .lb{font-size:9px;letter-spacing:.22em;color:#6E93AD}
+
+/* ── 띠 — `hud.js` 의 `.hudstrip`. 「번 것」과 「캔 것」이 **줄로 갈린다** ── */
+.ovk .hudstrip{margin-bottom:0;gap:10px;padding:5px 10px}
+.ovk .hudstrip .one{gap:5px}
+.ovk .hudstrip .one b{font-weight:600;color:#E8F8FF}
+.ovk .hudstrip canvas{display:block}
+.ov-unlock{border-color:rgba(79,195,247,.42)!important;background:rgba(79,195,247,.10)!important}
+
+.ov-ctx{font-size:11px;color:#6E93AD;letter-spacing:.04em}
+.ov-ctx em{font-style:normal;margin:0 6px;opacity:.5}
+.ov-foot{font-size:9.5px;color:#6E93AD}
+.ov-go{display:flex;align-items:flex-end;justify-content:space-between;margin-top:3px}
+.ov-col{display:flex;flex-direction:column;gap:8px;margin-top:2px}
+.ov-col .hudbtn{width:100%}
+
+/* ── 안 ㄴ — 판을 안 두르고 **화면 자체가 창**이다 ─────────────────────── */
+/* ⚠️⚠️ **위아래 여백은 장식이 아니라 자리다** — `hudChrome` 의 귀퉁이 판독값
+   넷이 정확히 거기 선다(위 42 · 아래 350, 각각 ±10). 첫 판은 띠를 32 에 두고
+   단추를 아래 14 에 뒀는데, 그 둘이 판독값 띠와 **겹쳐** 「SECTOR 38」이 글자
+   위로 지나갔다. 로비의 `.hudstage`(위 54 · 아래 24)와 같은 자리로 물린다.
+   ⚠️ 한쪽만 고치면 다시 겹친다 — 셋(띠 · 가운데 · 단추)이 한 벌이다. */
+.ov-shape-win .ov-top{position:absolute;left:18px;right:18px;top:56px}
+.ov-shape-win .ov-mid{position:absolute;left:18px;right:18px;top:90px;bottom:78px;
+  display:flex;gap:14px;align-items:flex-start}
+/* ⭐ 왼쪽 기둥은 **띠 안에서 펼쳐진다**(space-between) — 판정이 위, 별이
+   가운데, 값 칸 셋이 아래다. 위로 몰아 두면 화면 절반이 빈 채로 남아
+   「덜 만든 자리」로 읽힌다(첫 판이 그랬다). */
+.ov-shape-win .ov-lf{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;
+  align-self:stretch;justify-content:space-between}
+.ov-shape-win .ov-rt{flex:0 0 268px;display:flex;flex-direction:column;gap:6px;
+  align-self:stretch;justify-content:center}
+.ov-shape-win .ov-bl{position:absolute;left:18px;bottom:24px}
+.ov-shape-win .ov-br{position:absolute;right:18px;bottom:24px;
+  display:flex;gap:10px;align-items:flex-end}
+
+/* ── 멈춤 ㄴ 의 왼쪽 기둥 — **좁고 위로 붙는다** ─────────────────────────
+   결과 ㄴ 처럼 펼치면 띠 둘이 화면 폭을 다 먹는데, 이 화면은 뒤에 판이
+   살아 있어 **덜 덮는 것이 이득**이다. */
+.ov-shape-win .ov-lf2{flex:0 0 330px;display:flex;flex-direction:column;gap:6px;
+  align-self:flex-start}
+
+/* ── 설정 줄 — `hud.js` 의 `.hudrow`. **줄 전체가 과녁이다** ────────────── */
+.ov-two{display:flex;gap:8px}
+.ov-two .cl{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:6px}
+.ovk .hudrow.ov-set-row{flex:0 0 auto;min-height:44px;padding:5px 9px 5px 11px;gap:9px}
+.ovk .ov-set-row .nm{flex:1 1 auto;min-width:0}
+/* ⚠️ `.hudrow .nm b` 는 강화 화면에서 `display:block` 이라 곁의 「기본값」이
+   다음 줄로 떨어진다 — 이름과 한 줄에 서야 「이 줄의 값이 기본값이다」로 읽힌다. */
+.ovk .ov-set-row .nm b{display:inline;font-size:11.5px;letter-spacing:-.01em}
+.ovk .ov-set-row .nm em{font-style:normal;font-size:7.5px;letter-spacing:.12em;
+  color:#4FC3F7;margin-left:7px}
+/* ⚠️ `.hudrow .nm i` 는 강화 화면에서 **못 누르는 까닭**이라 붉은색이다.
+   여기 잔글은 「무엇이 달라지나」라 경고가 아니다 — 보조색으로 되돌린다. */
+.ovk .ov-set-row .nm i{font-size:8px;color:#6E93AD;line-height:1.35;margin-top:1px}
+.ov-set-row.on{border-color:rgba(79,195,247,.62);background:rgba(79,195,247,.09)}
+/* 켜고 끄는 것 = **칸 둘 중 하나** · 계단을 도는 것 = **눈금 여럿 중 하나**.
+   자리 수가 곧 「몇 중 몇」이라 값을 안 읽어도 어디쯤인지 보인다. */
+.ov-seg{flex:0 0 auto;display:flex;align-items:center;gap:6px}
+.ov-seg .sg{display:flex;align-items:center;justify-content:center;width:26px;height:18px;
+  font-size:9px;color:#6E93AD;border:1px solid rgba(79,195,247,.26);
+  clip-path:polygon(0 0,calc(100% - 4px) 0,100% 4px,100% 100%,4px 100%,0 calc(100% - 4px))}
+.ov-seg .sg.on{color:#050B14;background:#4FC3F7;border-color:#4FC3F7;font-weight:600}
+.ov-seg>b{font-size:11px;color:#E8F8FF;min-width:36px;text-align:right}
+.ov-seg .tk{display:flex;align-items:center;gap:2px}
+.ov-seg .tk i{display:block;width:3px;height:8px;background:#4FC3F7;opacity:.30}
+.ov-seg .tk i.on{height:13px;background:#E8F8FF;opacity:1}
+/* ⚠️⚠️ **여섯 줄이 다 서야 한다.** 44 × 6 + 틈 다섯 = 279 라 다른 안의 띠
+   (위 90 · 아래 78)로는 못 든다 — 첫 판이 마지막 줄을 잘라 먹었다.
+   위 52 는 귀퉁이 판독값 띠(42 ±10)의 바로 아래, 아래 24 는 그 아래쪽 띠
+   (350 ±8)의 바로 위다. */
+.ov-shape-win .ov-mid.ov-setwin{top:52px;bottom:24px;align-items:stretch}
+.ov-setcol{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+.ov-setrt{flex:0 0 176px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.ovk .ov-setwin .hudside{align-self:flex-start}
+.ovk .ov-setwin .hudside .ttl{font-size:11.5px}
+.ovk .ov-setwin .hudkv{display:block;font-size:9px;line-height:1.5;color:#6E93AD}
+
+/* ── 부품 견본 — 폰 밖 ──────────────────────────────────────────────────── */
+.ov-samps{display:flex;flex-direction:column;gap:13px;margin:14px 0 6px}
+.ov-samp{display:flex;align-items:center;gap:14px}
+.ov-samp>div:first-child{flex:0 0 auto;padding:9px 11px;background:#0A0E16;
+  border:1px solid #1B2733}
+.ov-samp .sc{font-size:11px;color:#8B8B99;line-height:1.45;max-width:52ch}
+.ov-samp .sc b{color:#D8F2FF;font-weight:600}
+.ov-row{display:flex;align-items:center;gap:10px}
+.ov-samp .ov-col{margin-top:0;width:330px}
+.ov-samp .ov-set{width:auto}
+/* 견본의 나가는 문은 제자리에 선다 — 화면에서만 절대 자리다. */
+.ov-samp .hudbtn.ov-x{position:static}
+/* 지금을 적은 줄 — 그림이 아니라 **옮겨 적은 수**라 표에서 갈려 보여야 한다. */
+table.st tr.ov-nowrow td{background:rgba(255,138,61,.09)}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-why">왜 이 넷인가</a><a href="#s-axis">안을 가르는 축</a><a href="#s-result">결과</a><a href="#s-pause">일시정지</a><a href="#s-set">설정</a><a href="#s-clear">클리어</a><a href="#s-measure">재서 견주는 표</a><a href="#s-parts">부품 견본</a><a href="#s-gap">어긋난 자리</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · 덮는 화면 넷</p>
+  <h1>판을 덮는 화면 — 결과 · 일시정지 · 설정 · 클리어</h1>
+  <p class="lede">사용자 판정(2026-08-28)입니다: <b>「게임 종료 시 뜨는 화면인데,
+  설정이나 게임 종료 클리어 일시정지 뭐 이런 거 될 때 뜨는 화면들 있잖아?
+  게임 무드에 맞게 버튼이라든가 재디자인 해야 될 거 같은데」</b>.
+  로비 여덟 장과 판 안 HUD 가 냉광 한 계보로 다시 서는 동안 <b>이 넷만 옛
+  계보에 남아 있습니다</b>. ⚠️ 다만 <b>모양은 이미 맞습니다</b> — 각도 글꼴도
+  2026-08 에 갈렸습니다. 남은 어긋남은 <b>색과 창틀</b>이고, 이 장은 그 둘을
+  옮긴 시안입니다. 화면마다 <b>안이 둘</b>입니다.</p>
+</header>
+
+<h2 id="s-why">왜 이 넷인가 — 어긋남은 <b>색</b>에 있습니다</h2>
+<p class="sub"><b>「지금」을 여기 다시 안 그립니다.</b> 세 화면의 그림은
+<a href="mockup-ui.html#s-result">인터페이스</a> 장의 「일시정지 · 설정 · 결과」
+세 절이 정본이고, 사본을 두면 그 셋과 갈라집니다. 이 장이 「지금」에 대해 하는
+일은 <b>재는 것</b>뿐입니다 — 아래 표의 수는 전부
+<code>lib/ui</code> 의 심볼에서 센 것이고, 안 여덟의 수는
+<b>브라우저가 그린 것을 그대로</b> 잰 값입니다.</p>
+<table class="st">
+<tr><th>지금</th><th>무엇이 어긋나 있나</th></tr>
+<tr><td><b>색이 세 계보에서 나온다</b></td>
+<td><code>screens.dart</code> 의 결과 화면은 회백(<code>kUiInk</code> 계열
+<code>#EEE4D8</code> · 칸 테 <code>#B4B4C8</code>) · 금빛 · <b>분홍</b>
+(<code>#C97487</code>, 진 판의 판정 글자) 셋에서 색을 뽑습니다. 로비 여덟 장과
+판 안 HUD 는 냉광 하나에 금빛을 얹습니다. 세어 보면 그 화면의 색 열여덟 중
+<b>열다섯이 SF HUD 여덟 장에 한 번도 안 서는 색</b>입니다</td></tr>
+<tr><td><b>금빛이 한 자리가 아니다</b></td>
+<td>금빛은 「지금 누를 수 있는 단 하나」의 색인데(<code>hud.js</code> 팔레트
+머리말) 결과 화면에는 <b>셋</b>입니다 — 별 · 해금 띠 · 「로비로」. 설정은 더해서
+<b>다섯</b>입니다(켜진 스위치 둘 + 값 칸 셋, <code>SettingsValue</code> 가 금빛).
+그러면 눈이 어디로 가야 할지를 화면이 안 말합니다</td></tr>
+<tr><td><b>별이 흐림을 쓴다</b></td>
+<td><code>_StarPainter</code> 는 열 꼭짓점 다각형에 금빛 두 단 계조 +
+<code>MaskFilter.blur</code> 하나입니다. 냉광 계보는 흐림 대신 <b>획의 굵기</b>로
+급을 가릅니다 — 그리고 무엇보다 <b>금빛</b>입니다</td></tr>
+<tr><td><b>바탕부터 계보가 다르다</b></td>
+<td>결과 화면의 바탕은 <code>#0B0B10</code>(중성 검정)인데 로비 여덟 장은
+<code>#050B14</code>, 판 안 HUD 는 <code>#05050B</code> 입니다. 냉광은
+<b>HUD 의 색</b>이라 바탕에 푸른끼가 있고 없고가 그 위에 서는 모든 것의
+대비를 정합니다</td></tr>
+<tr><td><b>창틀이 하나도 없다</b></td>
+<td>로비 여덟 장은 전부 <code>hudChrome</code> 한 벌(별밭 · 뷰파인더 브래킷 ·
+귀퉁이 판독값 넷)을 두르는데 이 넷은 <b>민 바탕 한 장</b>입니다
+(<code>ResultScreen</code> 의 <code>ColoredBox</code> · 멈춤의 어둠막).
+그래서 같은 게임의 화면인데 <b>테두리가 말을 안 겁니다</b></td></tr>
+<tr><td><b>각과 글꼴은 이미 맞습니다</b></td>
+<td>⚠️ 여기는 <b>안 고칩니다</b>. 2026-08-18 에 <code>BorderRadius</code> 가
+전부 <code>CutCorner</code> 로 갈렸고(<code>theme_cut.dart</code> 머리말) 통계
+칸도 <code>CutBox</code>, 단추도 각진 일곱 부위를 다 합니다. 글꼴도
+<code>ui/app.dart</code> 가 <code>DefaultTextStyle</code> 한 자리에서
+<code>ChakraPetch</code> + <code>Pretendard</code> 를 먹이므로 이 넷도 이미
+그 두 벌입니다. <b>남은 어긋남은 색과 창틀</b>입니다</td></tr>
+</table>
+
+<h2 id="s-axis">안을 가르는 축 — <b>하나</b>입니다</h2>
+<p class="sub">화면마다 다른 축으로 가르면 여덟 장이 여덟 질문이 되어 고를 수가
+없습니다. 넷 다 <b>같은 한 축</b>으로 갈랐습니다.</p>
+<table class="st">
+<tr><th>안</th><th>무엇인가</th><th>무엇을 얻고 무엇을 잃나</th></tr>
+<tr><td><b>ㄱ · 판</b></td>
+<td>각진 판(<code>.hudpanel</code>) 한 장이 가운데 서고 그 안에 다 담습니다.
+로비의 문법입니다</td>
+<td>얻는 것 — <b>눈이 한 군데에 머뭅니다.</b> 판정이 한 덩어리로 읽히고
+가린 면적이 한 사각에 모입니다<br>
+잃는 것 — <b>손이 가운데로 모입니다.</b> 가로 폰에서 두 엄지는 아래 양 끝에
+있습니다</td></tr>
+<tr><td><b>ㄴ · 창</b></td>
+<td>판을 안 두르고 화면 자체를 창으로 씁니다(브래킷 + 귀퉁이 판독값).
+내용이 가로로 눕고 손잡이가 아래 두 귀퉁이로 갑니다</td>
+<td>얻는 것 — <b>두 엄지 문법입니다.</b> 지금 결과 화면이 이미 그 자리이고
+(<code>.ovbl</code>/<code>.ovbr</code>), 파괴적인 문을 앞으로 가는 문에서
+멀리 뗄 수 있습니다<br>
+잃는 것 — <b>읽을 것이 흩어집니다.</b></td></tr>
+</table>
+<p class="sub">⭐ <b>바탕이 두 무리로 갈립니다.</b> 결과 · 클리어는 판이 이미
+꺼진 뒤라(<code>ResultScreen</code> 이 <code>ColoredBox</code> 하나로 세계를
+지웁니다) 화면 자체가 계기판이 됩니다 — 격자 · 별밭 · 창틀을 다 세웁니다.
+일시정지 · 설정은 <b>판이 뒤에 살아 있어</b>(어둠막 <code>0xD9</code>) 그 위에
+필요한 것만 얹습니다. 뒤에 있는 판을 더 가리면 「무엇이 오고 있었나」를
+그만큼 못 봅니다.</p>
+
+<h2 id="s-result">결과 — 진 판</h2>
+<p class="sub">판이 남긴 값이 전부 놓입니다 — 난이도 · 판정 · 별 셋 ·
+생존 · 처치 · 레벨 · <b>주운</b> 재화 · <b>캔</b> 강화석. 두 재화 줄이 갈려
+있는 것은 <b>출처가 갈려서</b>입니다(위는 몹, 아래는 운석) — 쓰는 곳도
+갈립니다. 문은 둘이고 오른엄지가 앞으로 갑니다.</p>
+<div class="rack land">
+ <div class="col">
+  <div class="cap"><b>ㄱ · 판</b> — 판 한 장이 판정을 통째로 듭니다.
+  <b>제목 글자의 색이 판정을 안 말합니다</b> — 그 일은 왼쪽 배지 하나가 하고,
+  그래서 판정이 갈려도 화면의 색이 안 늡니다</div>
+  <div class="phone land"><div class="screen ov-screen" id="ov-r1-screen">
+    <canvas class="bg" id="ov-r1-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="ov-ui ovk" id="ov-r1"></div>
+  </div></div>
+ </div>
+ <div class="col">
+  <div class="cap"><b>ㄴ · 창</b> — 화면이 창입니다. 왼쪽이 <b>판정</b>,
+  오른쪽이 <b>번 것</b>, 손잡이가 아래 두 귀퉁이입니다</div>
+  <div class="phone land"><div class="screen ov-screen" id="ov-r2-screen">
+    <canvas class="bg" id="ov-r2-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="ov-ui ovk" id="ov-r2"></div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-pause">일시정지</h2>
+<p class="sub"><b>판에서 나가는 유일한 문</b>이고, 판 안에서 「몇 개 먹었나」에
+답하는 유일한 자리이기도 합니다(<code>pause_overlay.dart</code> 의
+<code>_harvest</code>). <b>버리는 판이 무엇인지</b>가 물음보다 먼저 옵니다.</p>
+<p class="sub">⚠️ <b>암흑물질이 결과 화면과 다른 수입니다.</b> 여기는 판 안이라
+<code>run.matterPicked</code> 를 날것으로 보이고(199), 결과는 난이도 배수를
+곱한 지갑 값입니다(199 × 1.6 = 318). 둘을 같은 수로 그리면 시안이 엔진을
+거짓말하게 만듭니다.</p>
+<div class="rack land">
+ <div class="col">
+  <div class="cap"><b>ㄱ · 판</b> — 손잡이 셋이 세로 기둥입니다.
+  지금 엔진과 같은 뼈대이고 <b>말만 갈아입은</b> 안입니다</div>
+  <div class="phone land"><div class="screen ov-screen" id="ov-p1-screen">
+    <canvas class="bg" id="ov-p1-bg"></canvas>
+    <div class="hudscan"></div><div class="hudvig"></div>
+    <div class="ov-ui ovk" id="ov-p1"></div>
+  </div></div>
+ </div>
+ <div class="col">
+  <div class="cap"><b>ㄴ · 창</b> — 앞으로 가는 문 둘은 <b>오른아래</b>,
+  판을 버리는 문은 <b>왼아래</b>입니다. 파괴적인 것이 제일 멀리 갑니다 —
+  오터치 한 번에 판이 죽으면 안 됩니다</div>
+  <div class="phone land"><div class="screen ov-screen" id="ov-p2-screen">
+    <canvas class="bg" id="ov-p2-bg"></canvas>
+    <div class="hudscan"></div><div class="hudvig"></div>
+    <div class="ov-ui ovk" id="ov-p2"></div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-set">설정 — 손잡이 여섯</h2>
+<p class="sub">이름과 잔글은 <code>settings_screen.dart</code> 의
+<code>_rows</code> <b>그대로</b>입니다. 새로 안 짓습니다 — 화면의 글이 엔진과
+어긋나면 그 글은 설명이 아니라 거짓말입니다.</p>
+<p class="sub">⭐ <b>손잡이의 꼴이 둘로 갈립니다.</b> 켜고 끄는 것은
+<b>칸 둘 중 하나</b>, 계단을 도는 것은 <b>눈금 여럿 중 하나</b>입니다.
+자리 수가 곧 「몇 중 몇」이라 값을 안 읽어도 어디쯤인지 보입니다 — 지금은
+계단이 값 하나뿐이라(<code>SettingsValue</code>) 눌러 보기 전에는 몇 칸짜리인지
+모릅니다. 계단의 차례는 <code>world_fold.dart</code> 의
+<code>kFoldSquashSteps</code> 그대로입니다(첫 칸이 「끔」, 둘째 칸이 채택값이라
+한 번 눌러 왕복합니다 — 크기순으로 고치지 마십시오).</p>
+<p class="sub">⚠️ <b>이 화면에는 금빛이 없습니다.</b> 이 방에서 앞으로 가는 일은
+값을 고르는 것이라 문 하나가 그것을 대표하지 않습니다. 지금은 켜진 스위치와
+값 칸이 전부 금빛이라 <b>금빛 자리가 다섯</b>입니다.</p>
+<div class="rack land">
+ <div class="col">
+  <div class="cap"><b>ㄱ · 판</b> — 판 한 장에 여섯 줄이 두 기둥.
+  <b>줄마다 잔글</b>이 붙습니다</div>
+  <div class="phone land"><div class="screen ov-screen" id="ov-s1-screen">
+    <canvas class="bg" id="ov-s1-bg"></canvas>
+    <div class="hudscan"></div><div class="hudvig"></div>
+    <div class="ov-ui ovk" id="ov-s1"></div>
+  </div></div>
+ </div>
+ <div class="col">
+  <div class="cap"><b>ㄴ · 창</b> — 여섯 줄이 한 기둥, 잔글은
+  <b>고른 줄 하나만</b> 옆창에 섭니다(<code>.hudside</code>).
+  <b>줄을 누르면 옆창이 갈립니다</b></div>
+  <div class="phone land"><div class="screen ov-screen" id="ov-s2-screen">
+    <canvas class="bg" id="ov-s2-bg"></canvas>
+    <div class="hudscan"></div><div class="hudvig"></div>
+    <div class="ov-ui ovk" id="ov-s2"></div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-clear">클리어 — 이긴 판</h2>
+<p class="sub"><b>결과와 같은 뼈대입니다.</b> 갈리는 것은 셋뿐입니다 —
+배지가 냉광이 되고, 별 셋이 차고, <b>해금 띠</b>가 한 줄 늡니다.
+생존이 19분대인 것은 보스가 19:00 에 오기 때문입니다
+(<code>stages.dart</code> 의 <code>bossAtSec</code> 1140).</p>
+<p class="sub">⚠️ <b>해금 띠에 금빛을 안 씁니다.</b> 지금은 그 띠가 금빛인데
+(<code>_UnlockBand</code>) 그러면 이긴 판의 금빛이 셋이 됩니다 — 별 · 띠 ·
+「로비로」. 금빛은 오른아래 문 하나가 쥡니다.</p>
+<div class="rack land">
+ <div class="col">
+  <div class="cap"><b>ㄱ · 판</b> — 결과 ㄱ 과 같은 판. 한 줄이 늘 뿐입니다</div>
+  <div class="phone land"><div class="screen ov-screen" id="ov-c1-screen">
+    <canvas class="bg" id="ov-c1-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="ov-ui ovk" id="ov-c1"></div>
+  </div></div>
+ </div>
+ <div class="col">
+  <div class="cap"><b>ㄴ · 창</b> — 결과 ㄴ 과 같은 창. 오른쪽 기둥이
+  한 줄 길어질 뿐입니다</div>
+  <div class="phone land"><div class="screen ov-screen" id="ov-c2-screen">
+    <canvas class="bg" id="ov-c2-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="ov-ui ovk" id="ov-c2"></div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-measure">재서 견주는 표</h2>
+<p class="sub">⚠️ 표에 수를 손으로 적으면 그림을 고치는 날 표만 안 따라옵니다.
+⇒ 안 여덟의 수는 <b>브라우저가 배치를 끝낸 그 사각과 그 글꼴 크기</b>에서
+뽑습니다. 자는 화면에 대한 비율로 잡아 시안 자 788×364 로 되돌려 적었습니다.</p>
+<table class="st">
+<tr><th>재는 것</th><th>어떻게</th></tr>
+<tr><td><b>제일 작은 과녁</b></td><td>누르는 것(<code>.ov-tap</code>) 중 제일
+낮은 것의 세로. <b>44 가 하한</b>입니다(<code>theme.dart</code> 의
+<code>kUiBtnLowH</code>) — 그 아래는 실기에서 빗나갑니다</td></tr>
+<tr><td><b>과녁 수</b></td><td>누르는 것의 개수. 많을수록 손이 고를 것이 많고,
+적을수록 화면이 한 가지만 묻습니다</td></tr>
+<tr><td><b>글자 급수</b></td><td>화면 안에 선 <code>font-size</code> 가짓수.
+급이 많으면 어디를 먼저 읽어야 할지가 안 정해집니다</td></tr>
+<tr><td><b>색 · SF HUD 밖의 색</b></td><td>화면 한 장이 칠하는 색 전부 —
+글자색 · 면 · 테 · <b>계조</b> · 그림자까지 셉니다(단추의 세 단이 안 빠지도록).
+알파는 안 셉니다 — 같은 색을 옅게 쓴 것은 새 색이 아닙니다. <b>문양은 저절로
+빠집니다</b>(캔버스라 CSS 색이 없습니다). 뒷 칸은 그중
+<code>hud.js</code> 와 판 안 HUD 장에 <b>한 번도 안 서는</b> 색이고
+— <b>이 칸이 이 장의 요점</b>입니다</td></tr>
+<tr><td><b>금빛 자리</b></td><td>금빛을 든 것의 개수. 규약은 <b>하나</b>이고
+(설정은 <b>0</b>) 그보다 많으면 「지금 누를 수 있는 것」이 안 갈립니다</td></tr>
+<tr><td><b>가린 면적</b></td><td>불투명하게 덮은 것의 넓이 ÷ 화면 넓이.
+⚠️ 겹쳐 세지 않습니다 — 판을 두른 안은 <b>판 하나만</b>, 안 두른 안은
+띠 · 칸 · 단추 낱개를 셉니다</td></tr>
+</table>
+<table class="st" id="ov-areatbl">
+<tr><th>화면</th><th>제일 작은 과녁</th><th>과녁</th><th>글자 급수</th>
+<th>색</th><th>SF HUD 밖</th><th>금빛 자리</th><th>가린 면적</th><th>한 줄</th></tr>
+<tbody id="ov-tbl"></tbody>
+</table>
+<p class="sub">⚠️ <b>바탕이 깔린 위 석 줄은 「지금」이고 출처가 다릅니다</b> —
+그림이 이 장에 없어(위 「왜 이 넷인가」 참조) <code>lib/ui</code> 의 심볼에서
+옮겨 적은 수입니다. 가린 면적만 「—」인 것은 그래서입니다.
+클리어는 지금 결과와 <b>같은 위젯</b>이라(<code>ResultScreen</code> 이
+<code>r.cleared</code> 하나로 갈립니다) 따로 줄이 없습니다.</p>
+<p class="sub">⭐ <b>과녁에서는 지금이 안 밀립니다</b> — 결과 화면의 제일 작은
+과녁은 52 이고 이 장의 것은 44 입니다. 밀리는 것은 <b>색</b>입니다.</p>
+<p class="sub">⭐⭐ <b>가린 면적은 화면마다 뜻이 다릅니다.</b> 세 갈래로 읽습니다.<br>
+<b>일시정지</b> — 판이 뒤에 살아 있어 덮은 만큼 「무엇이 오고 있었나」를 못 봅니다.
+ㄴ 이 ㄱ 의 <b>절반보다 덜</b> 덮습니다(46.5% → 17.9%). 여기서는 그 차이가
+그대로 이득입니다.<br>
+<b>설정</b> — <b>거꾸로입니다</b>(44.5% → 63.2%). 여섯 줄을 한 기둥에 세우면
+세로를 다 쓰기 때문입니다. 같은 축인데 화면에 따라 답이 뒤집히는 자리라,
+<b>고를 때 같이 보셔야 합니다</b>.<br>
+<b>결과 · 클리어</b> — 판이 이미 꺼졌으니 면적이 성능이 아닙니다. 여기서 면적이
+말하는 것은 <b>시선이 한 덩어리에 모이나 흩어지나</b>뿐입니다.</p>
+
+<h2 id="s-parts">부품 견본 — 화면과 같은 함수가 짓습니다</h2>
+<p class="sub">견본이 제 손으로 그리면 「이 상태가 화면에서 어떻게 보이나」를
+거짓으로 말하게 됩니다. 아래 것은 전부 위 폰과 <b>같은 함수</b>가 그립니다.</p>
+<div class="ov-samps" id="ov-parts"></div>
+
+<h2 id="s-gap">어긋난 자리 — 고치지 않고 적어만 둡니다</h2>
+<table class="st">
+<tr><th>자리</th><th>어긋남</th></tr>
+<tr><td><b>단추가 38 인가 44 인가</b></td>
+<td><code>hud.js</code> 의 <code>.hudbtn</code> 은 <b>38</b> 인데 이 게임의
+엄지 자 하한은 <b>44</b> 입니다(<code>theme.dart</code> 의
+<code>kUiBtnLowH</code>). 로비 여덟 장이 38 을 그대로 쓰고 있어 여기서
+고치지 않고 <b>이 장의 자만</b> 올렸습니다 — 키트를 44 로 올리면 여덟 장의
+줄 높이가 전부 밀리므로 <b>판정이 필요합니다</b></td></tr>
+<tr><td><b>이긴 판에 「다음 스테이지」가 없다</b></td>
+<td>엔진의 <code>ResultScreen</code> 은 문이 둘뿐입니다
+(<code>onRetry</code>·<code>onHome</code>). 이 장도 안 그렸습니다 —
+없는 길을 시안이 지어내면 이식하는 손이 그것을 만들어야 합니다.
+필요하면 <b>판정이 먼저</b>입니다</td></tr>
+<tr><td><b>「캔 것」이 운석 수가 아니다</b></td>
+<td>런 상태가 드는 것은 <b>캐서 나온 강화석 수</b>(<code>stonePicked</code>)뿐이고
+「부순 운석 수」를 세는 칸은 없습니다. 이 장은 <b>있는 수</b>로 그렸습니다 —
+판 안 HUD 장이 같은 자리에 같은 표를 적어 뒀습니다</td></tr>
+<tr><td><b>설정을 로비에서도 연다</b></td>
+<td><code>SettingsScreen</code> 이 같은 <code>SettingsPanel</code> 을 제
+어둠막 위에 세웁니다. 이 장은 <b>멈춤에서 연 쪽</b>만 그렸습니다 — 로비에서
+열면 뒤가 판이 아니라 허브라 바탕이 갈립니다</td></tr>
+<tr><td><b>글꼴 파일 경로</b></td>
+<td>이 장은 <code>../../assets/fonts/</code> 의 <b>엔진이 싣는 그 파일</b>을
+읽습니다. <code>docs/vfx</code> 미러는 그 폴더를 안 복사하므로 미러에서는
+<b>대체 글꼴로 떨어집니다</b></td></tr>
+</table>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 스크립트를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"hud.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-hud-overlay.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

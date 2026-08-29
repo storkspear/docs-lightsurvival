@@ -7,11 +7,10 @@
    갈라질 수가 없다. 페이지 고유 규칙도 여기에 둔다 — 이름이 안 겹치므로.
 
    ── 레이아웃의 뼈대: **N칸이 한 덩어리** ─────────────────────────────────
-   무기는 5칸(L1~L5), 발현 계열은 3칸(기본·발현·발현전용). 화면이 바뀌어도
-   **덩어리는 안 쪼개진다** — 바뀌는 것은 한 줄에 덩어리가 몇 개 오느냐뿐이다.
-   모바일에서는 덩어리 하나만 두고 **마지막 칸(완성형)을 맨 위 전폭**으로
-   올린다. 무기는 L5, 발현은 전용기 — 둘 다 마지막이 완성형이라 규칙 하나로
-   맞는다.
+   무기는 5칸(L1~L5)이다. 화면이 바뀌어도 **덩어리는 안 쪼개진다** — 바뀌는
+   것은 한 줄에 덩어리가 몇 개 오느냐뿐이다. 모바일에서는 덩어리 하나만 두고
+   **마지막 칸(완성형)을 맨 위 전폭**으로 올린다 — 무기는 L5 가 완성형이라
+   규칙 하나로 맞는다.
 
    ⚠️ **`display:grid` 를 쓴다 — 과거에 버렸던 것을 되살린 것이다.**
    옛 주석: 「grid-template-columns 가 **아티팩트 호스트**에서 안 먹어 한 열로
@@ -155,7 +154,14 @@ body.bare .voc .vl{-webkit-line-clamp:1}
 .big1{grid-column:1/-1}
 h3{font-size:14px;margin:26px 0 4px;font-weight:600}
 .sub b{color:var(--ink);font-weight:600}
-body.bare .sub,body.bare .note,body.bare .warn,body.bare h3,body.bare header .lede{display:none}
+/* ⚠️⚠️ **`h3` 를 여기서 뺐다** (2026-08-29). 「설명 접기」가 감출 것은 **설명**
+   이지 **이름**이 아니다 — `h3` 가 스킬 이름을 지는 자리라, 접기를 켜면
+   그림만 남고 이름이 통째로 사라졌다. 사용자가 **세 번** 그것에 걸렸다:
+   풍 「스킬 이름이 없어서 어떤 걸 고르겠다고 말을 해 줄 수가 없음」 ·
+   독 「이건 스킬 이름이 뭐야?」 「이거 스킬 이름을 안 알려주면 우짜노」.
+   ⇒ **고르는 장에서 이름이 없는 그림은 고를 수가 없다.**
+   ⚠️ 감추는 것은 `.sub`·`.note`·`.warn`·`.def`·`.cap .ds` 처럼 **설명인 것**만이다. */
+body.bare .sub,body.bare .note,body.bare .warn,body.bare header .lede{display:none}
 table{border-collapse:collapse;margin:12px 0 0;font-size:12px;width:100%;max-width:1000px}
 th,td{border:1px solid var(--edge);padding:6px 10px;text-align:left;vertical-align:top}
 th{color:var(--amber);font-weight:600;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
@@ -212,7 +218,7 @@ body.bare .sub,body.bare .note,body.bare .refs,body.bare .ia,body.bare .spec, bo
       linear-gradient(90deg,rgba(8,8,12,.90) 0%,rgba(8,8,12,.10) 30%,rgba(8,8,12,.10) 62%,rgba(8,8,12,.94) 92%),
       radial-gradient(110% 80% at 50% 46%,rgba(8,8,12,0) 38%,rgba(8,8,12,.66) 100%)}
 /* ⚠️ 위를 **30px** 비운다 — 상단 띠(`.topbar`)가 절대 배치라, 안 비우면
-   무대의 첫 줄(「무속성 · 발현」)과 겹친다. 실측으로 겹쳤다. */
+   무대의 첫 줄(「무속성」)과 겹친다. 실측으로 겹쳤다. */
 /* ⚠️ 위 여백 24 → 36 (2026-08-18 사용자: 「살짝 겹치는 것 같아」 — 실측
    **3.6px 겹쳤다**. 창틀 줄이 10px 에서 시작해 27.6 에서 끝나는데 내용이
    24 에서 시작했다). 36 = 창틀 끝 27.6 + 숨통 8. ⚠️ 창틀 글씨를 키우면
@@ -544,7 +550,7 @@ table.st.tiers td:nth-child(3){width:auto}
            min(calc(var(--cell,150px)*1.25),calc(50% - 4.5px))))}
 .gridset>.grid{display:contents}
 
-/* ── 덩어리 격자 (레벨이 있는 것: 무기 5칸 · 발현 3칸) ─────────────────── */
+/* ── 덩어리 격자 (레벨이 있는 것: 무기 5칸) ────────────────────────────── */
 .lvset{display:grid;gap:12px;align-items:start;margin-top:8px;
   grid-template-columns:repeat(auto-fill,minmax(min(var(--block,600px),100%),1fr))}
 .lvblock{max-width:var(--blockmax,780px);background:var(--panel);
@@ -758,14 +764,6 @@ table.st.tiers td:nth-child(3){width:auto}
 .hdot2{position:absolute;width:3px;height:3px;border-radius:50%;
   background:rgba(200,200,220,.78);transform:translate(-50%,-50%);
   pointer-events:none}
-/* 발현 단계 토글 — 시안 검증용 조작대(엄지 존 버튼과 같은 결). */
-.bctl{display:inline-flex;gap:5px;margin-left:10px;vertical-align:middle}
-.bbtn{font:inherit;font-size:10px;padding:3px 9px;border-radius:99px;cursor:pointer;
-  background:#13131A;border:1px solid #26262F;color:#9494A2}
-.bbtn.on{background:var(--gold);border-color:var(--gold);color:#0A0A0E;font-weight:700}
-.bval{margin-left:8px;font-size:10px;color:#5A5A68}
-.bval b{color:#9494A2;font-variant-numeric:tabular-nums}
-
 /* ══ 상점 — 캐주얼하게 ════════════════════════════════════════════════════
    ⚠️ 사용자: 「상점 페이지는 좀 더 캐주얼한 느낌으로 바꿔도 될 것 같아」.
    ⭐ **캐주얼은 색을 늘리는 게 아니다.** 이 저장소는 「색은 주 버튼 하나뿐」

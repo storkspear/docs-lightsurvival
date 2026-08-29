@@ -29,12 +29,13 @@
 </div>
 
 <h2 id="s-what">「암 影」이 무엇인가 — <b>이름을 새로 안 지었다</b></h2>
-<p class="def"><b>암 影 은 쌍이 아니다.</b> 특수 열 종은 여섯 속성의 <b>쌍</b>(<code>FVNAME</code>)인데 암은 그 표에 없다 — <code>ELEMS</code> 에 <b>제 몸 두 벌</b>(<code>preShade</code>/<code>shade</code>)로 서 있는 <b>일곱째 속성</b>이고, 상태이상 표에서도 실명 · 침묵 · 봉인 셋을 혼자 쥔다(<code>vfx.js</code> 의 <code>PVMKL</code>).</p>
+<p class="def"><b>암 影 은 쌍이 아니다.</b> 특수 열 종은 여섯 속성의 <b>쌍</b>(<code>FVNAME</code>)인데 암은 그 표에 없다 — <code>ELEMS</code> 에 <b>제 몸과 제 둘레 모티프</b>(<code>preShade</code>/<code>shade</code>)로 서 있는 <b>일곱째 속성</b>이고, 상태이상 표에서도 실명 · 침묵 · 봉인 셋을 혼자 쥔다(<code>vfx.js</code> 의 <code>PVMKL</code>).</p>
 <p class="def">⚠️ <b>이름이 두 갈래로 적혀 있다</b> — <code>ELEMS</code> 는 「<b>어둠 影</b>」, 원장(<code>docs/design/속성-개선-백로그.md</code>)과 결계 표(<code>WLTBL</code>)는 「<b>암 影</b>」이다. 이 장은 <b>원장을 따랐다</b>. ⚠️ 새 이름을 지은 것이 아니라 <b>둘 중 하나를 고른 것</b>이고, 갈라짐 자체는 <b>남아 있다</b>(판정 대기).</p>
 <p class="def">⚠️ <b>색은 <code>TONE.shade</code></b> = <code>#0E060F</code> / <code>#2E1840</code> / <code>#6B4E8C</code> — 여섯 팔레트 중 <b>유일하게 lit 이 어두운</b> 속성이다. 이 장의 레벨 라벨이 그 보라인 것도 같은 이유다.</p>
 
 <h2 id="s-body">몸</h2>
 <p class="def"><b>몸 그림은 이미 있다 — 새로 안 그렸다.</b> <a href="mockup.html">속성 · 몸</a> 장의 <code>#elem</code> 격자가 부르는 <b>같은 함수</b>(<code>ELEM.preShade</code> · <code>ELEM.shade</code>)를 <code>charBody</code> 로 그대로 부르고, <b>캡션도 <code>ELEMS</code> 에서 읽어 온다</b>.<br>
+⚠️ <b>몸에 서는 것은 코어뿐이다</b> — 몸은 한 벌이고 <b>코어만 물든다</b>(엔진도 같다: <code>body_elements.dart</code> 가 「어둠도 예외가 아니다」라고 적어 뒀다). 둘레의 <b>먹는 둘레 + 복제하는 코어</b>는 <b>그림만 남은 모티프</b>라 지금은 어느 몸에도 안 선다. 다만 <b>암은 살아남은 둘(풍 · 암) 중 하나</b>이고, <b>어느 계열로 앉을지는 미정</b>이다(<code>docs/1차-개발.md</code> 「살아남은 모티프(풍 · 암)가 앉을 칸」).<br>
 ⭐ 폭마 장은 <code>charBody</code> 를 못 썼는데(특수 쌍은 <code>ELEMS</code> 에 없다) <b>암은 쓸 수 있다</b> — 이 장이 쌍이 아니라 일곱째 속성이라는 사실이 여기서도 드러난다.</p>
 <div class="grid" id="csbody"></div>
 

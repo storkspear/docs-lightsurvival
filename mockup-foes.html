@@ -17,7 +17,7 @@
 <div class="wrap">
 <nav class="toc">
   <div class="nav1"></div>
-  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-foes">적군의 종류</a><a href="#s-bossgrid">보스</a><a href="#s-bosses">보스 공격 패턴</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-codex">도감(한 격자)</a><a href="#s-pair">엔진과 짝</a><a href="#s-bosses">보스 공격 패턴</a><a href="#" id="bare" class="bare">설명 접기</a></div>
 </nav>
 <header>
   <p class="kicker">Light Survival · 우주괴물</p>
@@ -25,21 +25,44 @@
   
 </header>
 
-<h2 id="s-elem">속성 우주괴물 <span class="tag">채택</span></h2>
-<p class="def"><b>몸은 안 바꿨다</b>(<code>#24141F</code> · L .102) — 유니버스 26안의 밝기
-예산이 그 값 기준이다. 바뀐 것은 <b>테와 눈</b>뿐이고, 그 둘로 속성을 말한다.
-테는 여섯 다 L .5 위라 배경에 안 묻힌다.</p>
-<div class="grid" id="emfoes"></div>
+<h2 id="s-codex">우주괴물 도감 — 한 격자에 30종</h2>
+<div class="grid" id="foecodex"></div>
+<p class="def">전에는 <b>세 격자</b>였다(적군의 종류 · 보스 · 속성 우주괴물). 가르던 축은
+<b>그림의 계보</b>였지 보는 사람의 물음이 아니었고, 그래서 엔진의 열둘이 두 격자에
+흩어져 있었다 — 점사·포격·추적은 「속성」 쪽에, 표류·질주·자폭·무리·돌진은 「적군」 쪽에.
+⇒ <b>한 격자</b>다.<br>
+<b>칸이 드는 것</b> — 이름 · <b>계열</b>(유기체 = 갑각과 부속지 ↔ 다각형 =
+속성·원거리) · <b>엔진 id</b>(<code>lib/data/enemies.dart</code>, 없으면 「엔진 없음」) ·
+<b>판정</b>(2026-08-12) · 출처 한 줄.<br>
+⚠️ <b>버린 여덟도 같이 선다</b> — 흐리게, 「버림」 배지로. 되살린 것이 아니라
+<b>판정을 도감에 적는 것</b>이다: 지우면 「무엇을 왜 안 골랐나」가 그림으로 안 남는다.<br>
+⚠️ <b>몸은 안 바꿨다</b>(<code>#24141F</code> · L .102) — 유니버스 26안의 밝기 예산이 그 값
+기준이다. 속성이 바꾼 것은 <b>테와 눈</b>뿐이고, 테는 여섯 다 L .5 위라 배경에 안 묻힌다.</p>
 
-<h2 id="s-foes">적군의 종류</h2>
-
-<div class="grid" id="foes"></div>
-
-<h2 id="s-bossgrid">보스</h2>
-<div class="grid" id="bossgrid"></div>
+<h2 id="s-pair">시안 ↔ 엔진 — 어느 쪽에만 있나</h2>
+<p class="def">⚠️ <b>억지로 안 짝지었다.</b> 이름이 비슷해도 4축(반경 · 속도 · 경로 ·
+가장자리)이 다르면 짝이 아니다. 아래 셋은 <b>엔진에만</b> 있어 시안에 그림이 없다 —
+없는 그림을 지어내지 않으므로 칸이 아니라 표로 적는다.</p>
+<table class="st">
+<tr><th>엔진 id</th><th>이름</th><th>4축</th><th>시안</th></tr>
+<tr><td><code>hulk</code></td><td>거구</td><td>r26 · 22 · direct · mass</td>
+    <td><b>그림 없음.</b> 시안의 큰 몸은 보스(r36)뿐이라 그 사이가 빈다</td></tr>
+<tr><td><code>splitter</code></td><td>분열</td><td>r18 · 43 · direct · lobed</td>
+    <td><b>그림 없음.</b> ⚠️ 「보스 D · 분열괴물」과 <b>이름만 같다</b> — 저쪽은 r36 보스다</td></tr>
+<tr><td><code>shard</code></td><td>조각</td><td>r7 · 64 · direct · lobed</td>
+    <td><b>그림 없음.</b> 분열이 죽으며 남기는 미니언(<code>minion: true</code> ·
+    <code>spawnWeight 0</code>)이라 <b>분열과 한 벌로</b> 그려야 한다 — 어미의 세 갈래 결을
+    물려받은 파편이다</td></tr>
+</table>
+<p class="def"><b>시안에만 있는 것</b>은 도감 칸의 「엔진 없음」 배지가 그대로 말한다 —
+기본형 · 성게 · 연소체 A·B · 결빙 · 전절(자·황) · 쌍극 · 저격, 그리고 버린 여덟.
+<b>보스는 다섯 안이 엔진 한 종</b>(<code>boss</code> · r36)<b>을 나눠 쓴다</b> — 다섯 중
+무엇이 그 한 종인지는 아직 안 정해졌다.</p>
 
 <h2 id="s-bosses">보스 공격 패턴</h2>
-
+<p class="def">도감 격자가 「몇이고 어떻게 생겼나」에 답한다면 이 아래는 <b>「무엇을 하나」</b>다.
+정사각 칸에서는 달려가는 거리와 표적 지점이 화면 밖으로 나가 패턴이 안 읽혀
+<b>한 줄에 하나, 넓은 무대</b>로 둔다.</p>
 <div class="grid" id="bosses"></div>
 </div>
 <!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->

@@ -1,0 +1,223 @@
+<meta charset="utf-8">
+<!-- ⚠️⚠️ **HTML 도 캐시를 안 탄다.** js·css 는 `?t=` 로 깨는데 HTML 만
+     안 깨서, 스크립트 구성이 바뀔 때마다 이미 열려 있던 탭이 「옛 HTML +
+     새 js」 조합으로 조용히 고장 났다. ⇒ 문서 자체를 캐시에 안 남긴다. -->
+<meta http-equiv="Cache-Control" content="no-store">
+<!-- ⚠️ 이게 없으면 폰이 980px 로 렌더한 뒤 축소한다 — `max-width` 질의가
+     한 번도 안 걸려 반응형이 통째로 죽는다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Light Survival — SF HUD 도감</title>
+<script>document.write(unescape("%3Clink rel=\"stylesheet\" href=\"vfx.css?t=")+Date.now()+unescape("\"%3E"))</script>
+<noscript><link rel="stylesheet" href="vfx.css"></noscript>
+<!-- 이 장 전용 배치만 여기 둔다 — 뼈(`.hudcell`·`.hudhead`·`.hudside`·
+     `.hudscrollbox`)는 `hud.js` ⑨절이 든다. -->
+<style>
+.hc-screen{background:#050B14}
+.phone.land .screen.hc-screen .scrim{background:
+  linear-gradient(180deg,rgba(8,8,12,.42) 0%,rgba(8,8,12,.06) 22%,rgba(8,8,12,.06) 74%,rgba(8,8,12,.30) 100%)}
+.hc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:5px;
+  align-content:start}
+.hc-grid .hudcell{padding:5px 3px 4px;gap:2px}
+.hc-grid .hudcell .n{min-height:20px;display:flex;align-items:center}
+/* ── 칸의 상태 다섯 — 옛 도감 장이 정한 그대로 ────────────────────────────
+   ⚠️ **고른 칸은 금이 아니다**(옛 규칙: 「금은 「다 모은 분수」 하나에만
+   남긴다」). 그래서 이 화면의 고름은 냉광 하이라이트(흰 테 + 밝은 바탕)다. */
+.hudcell.pick{border-color:#E8F8FF;background:#E8F8FF12}
+.hudcell.dim .n{color:#6E93AD}
+.hudcell.hollow .n{color:#6E93AD}
+.hudcell.void .vq{height:20px;display:flex;align-items:center;font-size:12px;color:#3A5468}
+/* 다 모은 묶음의 분수만 금빛 — 지금 저장본엔 그런 묶음이 없다. */
+.hudhead .ct.full{color:#FFD27A}
+.hc-cnt{display:flex;align-items:center;gap:9px}
+/* 오른쪽 창 — 미리보기 위 · 성장표 아래. */
+.hc-pv{position:relative;height:74px;flex:0 0 auto;overflow:hidden;margin-bottom:7px;
+  background:#02060C;border:1px solid #4FC3F72E}
+.hc-pv canvas{width:100%;height:100%;display:block}
+.hc-pv .pvl{position:absolute;left:5px;top:4px;font-size:7px;letter-spacing:.12em;color:#6E93AD}
+.hc-dk{font-size:9px;margin-top:2px;color:#4FC3F7}
+/* 상태 견본 — 크게. */
+.hc-samps{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;margin-top:12px}
+.hc-samp{width:92px;text-align:center}
+.hc-samp .hudcell{width:92px;padding:8px 4px 6px}
+.hc-samp .hudcell .n{font-size:10px;min-height:24px}
+.hc-samp .sc{font-size:9.5px;color:var(--faint);margin-top:6px;line-height:1.45}
+/* 일반 일곱 판정 격자 — **실크기로** 세 줄. 확대는 안 한다(확대해야 갈리는
+   것은 안 갈린 것이다). */
+.hc-wep{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.hc-weprow{display:flex;align-items:stretch;gap:5px;flex-wrap:wrap}
+.hc-weprow .wc{width:150px;flex:0 0 auto;display:flex;align-items:center;
+  font-size:9px;color:#6E93AD;letter-spacing:.02em}
+.hc-weprow .hudcell{width:58px;flex:0 0 auto;padding:5px 3px 4px;gap:2px}
+.hc-weprow .hudcell .n{min-height:20px;display:flex;align-items:center}
+.hc-weprow.gray{filter:grayscale(1)}
+</style>
+
+<div class="wrap">
+<nav class="toc">
+  <div class="nav1"></div>
+  <div class="nav2"><span class="lbl">이 페이지</span><a href="#s-codex">도감</a><a href="#s-cell">칸의 상태</a><a href="#s-wep">일반 일곱</a><a href="#s-notes">설계 메모</a><a href="#s-gap">어긋난 자리</a><a href="#" id="bare" class="bare">설명 접기</a></div>
+</nav>
+<header>
+  <p class="kicker">Light Survival · SF HUD 도감</p>
+  <h1>모은 것과 만난 것 — 한 벽에</h1>
+  <p class="lede">칸 · 상태 · 수 · 눌렀을 때는 <a href="mockup-codex.html">옛 도감
+  장</a>이 다 정했다(<b>아홉 묶음 83칸</b> · <b>모음 71 · 만남 12</b> 두 분수 ·
+  <b>미리보기 위 · 성장표 아래</b>). 이 장은 그 화면을 SF HUD 창에 옮긴
+  것이다 — 칸 목록의 정본은 여전히 저쪽이라 여기서 83칸을 다시 적지 않는다.</p>
+</header>
+
+<h2 id="s-codex">도감</h2>
+<table class="st">
+<tr><th>옛 시안이 정한 것</th><th>이 화면에서</th></tr>
+<tr><td><b>왼쪽 레일 · 위 창틀 · 가운데 격자 · 오른쪽 창</b>, 격자만 제 안에서 흐른다</td>
+<td>그 골격 그대로 SF HUD 껍질을 입혔다. 창틀의 <b>분수 둘</b>이 이 화면의
+문장이고, 격자가 넘치는 만큼은 아래 페이드가 「무엇이 남았나」로 받는다</td></tr>
+<tr><td><b>얻는 것은 실루엣 · 마주치는 것은 빈 칸</b></td>
+<td>안 모은 스킬은 같은 모양에 채도 0 · 밝기 절반(엔진 <code>_kLockedFilter</code>
+와 같은 수), 안 만난 적만 점선 빈 칸 + 물음표</td></tr>
+<tr><td><b>미리보기 위 · 성장표 아래</b> — FX 를 그대로 돌린다</td>
+<td>오른쪽 창 맨 위가 확정본 화염방사 FX(<code>PKflameC4</code>)를 실제로
+돌리고, 그 밑 네 줄은 <code>LVT["flamer"]</code> 를 그대로 읽는다</td></tr>
+</table>
+<div class="rack land">
+ <div class="col">
+  <div class="cap">도감 — 묶음 머리줄 + 칸, 오른쪽 창은 <b>비어도 자리를 남긴다</b></div>
+  <div class="phone land"><div class="screen hc-screen">
+    <canvas class="bg" id="hc-bg"></canvas>
+    <div class="hudgrid"></div><div class="hudscan"></div><div class="hudvig"></div>
+    <div class="scrim"></div>
+    <div class="topbar"><span><b>도감</b></span>
+      <span class="hc-cnt">
+        <span class="hudchip">모음 <b>31</b> / 71</span>
+        <span class="hudchip">만남 <b>10</b> / 12</span>
+        <span class="setico" id="hc-set" title="설정"></span></span></div>
+    <div class="hudui">
+      <div class="hudmid">
+        <div class="hudrail side" id="hc-rail"></div>
+        <div class="hudstage">
+          <div class="hudbody">
+            <div class="hudcol">
+              <div class="hudscrollbox">
+                <div class="hc-grid" id="hc-grid"></div>
+                <div class="hudfade">아래로 — 방어 7 · 버프 8 · 방어구 10 · 성좌 12 · 적 12</div>
+              </div>
+            </div>
+            <div class="hudside" id="hc-side"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+ </div>
+</div>
+
+<h2 id="s-cell">칸의 상태 다섯</h2>
+<table class="st">
+<tr><th>상태</th><th>그림</th><th>왜</th></tr>
+<tr><td><b>모음</b></td><td>냉광 문양 그대로</td><td>도감의 「있다」 — 기본값이라 장식이 없다</td></tr>
+<tr><td><b>안 모음</b>(얻는 것)</td><td>같은 모양 · 채도 0 · 밝기 절반</td>
+<td>무엇인지 알아야 모을 이유가 생긴다</td></tr>
+<tr><td><b>안 만남</b>(적)</td><td>점선 빈 칸 + 물음표</td><td>첫 마주침은 게임 안의 것이다</td></tr>
+<tr><td><b>고름</b></td><td>흰 테 + 밝은 바탕</td>
+<td><b>금이 아니다</b> — 금은 「다 모은 분수」 하나에만 남긴다</td></tr>
+<tr><td><b>헛</b>(성좌 <code>wired: false</code>)</td><td>문양은 밝고 이름만 회</td>
+<td>열려 있는데 아무 일도 안 한다 — 죽은 칸을 조용히 두지 않는다</td></tr>
+</table>
+<div class="hc-samps" id="hc-samps"></div>
+
+<h2 id="s-wep">일반 일곱 — 나란히 놓고 본다</h2>
+<p class="lede">⚠️ <b>이 격자가 판정의 자리다.</b> 문양 하나만 보면 다
+그럴듯하고, 일곱을 <b>실크기로 나란히</b> 놓아야 겹치는 것이 드러난다. 세 줄은
+도감이 실제로 그리는 세 조건이다 — 실크기 · 잠김(채도 0 · 밝기 절반) · 색 없음.</p>
+<div class="hc-wep" id="hc-wep"></div>
+
+<p class="lede">⭐ <b>화염방사만 후보가 넷이다 — 「얹은 정도」만 다르다.</b>
+갈아엎는 것이 아니라 <b>지금 꼴 위에 불의 성질을 조금 얹는</b> 일이라,
+<b>지금 것을 같은 줄에 세워</b> 얼마나 얹혔는지를 눈으로 견준다. 얹은 성질은
+둘뿐이다 — <b>끝이 한쪽으로 말린다</b> · <b>사이가 빈다</b>. ★ 가 지금 격자에
+선 것이고, 고르면 <code>WEPFLAMEPICK</code> 한 줄만 바뀐다.</p>
+<div class="hc-wep" id="hc-wepalt"></div>
+
+<table class="st">
+<tr><th>무기</th><th>어떻게 닿나</th><th>그래서 무슨 꼴인가</th></tr>
+<tr><td><b>빛파동</b></td><td>한 장이 통째로 밀려 나가고 <b>뒤로 한 장이 더</b> 온다
+(L3 「파동 2개」)</td><td>같은 꼴의 초승달 <b>둘</b> — 크기만 다르다. 일곱 중 혼자
+<b>매끈하게 굽은 덩이</b>다</td></tr>
+<tr><td><b>빛따발총</b></td><td>같은 줄로 <b>쉼없이 낱개</b>가 간다 — 퍼지지 않는다
+(L2 「3가닥 <b>1자</b>」)</td><td>나란한 곧은 줄 셋, 줄마다 앞에서 낱알로 끊긴다.
+일곱 중 혼자 <b>직선 평행</b>이다</td></tr>
+<tr><td><b>바람산탄총</b></td><td><b>한 순간에</b> 여러 발이 흩어져 민다</td>
+<td>한 점에서 벌어진 낱알 다섯 — <b>떨어져 있고 앞이 물렸다</b>. 밑동이 아무 데도
+안 붙는다</td></tr>
+<tr><td><b>화염방사</b></td><td><b>끊기지 않는</b> 한 줄기 — 서 있는 동안 덧칠된다</td>
+<td>통짜 면 <b>하나</b>. 일곱 중 혼자 낱개가 없다. 앞이 <b>갈고리로 말리고</b>
+그 밑이 <b>빈다</b> — 불의 성질은 그 두 자리에서만 난다(위 후보 줄)</td></tr>
+<tr><td><b>서릿발</b></td><td>부채 갈래가 훑고 <b>자국이 땅에 남는다</b>. 자라는 것도
+갈래 수뿐이다(1→3→5→7)</td><td><b>밑변 위에 선</b> 갈래 다섯. 일곱 중 혼자
+바닥에 붙는다(FXPLANE 의 <code>ground</code>)</td></tr>
+<tr><td><b>서리결정</b></td><td>한 자리에 <b>박혀</b> 마디가 <b>앞에서부터</b> 부서진다</td>
+<td>끊긴 기둥 하나, 앞 두 마디가 <b>어긋나 벌어진다</b>. 일곱 중 혼자 비대칭이다</td></tr>
+<tr><td><b>순포</b></td><td>둘레를 돌며 사방으로 — <b>앞이 없다</b></td>
+<td>닫힌 둘레 위 굽은 판 셋 + 가운데 심. 일곱 중 혼자 <b>닫혀 있다</b></td></tr>
+</table>
+
+<h2 id="s-notes">설계 메모</h2>
+<table class="st">
+<tr><th>결정</th><th>왜</th></tr>
+<tr><td><b>낱 문양이 없는 칸은</b> 묶음마다 한 꼴인 자리표다 — 옛 도감의 여덟
+실루엣을 그대로 캔버스로 옮겼다</td>
+<td>옛 장이 못 박았다: 「칸 속 그림 낱장의 정본은 각 계열 시안이 이미 든다 —
+격자의 문양은 자리표다」. 실루엣을 새로 지으면 자리표가 두 벌이 된다
+⇒ <b>모양은 그대로, 색만 냉광</b></td></tr>
+<tr><td>⭐⭐ <b>일반 일곱만 자리표를 졸업했다</b> — 낱 문양 일곱을
+<code>glyph-weapon.js</code> 에 새로 지었다</td>
+<td>자리표는 「같은 계열이다」를 말하는데, 한 계열 <b>안</b>에서 칸을 고르는
+화면에서는 그 말이 이미 참이라 아무것도 안 가른다 — 일곱 칸이 죄다 같은
+화살표였고 사용자가 반려했다(2026-08-27 「촌스럽다」). 가른 축은 이름이
+아니라 <b>「어떻게 닿나」</b>이고, 어휘는 <code>vfx.js</code> 의
+<code>ICON.*</code> 가 이미 통과시킨 것을 서로 안 겹치게 떼어 준 것이다.
+나머지 열(공전 · 유도탄 · 빛폭탄 · 바람원반 · 기생 · 기폭 · 분열 · 단전 ·
+부양 · 뇌광)과 마법은 <b>안 건드렸다</b> — 승급은 한 묶음씩 한다.
+⚠️ 그 열은 <b>일반 줄에 같이 선다</b>(대분류가 셋이 되며 옛 「보조」 묶음이
+없어졌다) — 아직 자리표를 쓰는 것뿐이지 딴 묶음이 아니다</td></tr>
+<tr><td>문양의 <b>꼴은 한 파일에서만</b> 나오고, 색은 부르는 장의 것이다</td>
+<td>도감이 둘이고(옛 격자 · 이 격자) 상점이 또 하나다. 꼴을 각자 들면 반드시
+어긋난다 ⇒ <code>glyph-weapon.js</code> 가 <b>아무것도 안 부르는 곁 파일</b>로
+서서 두 장이 같은 함수를 읽는다(옛 도감은 <code>vfx.js</code> 를 안 부르므로
+이 파일도 홀로 서야 했다). 색만 인자로 갈린다 — 저쪽은 중성회, 이쪽은 냉광</td></tr>
+<tr><td>이 장은 <b>83칸을 다시 안 적는다</b></td>
+<td>칸 목록의 정본은 옛 도감 장이다. 여기 베끼면 스킬 하나가 늘 때 두 곳을
+고쳐야 하고, 한 곳만 고치는 날이 온다</td></tr>
+<tr><td>이 화면에 <b>금빛이 하나도 없다</b></td>
+<td>도감의 금빛은 「다 모은 묶음의 분수」 자리 하나뿐인데, 이 저장본(모음
+31 / 71)에는 다 모은 묶음이 없다 — 없는 것을 그리지 않는다</td></tr>
+</table>
+
+<h2 id="s-gap">어긋난 자리 — 고치지 않고 적어만 둔다</h2>
+<table class="st">
+<tr><th>자리</th><th>어긋남</th></tr>
+<tr><td>분수가 안 맞는다</td>
+<td>옛 도감 장의 <b>수 표</b>는 일반 21 로 합이 <b>83</b>인데,
+같은 장의 <b>그려진 격자</b>는 일반 17 이라 분모 합이 <b>67</b>,
+칸 분수의 합도 <b>28</b>이라 창틀의 「모음 31 / 71」과 안 맞는다. 이 장은
+<b>그려진 격자 쪽 수를 그대로</b> 옮겼다 — 어느 쪽이 정본인지는 도감 장이
+정할 일이다</td></tr>
+<tr><td>캐릭터 18 · 채굴도구 3 이 격자에 없다</td>
+<td>2026-08-25 결정이 도감에 두 식구를 더했는데(모음 71 → 89) 옛 장의
+격자에도 이 장의 격자에도 아직 그 묶음이 없다. 옛 장이 「분모 갱신은 화면을
+그리는 담당의 몫」이라 적어 뒀지만, <b>그러려면 분수 표부터 하나로
+맞아야</b> 한다(위 줄)</td></tr>
+<tr><td>미리보기가 도는 칸이 하나다</td>
+<td>확정본 FX 가 이름으로 잡히는 것이 화염방사(<code>PKflameC4</code>)뿐이라
+나머지 칸은 문양만 크게 뜬다 — 상점 장의 같은 줄과 한 원인이다</td></tr>
+</table>
+
+</div>
+<!-- ⚠️ file:// 에서 브라우저가 vfx.js 를 세게 캐시한다. 매 로드마다 쿼리를 갈아 항상 새로 읽게 한다. -->
+<script>document.write(unescape("%3Cscript src=\"nav.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"vfx.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"hud.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<!-- ⭐⭐ 일반 일곱의 문양 — **꼴의 정본은 여기 한 곳**이고 옛 도감
+     (`mockup-codex.html`)이 같은 파일을 읽는다. 색만 이 장의 냉광을 넘긴다. -->
+<script>document.write(unescape("%3Cscript src=\"glyph-weapon.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>
+<script>document.write(unescape("%3Cscript src=\"mockup-hud-codex.js?t=")+Date.now()+unescape("\"%3E%3C/script%3E"));</script>

@@ -1,7 +1,8 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   운석 — 균열(fissure) B안. `rock.js`(패싯 크리스탈 방향)와 나란히 두고
-   고르는 후보 시안이다. 정본이 되기 전까지는 `rock.js`/`rock_view.dart`/
-   `rock_paint.dart`를 안 건드리고 여기서만 산다.
+   운석 — 균열(fissure) 재질. 색 운석 넷의 **재질 정본**이다(호스트는
+   `mockup-rock.html`의 「2 · 재질」). 엔진 이식 전까지는 `rock.js`/
+   `rock_view.dart`/`rock_paint.dart`를 안 건드리고 여기서만 산다 —
+   이식할 때 이 파일의 그림과 수치가 정본이다.
 
    재질 언어: 몸은 **진짜 입체**(다면체 — 면마다 법선·명암을 갖는다)다.
    판(plate)은 그 다면체의 면 자체이고, 균열은 인접한 두 면이 공유하는
@@ -546,8 +547,8 @@ function rfRock(c, x, y, r, seed, t, key) {
   // ① 균열이 옆 면을 물들인다 — 면 중심에서 채택된 균열까지 최단거리로
   // 물드는 정도를 정한다. 새 레이어가 아니라 면의 칠 색 자체를 등급색
   // 쪽으로 섞는다(아래 face-fill). 문턱 셋으로 끊은 이산 4단(없음·약·중·
-  // 강) — 연속 그라디언트로 번지면 A안(패싯 크리스탈)처럼 몸 전체가 색
-  // 덩어리로 읽힌다. 문턱보다 먼 면은 mixK=0이라 등급색이 전혀 안 섞여
+  // 강) — 연속 그라디언트로 번지면 몸 전체가 색
+  // 덩어리가 되어 「보석으로 읽힌다」 — 걷힌 보석안이 빠진 바로 그 이유다. 문턱보다 먼 면은 mixK=0이라 등급색이 전혀 안 섞여
   // 확실히 회색으로 남는다.
   // ⚠️ 물듦은 `crackEdges`(화면에 그리는 것, 앞면만)가 아니라 **선별된
   // 전체 균열**(`isCrackEdge`, 뒷면으로 넘어간 것도 포함)로 잰다 — 물듦은
@@ -560,7 +561,7 @@ function rfRock(c, x, y, r, seed, t, key) {
   const crackSegs = crackSegsAll.map(([va, vb]) => [V[va][0], V[va][1], V[vb][0], V[vb][1]]);
   // ⚠️ T[1]은 톤마다 채도가 이미 높아(특히 blast #E14CFF) 같은 mixK라도
   // 체감 색 면적이 크게 뛴다 — 실측(줌 렌더)에서 blast만 유독 크게 번져
-  // A안(패싯 크리스탈)에 가까워 보였다. 문턱을 좁히고 비율을 낮춰 "가까운
+  // 몸이 보석처럼 읽히는 쪽으로 기울었다. 문턱을 좁히고 비율을 낮춰 "가까운
   // 몇 면만 강하게, 대부분은 회색" 쪽으로 다시 죈다.
   const RF_BLEED_R = [0.13, 0.24, 0.36]; // r 대비 거리 문턱(강/중/약 경계)
   const RF_BLEED_K = [0.32, 0.17, 0.08]; // 등급색 쪽으로 섞는 비율
@@ -918,7 +919,12 @@ function rfFrame(ms) {
   if (rfT0 === null) rfT0 = ms;
   const t = (ms - rfT0) / 1000;
   const cv = MOUNT('rf-grade');
-  if (cv) rfGradePanel(cv, t);
+  if (cv) {
+    // 다른 칸들과 한 장에서 같이 돈다 — 화면 밖이면 건너뛴다(`rock.js` 와 같은 규약).
+    const b = cv.getBoundingClientRect();
+    const vh = window.innerHeight || 800;
+    if (!(b.bottom < -80 || b.top > vh + 80)) rfGradePanel(cv, t);
+  }
   requestAnimationFrame(rfFrame);
 }
 requestAnimationFrame(rfFrame);
